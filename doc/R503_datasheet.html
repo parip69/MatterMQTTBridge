@@ -1,0 +1,730 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html><head><title>&#23553;&#38754;</title>
+<meta http-equiv="Content-Type" content="text/html; charset="UTF-8">
+</head>
+<body>
+<div style="page-break-before:always; page-break-after:always"><div><p>1 www.hzgrow.com<br/></p>
+<p>R503 Fingerprint Module<br/>User Manual<br/></p>
+<p><b>Hangzhou Grow Technology Co., Ltd.<br/></b>2019.6 Ver: 1.1</p>
+
+</div></div>
+<div style="page-break-before:always; page-break-after:always"><div><p>I www.hzgrow.com<br/></p>
+<p><b>Preface &amp; Declaration<br/></b>Thank you for you selection of R503 Fingerprint Identification Module of GROW.<br/>The Manual is targeted for hardware &amp; software development engineer, covering<br/>module function, hardware and software interface etc. To ensure the developing process<br/>goes smoothly, it is highly recommended the Manual is read through carefully.<br/>Because of the products constantly upgraded and improved, module and the manual<br/>content may be changed without prior notice. If you want to get the latest information,<br/>please visit our company website (www.hzgrow.com).<br/>We have been trying our best to enssure you the correctness of the Manual. However, if<br/>you have any question or find errorst, feel free to contact us or the authorized agent. We<br/>would be very grateful.<br/>The Manual contains proprietary information of Hangzhou Grow Technology Co., Ltd.,<br/>which shall not be used by or disclosed to third parties without the permission of GROW,<br/>nor for any reproduction and alteration of information without any associated warranties,<br/>conditions, limitations, or notices.<br/>No responsibility or liability is assumed by GROW for the application or use, nor for<br/>any infringements of patents or other intellectual property rights of third parties that may<br/>result from its use.<br/></p>
+<p>www.hzgrow.com</p>
+
+</div></div>
+<div style="page-break-before:always; page-break-after:always"><div><p>- 1 - www.hzgrow.com<br/></p>
+<p><b>I Introduction<br/></b></p>
+<p>Operation Principle<br/>Fingerprint processing includes two parts: fingerprint enrollment and fingerprint matching (the<br/>matching can be 1:1 or 1:N).<br/>When enrolling, user needs to enter the finger two times. The system will process the two time<br/>finger images, generate a template of the finger based on processing results and store the template.<br/>When matching, user enters the finger through optical sensor and system will generate a template<br/>of the finger and compare it with templates of the finger library. For 1:1 matching, system will<br/>compare the live finger with specific template designated in the Module; for 1:N matching, or<br/>searching, system will search the whole finger library for the matching finger. In both<br/>circumstances, system will return the matching result, success or failure.<br/></p>
+<p><b>Power </b>DC 3.3V <b>Interface </b>UART(3.3V TTL logical<br/>level)<br/></p>
+<p><b>Working current<br/>(Fingerprint<br/>acquisition)<br/></b></p>
+<p>20mA <b>Matching Mode </b>1:1 and 1:N<br/></p>
+<p><b>Standby current<br/>(finger detection)<br/></b></p>
+<p>Typical touch standby<br/>voltage: 3.3V<br/>Average current: 2uA<br/></p>
+<p><b>Characteristic value<br/>size<br/></b></p>
+<p>384 bytes<br/></p>
+<p><b>Baud rate </b>(9600*N)bps,<br/>N=1&#65374;6 (default N=6&#65289;<br/></p>
+<p><b>Template size </b>768 bytes<br/></p>
+<p><b>Image acquiring time </b>&lt;0.2s <b>Image resolution </b>508dpi<br/><b>Sensing Array </b>192*192 pixel <b>Detection Area </b>Diameter 15mm<br/><b>Storage capacity </b>200 <b>Security level </b>5 (1, 2, 3, 4, 5(highest))<br/><b>FAR </b>&lt;0.001% <b>FRR </b>&lt;1%<br/><b>Generate feature<br/>point time<br/></b></p>
+<p>&lt; 500ms <b>Starting time </b>&lt;30ms<br/></p>
+<p><b>Working<br/>environment<br/></b></p>
+<p>Temp: -20&#8451;- +60&#8451; <b>Storage<br/>environment<br/></b></p>
+<p>Temp: -40&#8451;- +75&#8451;<br/>RH: 10%-85% RH: &lt;85%</p>
+
+</div></div>
+<div style="page-break-before:always; page-break-after:always"><div><p>- 2 - www.hzgrow.com<br/></p>
+<p><b>II Hardware Interface<br/>Exterior Interface<br/></b></p>
+<p>Connector: MX1.0--6P Thread:M25<br/>Product external diameter: 28mm Inner diameter:23.5mm Height:19mm<br/></p>
+<p><b>Serial Communication<br/></b>Connector: MX1.0--6P<br/>Pin Name Description Pic<br/></p>
+<p>1 Power Supply DC3.3V<br/></p>
+<p>2 GND<br/>Signal ground.<br/>Connected to power ground.<br/></p>
+<p>3 TXD Data output. TTL logical level<br/></p>
+<p>4 RXD Data input. TTL logical level<br/></p>
+<p>5 WAKEUP Finger Detection Signal<br/></p>
+<p>6 3.3VT Touch induction power supply, DC3&#8212;6V<br/></p>
+<p><b>Hardware connection<br/></b>Via serial interface, the Module may communicate with MCU of 3.3V or 5V power: TD (pin 3 of<br/>P1) connects with RXD (receiving pin of MCU), RD (pin 4 of P1) connects with TXD (transferring<br/>pin of MCU). Should the upper computer (PC) be in RS-232 mode, please add level converting<br/>circuit, like MAX232, between the Module and PC.</p>
+
+</div></div>
+<div style="page-break-before:always; page-break-after:always"><div><p>- 3 - www.hzgrow.com<br/></p>
+<p><b>Serial communication protocol<br/></b>The mode is semiduplex asychronism serial communication. And the default baud rate is 57600bps.<br/>User may set the baud rate in 9600&#65374;115200bps&#12290;<br/>Transferring frame format is 10 bit: the low-level starting bit, 8-bit data with the LSB first, and an<br/>ending bit. There is no check bit.<br/></p>
+<p><b>Reset time<br/></b>At power on, it takes about 200ms for initialization. During this period, the Module can&#8217;t accept<br/>commands for upper computer.<br/></p>
+<p><b>III System Resources<br/></b>To address demands of different customer, Module system provides abundant resources at user&#8217;s<br/>use.<br/></p>
+<p>Notepad<br/>The system sets aside a 512-bytes memory (16 pages* 32 bytes) for user&#8217;s notepad, where data<br/>requiring power-off protection can be stored. The host can access the page by instructions of<br/>PS_WriteNotepad and PS_Read Notepad.<br/>Note: when write on one page of the pad, the entire 32 bytes will be written in wholly covering the<br/>original contents.<br/></p>
+<p>Buffer<br/>The module RAM resources are as follows:<br/>An ImageBuffer: ImageBuffer<br/>6 feature buffers: CharBuffer[1:6]<br/>All buffer contents are not saved without power.<br/></p>
+<p>Fingerprint Library<br/>Synstem sets aside a certain space within Flash for fingerprint template storage, that&#8217;s fingerprint<br/>library. Contents of the library remain at power off.<br/>Capacity of the library changes with the capacity of Flash, system will recognize the latter<br/>automatically. Fingerprint template&#8217;s storage in Flash is in sequential order. Assume the fingerprint<br/>capacity N, then the serial number of template in library is 0, 1, 2, 3 &#8230; N. User can only access<br/>library by template number.</p>
+
+</div></div>
+<div style="page-break-before:always; page-break-after:always"><div><p>- 4 - www.hzgrow.com<br/></p>
+<p><b>Baud rate control (Parameter Number: 4)<br/></b>The Parameter controls the UART communication speed of the Modul. Its value is an integer N,<br/></p>
+<p>N= [1/2/4/6/12]. Cooresponding baud rate is 9600*N bps&#12290;<br/></p>
+<p><b>Security Level (Parameter Number: 5)<br/></b>The Parameter controls the matching threshold value of fingerprint searching and matching.<br/>Security level is divided into 5 grades, and cooresponding value is 1, 2, 3, 4, 5. At level 1, FAR is<br/>the highest and FRR is the lowest; however at level 5, FAR is the lowest and FRR is the highest.<br/></p>
+<p><b>Data package length (Parameter Number: 6)<br/></b>The parameter decides the max length of the transferring data package when communicating with<br/>upper computer. Its value is 0, 1, 2, 3, corresponding to 32 bytes, 64 bytes, <b>128 bytes</b>, 256 bytes<br/>respectively.<br/></p>
+<p>System status register<br/>System status register indicates the current operation status of the Module. Its length is 1 word, and<br/>can be read via instruction <i>ReadSysPara. </i>Definition of the register is as follows:<br/></p>
+<p>Bit Num 15 4 3 2 1 0<br/>Description Reserved ImgBufStat PWD Pass Busy<br/></p>
+<p>Note:<br/>Busy&#65306;1 bit. 1: system is executing commands; 0: system is free;<br/>Pass&#65306;1 bit. 1: find the matching finger; 0: wrong finger;<br/>PWD&#65306;1 bit. 1: Verified device&#8217;s handshaking password.<br/>ImgBufStat&#65306;1 bit. 1: image buffer contains valid image.<br/></p>
+<p>Module password<br/>The default password of the module is 0x00000000. If the default password is modified, the first<br/>instruction of the upper computer to communicate with the module must be verify password. Only<br/>after the password verification is passed, the module will enter the normal working state and<br/>receive other instructions.<br/>The new modified password is stored in Flash and remains at power off.(the modified password<br/>cannot be obtained through the communication instruction. If forgotten by mistake, the module<br/>cannot communicate, please use with caution)<br/><i>Refer to instruction SetPwd and VfyPwd.<br/></i></p>
+<p>Module address<br/>Each module has an identifying address. When communicating with upper computer, each<br/>instruction/data is transferred in data package form, which contains the address item. Module<br/>system only responds to data package whose address item value is the same with its identifying<br/>address.<br/>The address length is 4 bytes, and its default factory value is 0xFFFFFFFF. User may modify the</p>
+
+</div></div>
+<div style="page-break-before:always; page-break-after:always"><div><p>- 5 - www.hzgrow.com<br/></p>
+<p>address via instruction <i>SetAdder. </i>The new modified address remains at power off.<br/></p>
+<p>Random number generator<br/>Module integrates a hardware 32-bit random number generator (RNG) (without seed). Via<br/>instruction <i>GetRandomCode</i>, system will generate a random number and upload it.<br/></p>
+<p>Features and templates<br/>The chip has an image buffer and six feature file buffers,all buffer contents are not saved after<br/></p>
+<p>power failure.<br/>A template can be composed of 2-6 feature files,the more characteristic files the composite<br/></p>
+<p>template has, the better the quality of the fingerprint template,<br/>At least 3 template synthesis features are recommended.</p>
+
+</div></div>
+<div style="page-break-before:always; page-break-after:always"><div><p>- 6 - www.hzgrow.com<br/></p>
+<p><b>IV Communication Protocol<br/></b>The protocol defines the data exchanging format when R503 series communicates with upper<br/>computer. The protocol and instruction sets apples for both UART and USB communication mode.<br/>For PC, USB interface is strongly recommended to improve the exchanging speed, especially in<br/>fingerprint scanning device.<br/></p>
+<p><b>4.1</b>Data package format<br/>When communicating, the transferring and receiving of command/data/result are all wrapped in<br/>data package format.<br/><b>Data package format<br/></b>Header Adder Package<br/></p>
+<p>identifier<br/>Package<br/>length<br/></p>
+<p>Package content<br/>(instuction/data/Parameter&#65289;<br/></p>
+<p>Checksum<br/></p>
+<p><b>Definition of Data package<br/>Name Symbol Length Description<br/></b>Header Start 2 bytes Fixed value of 0xEF01; High byte transferred first.<br/></p>
+<p>Adder ADDER 4 bytes<br/>Default value is 0xFFFFFFFF, which can be modified by<br/>command. High byte transferred first and at wrong adder value,<br/>module will reject to transfer.<br/></p>
+<p>Package<br/>identifier<br/></p>
+<p>PID 1 byte<br/></p>
+<p>01H Command packet;<br/></p>
+<p>02H<br/>Data packet; Data packet shall not appear alone in<br/>executing processs, must follow command packet or<br/>acknowledge packet.<br/></p>
+<p>07H Acknowledge packet;<br/></p>
+<p>08H End of Data packet.<br/></p>
+<p>Package<br/>length<br/></p>
+<p>LENGTH 2 bytes<br/>Refers to the length of package content (command packets and<br/>data packets) plus the length of Checksum( 2 bytes). Unit is<br/>byte. Max length is 256 bytes. And high byte is transferred first.<br/></p>
+<p>Package<br/>contents<br/></p>
+<p>DATA &#65293;<br/>It can be commands, data, command&#8217;s parameters,<br/>acknowledge result, etc. (fingerprint character value, template<br/>are all deemed as data);<br/></p>
+<p>Checksum SUM 2 bytes<br/>The arithmetic sum of package identifier, package length and<br/>all package contens. Overflowing bits are omitted. high byte is<br/>transferred first.<br/></p>
+<p>Check and acknowledgement of data package<br/><b>Note: Commands shall only be sent from upper computer to the Module, and the Module<br/>acknowledges the commands.</b></p>
+
+</div></div>
+<div style="page-break-before:always; page-break-after:always"><div><p>- 7 - www.hzgrow.com<br/></p>
+<p>Upon receipt of commands, Module will report the commands execution status and results to upper<br/>computer through acknowledge packet. Acknowledge packet has parameters and may also have<br/>following data packet. Upper computer can&#8217;t ascertain Module&#8217;s package receiving status or<br/>command execution results unless through acknowledge packet sent from Module. Acknowledge<br/>packet includes 1 byte confirmation code and maybe also the returned parameter.<br/><i>Confirmation code&#8217;s definition is :<br/></i>00h: commad execution complete;<br/>01h: error when receiving data package;<br/>02h: no finger on the sensor;<br/>03h: fail to enroll the finger;<br/>06h: fail to generate character file due to the over-disorderly fingerprint image;<br/>07h: fail to generate character file due to lackness of character point or over-smallness of<br/>fingerprint image<br/>08h: finger doesn&#8217;t match;<br/>09h: fail to find the matching finger;<br/>0Ah: fail to combine the character files;<br/>0Bh: addressing PageID is beyond the finger library;<br/>0Ch: error when reading template from library or the template is invalid;<br/>0Dh: error when uploading template;<br/>0Eh: Module can&#8217;t receive the following data packages.<br/>0Fh: error when uploading image;<br/>10h: fail to delete the template;<br/>11h: fail to clear finger library;<br/>13h: wrong password!<br/>15h: fail to generate the image for the lackness of valid primary image;<br/>18h: error when writing flash;<br/>19h: No definition error;<br/>1Ah: invalid register number;<br/>1Bh: incorrect configuration of register;<br/>1Ch: wrong notepad page number;<br/>1Dh: fail to operate the communication port;<br/>others: system reserved;</p>
+
+</div></div>
+<div style="page-break-before:always; page-break-after:always"><div><p>- 8 - www.hzgrow.com<br/></p>
+<p><b>V Module Instruction System<br/></b>R30X series provide 23 instructions. Through combination of different instructions, application<br/>program may realize muti finger authentication functions. All commands/data are transferred in<br/>package format. <i>Refer to 5.1 for the detailed information of package.<br/></i></p>
+<p>System-related instructions<br/><b>Verify passwoard VfyPwd<br/></b></p>
+<p>Description: Verify Module&#8217;s handshaking password. (Refer to 4.6 for details)<br/>Input Parameter: PassWord (4 bytes)<br/>Return Parameter: Confirmation code (1 byte)<br/>Instruction code: 13H<br/>Command (or instruction) package format:<br/></p>
+<p>2 bytes 4bytes 1 byte 2 bytes 1 byte 4 byte 2 bytes<br/>Header Module<br/></p>
+<p>address<br/>Package<br/>identifier<br/></p>
+<p>Instruction<br/>code<br/></p>
+<p>Password Checksum<br/></p>
+<p>0xEF01 xxxx 01H 07H 13H PassWord sum<br/>Acknowledge package format:<br/></p>
+<p>2 bytes 4bytes 1 byte 2 bytes 1 byte 2 bytes<br/>Header Module address Package<br/></p>
+<p>identifier<br/>Package<br/>Length<br/></p>
+<p>Confirmation<br/>code<br/></p>
+<p>Checksum<br/></p>
+<p>0xEF01 xxxx 07H 03H xxH sum<br/>Note: Confirmation code = 00H: Correct password;<br/></p>
+<p>Confirmation code = 01H: error when receiving package;<br/>Confirmation code = 13H: Wrong password;<br/></p>
+<p><b>Set password SetPwd<br/></b>Description: Set Module&#8217;s handshaking password. (Refer to 4.6 for details)<br/>Input Parameter: PassWord (4 bytes)<br/>Return Parameter: Confirmation code (1 byte)<br/>Instruction code: 12H<br/>Command (or instruction) package format:<br/></p>
+<p>2 bytes 4bytes 1 byte 2 bytes 1 byte 4 byte 2 bytes<br/>Header Module<br/></p>
+<p>address<br/>Package<br/>identifier<br/></p>
+<p>Package<br/>length<br/></p>
+<p>Instruction<br/>code<br/></p>
+<p>Password Checksum<br/></p>
+<p>0xEF01 xxxx 01H 07H 12H PassWord sum<br/>Acknowledge package format:<br/>2 bytes 4 byte 2 bytes 1 byte 2 bytes<br/>Header Module address Package length Confirmation<br/></p>
+<p>code<br/>Checksum<br/></p>
+<p>0xEF01 xxxx 03H xxH Sum<br/></p>
+<p>Note: Confirmation code=00H: password setting complete;</p>
+
+</div></div>
+<div style="page-break-before:always; page-break-after:always"><div><p>- 9 - www.hzgrow.com<br/></p>
+<p>Confirmation code=01H: error when receiving package;<br/></p>
+<p><b>Set Module address SetAdder<br/></b>Description: Set Module address. (Refer to 4.7 for adderss information)<br/>Input Parameter: None;<br/>Return Parameter: Confirmation code (1 byte)<br/>Instruction code: 15H<br/>Command (or instruction) package format:<br/></p>
+<p>2 bytes 4bytes 1 byte 2 bytes 1 byte 4 bytes 2 bytes<br/>Header Original<br/></p>
+<p>Module address<br/>Package<br/>identifier<br/></p>
+<p>Package<br/>length<br/></p>
+<p>Instruction<br/>code<br/></p>
+<p>New Module<br/>address<br/></p>
+<p>Checksum<br/></p>
+<p>0xEF01 xxxx 01H 07H 15H xxxx sum<br/>Acknowledge package format:<br/>2 bytes 4bytes 1 byte 2 bytes 1 byte 2 bytes<br/>Header New Module<br/></p>
+<p>address<br/>Package<br/>identifier<br/></p>
+<p>Package<br/>length<br/></p>
+<p>Confirmation<br/>code<br/></p>
+<p>Checksum<br/></p>
+<p>0xEF01 xxxx 07H 07H xxH Sum<br/>Note: Confirmation code=00H: address setting complete;<br/></p>
+<p>Confirmation code=01H: error when receiving package;<br/></p>
+<p><b>Set module system&#8217;s basic parameter SetSysPara<br/></b>Description: Operation parameter settings. (Refer to 4.4 for more information)<br/>Input Parameter: Parameter number;<br/>Return Parameter: Confirmation code (1 byte)<br/>Instruction code: 0eH<br/>Command (or instruction) package format:<br/></p>
+<p>2 bytes 4bytes 1 byte 2 bytes 1 byte 1byte 1byte 2 bytes<br/>Header Module<br/></p>
+<p>address<br/>Package<br/>identifier<br/></p>
+<p>Package<br/>length<br/></p>
+<p>Instruction<br/>code<br/></p>
+<p>Parameter<br/>number<br/></p>
+<p>Contents Checksum<br/></p>
+<p>0xEF01 Xxxx 01H 05H 0eH 4/5/6 xx sum<br/>Acknowledge package format:<br/>2 bytes 4bytes 1 byte 2 bytes 1 byte 2 bytes<br/>Header Module<br/></p>
+<p>address<br/>Package<br/>identifier<br/></p>
+<p>Package<br/>length<br/></p>
+<p>Confirmation<br/>code<br/></p>
+<p>Checksum<br/></p>
+<p>0xEF01 Xxxx 07H 03H xxH Sum<br/>Note: Confirmation code=00H: parameter setting complete;<br/></p>
+<p>Confirmation code=01H: error when receiving package;<br/>Confirmation code=1aH: wrong register number;<br/></p>
+<p><b>Port Control Control<br/></b>Description:<br/></p>
+<p>For UART protocol, it control the&#8220;on/off&#8221; of USB port;<br/>For USB protocol, it control the&#8220;on/off&#8221; of UART port;</p>
+
+</div></div>
+<div style="page-break-before:always; page-break-after:always"><div><p>- 10 - www.hzgrow.com<br/></p>
+<p>Input Parameter: control code<br/>Control code &#8221;0&#8221; means turns off the port;<br/>Control code &#8221;1&#8221; means turns on the port;<br/></p>
+<p>Return Parameter: confirmation code;<br/>Instruction code: 17H<br/>Command (or instruction) package format:<br/></p>
+<p>2 bytes 4bytes 1 byte 2 bytes 1 byte 1byte 2 bytes<br/>Header Chip<br/></p>
+<p>address<br/>Package<br/>identifier<br/></p>
+<p>Package<br/>length<br/></p>
+<p>Instruction<br/>code<br/></p>
+<p>Control<br/>code<br/></p>
+<p>Checksum<br/></p>
+<p>0xEF01 xxxx 01H 04H 17H 0/1 sum<br/>Acknowledge package format:<br/></p>
+<p>2 bytes 4bytes 1 byte 2 bytes 1 byte 2 bytes<br/>Header Chip<br/></p>
+<p>address<br/>Package<br/>identifier<br/></p>
+<p>Package<br/>length<br/></p>
+<p>Confirmation<br/>code<br/></p>
+<p>Checksum<br/></p>
+<p>0xEF01 xxxx 07H 03H xxH sum<br/>Note: Confirmation code=00H: Port operation complete;<br/></p>
+<p>Confirmation code=01H: error when receiving package;<br/>Confirmation code=1dH: fail to operate the communication port;<br/></p>
+<p><b>Read system Parameter ReadSysPara<br/></b>Description: Read Module&#8217;s status register and system basic configuration parameters;&#65288;Refer to 4.4<br/>for system configuration parameter and 4.5 for system status register&#65289;.<br/>Input Parameter&#65306;none<br/>Return Parameter&#65306;Confirmation code (1 byte) + basic parameter&#65288;16bytes&#65289;<br/>Instuction code: 0fH<br/>Command (or instruction) package format:<br/>2 bytes 4bytes 1 byte 2 bytes 1 byte 2 bytes<br/>Header Module<br/></p>
+<p>address<br/>Package<br/>identifier<br/></p>
+<p>Package length Instruction<br/>code<br/></p>
+<p>Checksum<br/></p>
+<p>0xEF01 Xxxx 01H 03H 0fH sum<br/>Acknowledge package format:<br/></p>
+<p>2 bytes 4bytes 1 byte 2 bytes 1 byte 16 bytes 2 bytes<br/>Header Module<br/></p>
+<p>address<br/>Package<br/>identifier<br/></p>
+<p>Package<br/>length<br/></p>
+<p>Confirmation<br/>code<br/></p>
+<p>Basic parameter<br/>list<br/></p>
+<p>Checksum<br/></p>
+<p>0xEF01 xxxx 07H 3+16 xxH See following<br/>table<br/></p>
+<p>sum<br/></p>
+<p>Note: Confirmation code=00H: read complete;<br/>Confirmation code=01H: error when receiving package;<br/></p>
+<p>Name Description Offset (word) Size (word)<br/>Status register Contents of system status register 0 1<br/></p>
+<p>System identifier code Fixed value: 0x0009 1 1<br/>Finger library size Finger library size 2 1<br/>Security level Security level (1, 2, 3, 4, 5) 3 1<br/>Device address 32-bit device address 4 2</p>
+
+</div></div>
+<div style="page-break-before:always; page-break-after:always"><div><p>- 11 - www.hzgrow.com<br/></p>
+<p>Data packet size Size code (0, 1, 2, 3) 6 1<br/>Baud settings N (baud = 9600*N bps) 7 1<br/></p>
+<p><b>Read valid template number TempleteNum<br/></b>Description: read the current valid template number of the Module<br/>Input Parameter: none<br/>Return Parameter: Confirmation code (1 byte)&#65292;template number:N<br/>Instuction code: 1dH<br/>Command (or instruction) package format:<br/>2 bytes 4bytes 1 byte 2 bytes 1 byte 2 bytes<br/>Header Module address Package<br/></p>
+<p>identifier<br/>Package<br/>length<br/></p>
+<p>Instruction<br/>code<br/></p>
+<p>Checksum<br/></p>
+<p>0xEF01 xxxx 01H 0003H 1dH 0021H<br/>Acknowledge package format:<br/></p>
+<p>2 bytes 4bytes 1 byte 2 bytes 1 byte 2 bytes 2 bytes<br/>Header Module<br/></p>
+<p>address<br/>Package<br/>identifier<br/></p>
+<p>Package<br/>length<br/></p>
+<p>Confirmation<br/>code<br/></p>
+<p>Template<br/>number<br/></p>
+<p>Checksum<br/></p>
+<p>0xEF01 xxxx 07H 5 xxH N sum<br/>Note: Confirmation code=0x00: read success;<br/></p>
+<p>Confirmation code=0x01: error when receiving package;<br/></p>
+<p><b>Read fingerprint template index table ReadIndexTable</b>&#65288;<b>0x1F</b>&#65289;<br/>Description: Read the fingerprint template index table of the module, read the index table of the<br/>fingerprint template up to 256 at a time (32 bytes)<br/>Input Parameter: Index page<br/>Return Parameter: Confirmation code+Fingerprint template index table<br/>Instuction code: 0x1F<br/>Command (or instruction) package format:<br/>2 bytes 4bytes 1 byte 2 bytes 1 byte 1 byte 2 bytes<br/>Header Module<br/></p>
+<p>address<br/>Package<br/>identifier<br/></p>
+<p>Package<br/>length<br/></p>
+<p>Instruction<br/>code<br/></p>
+<p>Index page Checksum<br/></p>
+<p>0xEF01 xxxx 0x01 0x0004 0x1F 0/1/2/3 Sum<br/>Index tables are read per page, 256 templates per page<br/>Index page 0 means to read 0 ~ 255 fingerprint template index table<br/>Index page 1 means to read 256 ~ 511 fingerprint template index table<br/>Index page 2 means to read 512 ~ 767 fingerprint template index table<br/>Index page 3 means to read 768 ~ 1023 fingerprint template index table<br/>Acknowledge package format:<br/></p>
+<p>2 bytes 4bytes 1 byte 2 bytes 1 byte 32 bytes 2 bytes<br/>Header Module<br/></p>
+<p>address<br/>Package<br/>identifier<br/></p>
+<p>Package<br/>length<br/></p>
+<p>Confirmation<br/>code<br/></p>
+<p>Index page Check-<br/>sum<br/></p>
+<p>0xEF01 xxxx 0x07 0x0023 X See the table below sum</p>
+
+</div></div>
+<div style="page-break-before:always; page-break-after:always"><div><p>- 12 - www.hzgrow.com<br/></p>
+<p>Note: Confirmation code=0x00: read complete;<br/>Confirmation code=0x01: error when receiving package;<br/></p>
+<p>Index table structure: every 8 bits is a group, and each group is output starting from the high<br/>position.<br/></p>
+<p>transport<br/>order<br/></p>
+<p>The output is sequential from low byte to high byte, and each byte starts at a high byte.<br/></p>
+<p>T[0] Template number 7 6 5 4 3 2 1 0<br/>Index table data 0/1 0/1 0/1 0/1 0/1 0/1 0/1 0/1<br/></p>
+<p>T[1] Template number 15 14 13 12 11 10 9 8<br/>Index table data 0/1 0/1 0/1 0/1 0/1 0/1 0/1 0/1<br/></p>
+<p>&#8230; &#8230;<br/>T[31] Template number 255 254 253 252 251 250 249 248<br/></p>
+<p>Index table data 0/1 0/1 0/1 0/1 0/1 0/1 0/1 0/1<br/>Data &quot;0&quot; in the index table means that there is no valid template in the corresponding position;&quot;1&quot;<br/></p>
+<p>means that there is a valid template in the corresponding position.<br/></p>
+<p>Fingerprint-processing instructions<br/><b>To collect finger image GenImg<br/></b></p>
+<p>Description: detecting finger and store the detected finger image in ImageBuffer while<br/>returning successfull confirmation code; If there is no finger, returned confirmation code<br/>would be &#8220;can&#8217;t detect finger&#8221;.<br/>Input Parameter: none<br/>Return Parameter: Confirmation code (1 byte)<br/>Instuction code: 01H<br/>Command (or instruction) package format:<br/></p>
+<p>2 bytes 4bytes 1 byte 2 bytes 1 byte 2 bytes<br/>Header Module<br/></p>
+<p>address<br/>Package<br/>identifier<br/></p>
+<p>Package length Instruction<br/>code<br/></p>
+<p>Checksum<br/></p>
+<p>0xEF01 Xxxx 01H 03H 01H 05H<br/>Acknowledge package format:<br/></p>
+<p>2 bytes 4bytes 1 byte 2 bytes 1 byte 2 bytes<br/>Header Module<br/></p>
+<p>address<br/>Package<br/>identifier<br/></p>
+<p>Package<br/>length<br/></p>
+<p>Confirmation<br/>code<br/></p>
+<p>Checksum<br/></p>
+<p>0xEF01 Xxxx 07H 03H xxH Sum<br/>Note: Confirmation code=00H: finger collection successs;<br/></p>
+<p>Confirmation code=01H: error when receiving package;<br/>Confirmation code=02H: can&#8217;t detect finger;<br/>Confirmation code=03H: fail to collect finger;</p>
+
+</div></div>
+<div style="page-break-before:always; page-break-after:always"><div><p>- 13 - www.hzgrow.com<br/></p>
+<p><b>Upload image UpImage<br/></b>Description: to upload the image in Img_Buffer to upper computer. Refer to 1.1.1 for more about<br/>image buffer.<br/>Input Parameter: none<br/>Return Parameter: Confirmation code (1 byte)<br/>Instuction code: 0aH<br/>Command (or instruction) package format:<br/>2 bytes 4bytes 1 byte 2 bytes 1 byte 2 bytes<br/>Header Module address Package<br/></p>
+<p>identifier<br/>Package length Instruction code Checksum<br/></p>
+<p>0xEF01 Xxxx 01H 03H 0aH 000eH<br/>Acknowledge package format:<br/>2 bytes 4bytes 1 byte 2 bytes 1 byte 2 bytes<br/>Header Module<br/></p>
+<p>address<br/>Package<br/>identifier<br/></p>
+<p>Package<br/>length<br/></p>
+<p>Confirmation<br/>code<br/></p>
+<p>Checksum<br/></p>
+<p>0xEF01 Xxxx 07H 03H xxH sum<br/>Note 1&#65306; Confirmation code=00H: ready to transfer the following data packet;<br/></p>
+<p>Confirmation code=01H: error when receiving package;<br/>Confirmation code=0fH: fail to transfer the following data packet;<br/></p>
+<p>2&#65306;Module shall transfer the following data packet after responding to the upper<br/>computer.<br/></p>
+<p>Data package format:<br/>2 bytes 4bytes 1 byte 2 bytes N byte 2 bytes<br/>Header Module<br/></p>
+<p>address<br/>Package identifier Package<br/></p>
+<p>length<br/>Package<br/>content<br/></p>
+<p>Checksum<br/></p>
+<p>0xEF01 xxxx 0x02- have<br/>following packet<br/>0x08 - end packet<br/></p>
+<p>N+2 Image data sum<br/></p>
+<p><b>Download the image DownImage<br/></b>Description: to download image from upper computer to Img_Buffer. Refer to 1.1.1 for more about<br/>the image buffer.<br/>Input Parameter: none<br/>Return Parameter: Confirmation code (1 byte)<br/>Instuction code: 0bH<br/>Command (or instruction) package format:<br/>2 bytes 4bytes 1 byte 2 bytes 1 byte 2 bytes<br/>Header Module address Package<br/></p>
+<p>identifier<br/>Package<br/>length<br/></p>
+<p>Instruction<br/>code<br/></p>
+<p>Checksum<br/></p>
+<p>0xEF01 Xxxx 01H 03H 0bH 000fH<br/></p>
+<p>Acknowledge package format:</p>
+
+</div></div>
+<div style="page-break-before:always; page-break-after:always"><div><p>- 14 - www.hzgrow.com<br/></p>
+<p>2 bytes 4bytes 1 byte 2 bytes 1 byte 2 bytes<br/>Header Module<br/></p>
+<p>address<br/>Package<br/>identifier<br/></p>
+<p>Package<br/>length<br/></p>
+<p>Confirmation<br/>code<br/></p>
+<p>Checksum<br/></p>
+<p>0xEF01 Xxxx 07H 03H xxH sum<br/>Note: 1&#65306;Confirmation code=00H: ready to transfer the following data packet;<br/></p>
+<p>Confirmation code=01H: error when receiving package;<br/>Confirmation code=0eH: fail to transfer the following data packet;<br/></p>
+<p>2&#65306;Module shall transfer the following data packet after responding to the upper computer.<br/>Data package length must be 64, 128, or 256&#12290;<br/>Data package format:<br/></p>
+<p>2 bytes 4bytes 1 byte 2 bytes N byte 2 bytes<br/>Header Module<br/></p>
+<p>address<br/>Package identifier Package<br/></p>
+<p>length<br/>Package<br/>content<br/></p>
+<p>Checksum<br/></p>
+<p>0xEF01 xxxx 0x02- have<br/>following packet<br/>0x08 - end packet<br/></p>
+<p>N+2 Image data sum<br/></p>
+<p><b>To generate character file from image Img2Tz<br/></b>Description: to generate character file from the original finger image in ImageBuffer and<br/>store the file in CharBuffer1 or CharBuffer2.<br/>Input Parameter: BufferID (character file buffer number)<br/>Return Parameter: Confirmation code (1 byte)<br/>Instuction code: 02H<br/>Command (or instruction) package format:<br/></p>
+<p>2 bytes 4bytes 1 byte 2 bytes 1 byte 1 byte 2 bytes<br/>Header Module<br/></p>
+<p>address<br/>Package<br/>identifier<br/></p>
+<p>Package<br/>length<br/></p>
+<p>Instruction<br/>code<br/></p>
+<p>Buffer<br/>number<br/></p>
+<p>Checksum<br/></p>
+<p>0xEF01 xxxx 01H 04H 02H BufferID sum<br/>Note: BufferID of CharBuffer1 and CharBuffer2 are 1h and 2h respectively. Other values<br/>(except 1h, 2h) would be processed as CharBuffer2.<br/>Acknowledge package format:<br/></p>
+<p>2 bytes 4bytes 1 byte 2 bytes 1 byte 2 bytes<br/></p>
+<p>Header Module<br/>address<br/></p>
+<p>Package<br/>identifier<br/></p>
+<p>Package length Confirmation<br/>code<br/></p>
+<p>Checksum<br/></p>
+<p>0xEF01 xxxx 07H 03H XxH sum<br/>Note: Confirmation code=00H: generate character file complete;<br/></p>
+<p>Confirmation code=01H: error when receiving package;<br/>Confirmation code=06H: fail to generate character file due to the over-disorderly<br/>fingerprint image;<br/>Confirmation code=07H: fail to generate character file due to lackness of character<br/>point or over-smallness of fingerprint image;<br/>Confirmation code=15H: fail to generate the image for the lackness of valid primary<br/>image;</p>
+
+</div></div>
+<div style="page-break-before:always; page-break-after:always"><div><p>- 15 - www.hzgrow.com<br/></p>
+<p><b>To generate template RegModel<br/></b>Description: To combine information of character files from CharBuffer1 and CharBuffer2 and<br/>generate a template which is stroed back in both CharBuffer1 and CharBuffer2.<br/>Input Parameter&#65306;none<br/>Return Parameter&#65306;Confirmation code (1 byte)<br/>Instuction code: 05H<br/>Command (or instruction) package format:<br/></p>
+<p>2 bytes 4bytes 1 byte 2 bytes 1 byte 2 bytes<br/>Header Module<br/></p>
+<p>address<br/>Package<br/>identifier<br/></p>
+<p>Package<br/>length<br/></p>
+<p>Instruction<br/>code<br/></p>
+<p>Checksum<br/></p>
+<p>0xEF01 xxxx 01H 03H 05H 09H<br/>Acknowledge package format:<br/></p>
+<p>2 bytes 4bytes 1 byte 2 bytes 1 byte 2 bytes<br/>Header Module<br/></p>
+<p>address<br/>Package<br/>identifier<br/></p>
+<p>Package<br/>length<br/></p>
+<p>Confirmation<br/>code<br/></p>
+<p>Checksum<br/></p>
+<p>0xEF01 xxxx 07H 03H xxH sum<br/>Note: Confirmation code=00H: operation success;<br/></p>
+<p>Confirmation code=01H: error when receiving package;<br/>Confirmation code=0aH: fail to combine the character files. That&#8217;s, the character files<br/>don&#8217;t belong to one finger.<br/></p>
+<p><b>To upload character or template UpChar<br/></b>Description: to upload the character file or template of CharBuffer1/CharBuffer2 to upper<br/>computer;<br/>Input Parameter: BufferID (Buffer number)<br/>Return Parameter: Confirmation code (1 byte)<br/>Instuction code: 08H<br/>Command (or instruction) package format:<br/></p>
+<p>2 bytes 4bytes 1 byte 2 bytes 1 byte 1 byte 2 bytes<br/>Header Module<br/></p>
+<p>address<br/>Package<br/>identifier<br/></p>
+<p>Package<br/>length<br/></p>
+<p>Instruction<br/>code<br/></p>
+<p>Buffer<br/>number<br/></p>
+<p>Checksum<br/></p>
+<p>0xEF01 xxxx 01H 04H 08H BufferID sum<br/>Note: BufferID of CharBuffer1 and CharBuffer2 are 1h and 2h respectively. Other values<br/>(except 1h, 2h) would be processed as CharBuffer2.<br/></p>
+<p>Acknowledge package format:<br/>2 bytes 4bytes 1 byte 2 bytes 1 byte 2 bytes<br/>Header Module<br/></p>
+<p>address<br/>Package<br/>identifier<br/></p>
+<p>Package<br/>length<br/></p>
+<p>Confirmation<br/>code<br/></p>
+<p>Checksum<br/></p>
+<p>0xEF01 xxxx 07H 03H xxH sum<br/>Note 1: Confirmation code=00H: ready to transfer the following data packet;<br/></p>
+<p>Confirmation code=01H: error when receiving package;<br/>Confirmation code=0dH: error when uploading template;<br/></p>
+<p>2: Module shall transfer following data packet after responding to the upper computer.;<br/>3: The instruction doesn&#8217;t affect buffer contents.</p>
+
+</div></div>
+<div style="page-break-before:always; page-break-after:always"><div><p>- 16 - www.hzgrow.com<br/></p>
+<p>Data package format:<br/>2 bytes 4bytes 1 byte 2 bytes N byte 2 bytes<br/>Header Module<br/></p>
+<p>address<br/>Package identifier Package<br/></p>
+<p>length<br/>Package<br/>content<br/></p>
+<p>Checksum<br/></p>
+<p>0xEF01 xxxx 0x02- have<br/>following packet<br/>0x08 - end packet<br/></p>
+<p>N+2 Template<br/>data<br/></p>
+<p>sum<br/></p>
+<p><b>Download template DownChar<br/></b>Description: upper computer download template to module buffer<br/>Input Parameter: CharBufferID (Buffer number)<br/>Return Parameter: Confirmation code (1 byte)<br/>Instuction code: 09H<br/>Command (or instruction) package format:<br/></p>
+<p>2 bytes 4bytes 1 byte 2 bytes 1 byte 1 byte 2 bytes<br/>Header Module<br/></p>
+<p>address<br/>Package<br/>identifier<br/></p>
+<p>Package<br/>length<br/></p>
+<p>Instruction<br/>code<br/></p>
+<p>Buffer number Checksum<br/></p>
+<p>0xEF01 xxxx 01H 04H 09H CharBufferID sum<br/>Note: BufferID of CharBuffer1 and CharBuffer2 are 1h and 2h respectively.<br/>Acknowledge package format:<br/></p>
+<p>2 bytes 4bytes 1 byte 2 bytes 1 byte 2 bytes<br/>Header Module<br/></p>
+<p>address<br/>Package<br/>identifier<br/></p>
+<p>Package<br/>length<br/></p>
+<p>Confirmation<br/>code<br/></p>
+<p>Checksum<br/></p>
+<p>0xEF01 xxxx 07H 03H xxH sum<br/>Note 1: Confirmation code=00H: ready to transfer the following data packet;<br/></p>
+<p>Confirmation code=01H: error when receiving package;<br/>Confirmation code=0eH: can not receive the following data packet<br/></p>
+<p>Data package format:<br/>2 bytes 4bytes 1 byte 2 bytes N byte 2 bytes<br/>Header Module<br/></p>
+<p>address<br/>Package identifier Package<br/></p>
+<p>length<br/>Package<br/>content<br/></p>
+<p>Checksum<br/></p>
+<p>0xEF01 xxxx 0x02- have<br/>following packet<br/>0x08 - end packet<br/></p>
+<p>N+2 Template<br/>data<br/></p>
+<p>sum<br/></p>
+<p>Note2: Module shall transfer following data packet after responding to the upper computer.;<br/>3: The instruction doesn&#8217;t affect buffer contents.<br/></p>
+<p><b>To store template Store<br/></b>Description: to store the template of specified buffer (Buffer1/Buffer2) at the designated location of<br/>Flash library.<br/>Input Parameter: BufferID(buffer number), PageID&#65288;Flash location of the template, two bytes with<br/>high byte front and low byte behind&#65289;<br/>Return Parameter: Confirmation code (1 byte)</p>
+
+</div></div>
+<div style="page-break-before:always; page-break-after:always"><div><p>- 17 - www.hzgrow.com<br/></p>
+<p>Instuction code: 06H<br/>Command (or instruction) package format:<br/>2 bytes 4bytes 1 byte 2 bytes 1 byte 1 byte 2 bytes 2 bytes<br/>Header Module<br/></p>
+<p>address<br/>Package<br/>identifier<br/></p>
+<p>Package<br/>length<br/></p>
+<p>Instruction<br/>code<br/></p>
+<p>buffer<br/>number<br/></p>
+<p>Location<br/>number<br/></p>
+<p>Checksum<br/></p>
+<p>0xEF01 xxxx 01H 06H 06H BufferID PageID sum<br/>Note: BufferID of CharBuffer1 and CharBuffer2 are 1h and 2h respectively. Other values<br/>(except 1h, 2h) would be processed as CharBuffer2.<br/></p>
+<p>Acknowledge package format:<br/>2 bytes 4bytes 1 byte 2 bytes 1 byte 2 bytes<br/>Header Module<br/></p>
+<p>address<br/>Package<br/>identifier<br/></p>
+<p>Package<br/>length<br/></p>
+<p>Confirmation<br/>code<br/></p>
+<p>Checksum<br/></p>
+<p>0xEF01 Xxxx 07H 03H xxH sum<br/>Note: Confirmation code=00H: storage success;<br/></p>
+<p>Confirmation code=01H: error when receiving package;<br/>Confirmation code=0bH: addressing PageID is beyond the finger library;<br/>Confirmation code=18H: error when writing Flash.<br/></p>
+<p><b>To read template from Flash library LoadChar<br/></b>Description: to load template at the specified location (PageID) of Flash library to template buffer<br/>CharBuffer1/CharBuffer2<br/>Input Parameter: BufferID(buffer number), PageID (Flash location of the template, two bytes with<br/>high byte front and low byte behind)&#12290;<br/>Return Parameter: Confirmation code (1 byte)<br/>Instuction code: 07H<br/>Command (or instruction) package format:<br/></p>
+<p>2 bytes 4bytes 1 byte 2 bytes 1 byte 1 byte 2 bytes 2 bytes<br/>Header Module<br/></p>
+<p>address<br/>Package<br/>identifier<br/></p>
+<p>Package<br/>length<br/></p>
+<p>Instruction<br/>code<br/></p>
+<p>buffer<br/>number<br/></p>
+<p>Page<br/>number<br/></p>
+<p>Checksum<br/></p>
+<p>0xEF01 xxxx 01H 06H 07H BufferID PageID sum<br/>Note: BufferID of CharBuffer1 and CharBuffer2 are 1h and 2h respectively. Other values (except<br/>1h, 2h) would be processed as CharBuffer2.<br/>Acknowledge package format:<br/>2 bytes 4bytes 1 byte 2 bytes 1 byte 2 bytes<br/>Header Module address Package<br/></p>
+<p>identifier<br/>Package<br/>length<br/></p>
+<p>Confirmation<br/>code<br/></p>
+<p>Checksum<br/></p>
+<p>0xEF01 xxxx 07H 03H XxH sum<br/>Note: Confirmation code=00H: load success;<br/></p>
+<p>Confirmation code=01H: error when receiving package;<br/>Confirmation code=0cH: error when reading template from library or the readout template is<br/>invalid;<br/>Confirmation code=0BH: addressing PageID is beyond the finger library;</p>
+
+</div></div>
+<div style="page-break-before:always; page-break-after:always"><div><p>- 18 - www.hzgrow.com<br/></p>
+<p><b>To delete template DeletChar<br/></b>Description: to delete a segment (N) of templates of Flash library started from the specified<br/>location (or PageID);<br/>Input Parameter: PageID (template number in Flash), N (number of templates to be deleted)<br/>Return Parameter: Confirmation code (1 byte)<br/>Instuction code: 0cH<br/>Command (or instruction) package format:<br/></p>
+<p>2 bytes 4bytes 1 byte 2 bytes 1 byte 2 bytes 2bytes 2 bytes<br/>Header Module<br/></p>
+<p>address<br/>Package<br/>identifier<br/></p>
+<p>Package<br/>length<br/></p>
+<p>Instruction<br/>code<br/></p>
+<p>Page<br/>number<br/></p>
+<p>number of<br/>templates to<br/>be deleted<br/></p>
+<p>Checksum<br/></p>
+<p>0xEF01 Xxxx 01H 07H 0cH PageID N sum<br/>Acknowledge package format:<br/>2 bytes 4bytes 1 byte 2 bytes 1 byte 2 bytes<br/>Header Module<br/></p>
+<p>address<br/>Package identifier Package<br/></p>
+<p>length<br/>Confirmation<br/></p>
+<p>code<br/>Checksum<br/></p>
+<p>0xEF01 Xxxx 07H 03H xxH sum<br/>Note: Confirmation code=00H: delete success;<br/></p>
+<p>Confirmation code=01H: error when receiving package;<br/>Confirmation code=10H: faile to delete templates;<br/></p>
+<p><b>To empty finger library Empty<br/></b>Description: to delete all the templates in the Flash library<br/>Input Parameter: none<br/>Return Parameter: Confirmation code (1 byte)<br/>Instuction code: 0dH<br/>Command (or instruction) package format:<br/>2 bytes 4bytes 1 byte 2 bytes 1 byte 2 bytes<br/>Header Module<br/></p>
+<p>address<br/>Package<br/>identifier<br/></p>
+<p>Package<br/>length<br/></p>
+<p>Instruction<br/>code<br/></p>
+<p>Checksum<br/></p>
+<p>0xEF01 Xxxx 01H 03H 0dH 0011H<br/>Acknowledge package format:<br/>2 bytes 4bytes 1 byte 2 bytes 1 byte 2 bytes<br/>Header Module<br/></p>
+<p>address<br/>Package<br/>identifier<br/></p>
+<p>Package<br/>length<br/></p>
+<p>Confirmation<br/>code<br/></p>
+<p>Checksum<br/></p>
+<p>0xEF01 Xxxx 07H 03H xxH sum<br/>Note: Confirmation code=00H: empty success;<br/></p>
+<p>Confirmation code=01H: error when receiving package;<br/>Confirmation code=11H: fail to clear finger library;</p>
+
+</div></div>
+<div style="page-break-before:always; page-break-after:always"><div><p>- 19 - www.hzgrow.com<br/></p>
+<p><b>To carry out precise matching of two finger templates Match<br/></b>Description: to carry out precise matching of templates from CharBuffer1 and CharBuffer2,<br/>providing matching results.<br/>Input Parameter: none<br/>Return Parameter: Confirmation code (1 byte)&#65292;matching score.<br/>Instuction code: 03H<br/>Command (or instruction) package format:<br/></p>
+<p>2 bytes 4bytes 1 byte 2 bytes 1 byte 2 bytes<br/>Header Module<br/></p>
+<p>address<br/>Package<br/>identifier<br/></p>
+<p>Package length Instruction code Checksum<br/></p>
+<p>0xEF01 Xxxx 01H 03H 03H 07H<br/>Acknowledge package format:<br/>2 bytes 4bytes 1 byte 2 bytes 1 byte 2 bytes 2 bytes<br/>Header Module<br/></p>
+<p>address<br/>Package<br/>identifier<br/></p>
+<p>Package<br/>length<br/></p>
+<p>Confirmation<br/>code<br/></p>
+<p>Matching<br/>score<br/></p>
+<p>Checksum<br/></p>
+<p>0xEF01 Xxxx 07H 05H XxH XxH sum<br/>Note 1: Confirmation code=00H: templates of the two buffers are matching!<br/></p>
+<p>Confirmation code=01H: error when receiving package;<br/>Confirmation code=08H: templates of the two buffers aren&#8217;t matching;<br/></p>
+<p>2: The instruction doesn&#8217;t affect the contents of the buffers.<br/></p>
+<p><b>To search finger library Search<br/></b>Description: to search the whole finger library for the template that matches the one in CharBuffer1<br/>or CharBuffer2. When found, PageID will be returned.<br/>Input Parameter: BufferID, StartPage (searching start address), PageNum&#65288;searching numbers&#65289;<br/>Return Parameter: Confirmation code (1 byte), PageID (matching templates location&#65289;<br/>Instuction code: 04H<br/>Command (or instruction) package format:<br/>2 bytes 4bytes 1 byte 2 bytes 1 byte 1 byte 2 bytes 2 bytes 2 bytes<br/></p>
+<p>Header Module<br/>address<br/></p>
+<p>Package<br/>identifie<br/></p>
+<p>r<br/></p>
+<p>Package<br/>length<br/></p>
+<p>Instructio<br/>n code<br/></p>
+<p>buffer<br/>number<br/></p>
+<p>Parameter Parameter Checks<br/>um<br/></p>
+<p>0xEF01 xxxx 01H 08H 04H BufferID StartPage PageNum sum<br/>Note: BufferID of CharBuffer1 and CharBuffer2 are 1h and 2h respectively. Other values<br/>(except 1h, 2h) would be processed as CharBuffer2.<br/></p>
+<p>Acknowledge package format:<br/>2 bytes 4bytes 1 byte 2 bytes 1 byte 2 bytes 2 bytes 2 bytes<br/>Header Module<br/></p>
+<p>address<br/>Package<br/>identifier<br/></p>
+<p>Package<br/>length<br/></p>
+<p>Confirmation<br/>code<br/></p>
+<p>Page Score Checksum<br/></p>
+<p>0xEF01 xxxx 07H 7 xxH PageID MatchScore sum<br/>Note 1: Confirmation code=00H: found the matching finer;<br/></p>
+<p>Confirmation code=01H: error when receiving package;<br/>Confirmation code=09H: No matching in the library (both the PageID and<br/>matching score are 0);</p>
+
+</div></div>
+<div style="page-break-before:always; page-break-after:always"><div><p>- 20 - www.hzgrow.com<br/></p>
+<p>2: The instruction doesn&#8217;t affect the contents of the buffers.<br/></p>
+<p><b>Fingerprint image collection extension command GetImageEx(0x28)<br/></b>Description: Detect the finger, record the fingerprint image and store it in ImageBuffer, return it<br/>and record the successful confirmation code;If no finger is detected, return no finger confirmation<br/>code(the module responds quickly to each instruction,therefore, for continuous detection, cycle<br/>processing is required, which can be limited to the number of cycles or the total time).<br/><b>Differences between GetImageEx and the GetImage:<br/>GetImage: return the confirmation code 0x00 when the image quality is too bad (image<br/>collection succeeded)<br/>GetImageEx: return the confirmation code 0x07 when the image quality is too bad (poor<br/>collection quality)<br/></b>Input Parameter: none<br/>Return Parameter: Confirmation code<br/>Instuction code: 0x28<br/>Command (or instruction) package format:<br/></p>
+<p>2 bytes 4bytes 1 byte 2 bytes 1 byte 2 bytes<br/>Header Module<br/></p>
+<p>address<br/>Package<br/>identifier<br/></p>
+<p>Package length Instruction code Checksum<br/></p>
+<p>0xEF01 xxxx 0x01 0x0003 0x28 sum<br/>Acknowledge package format:<br/>2 bytes 4bytes 1 byte 2 bytes 1 byte 2 bytes<br/>Header Module<br/></p>
+<p>address<br/>Package<br/>identifier<br/></p>
+<p>Package<br/>length<br/></p>
+<p>Confirmation<br/>code<br/></p>
+<p>Checksum<br/></p>
+<p>0xEF01 xxxx 0x07 0x0003 X sum<br/>Note 1: Confirmation code=0x00: read success<br/></p>
+<p>Confirmation code=0x01: error when receiving package;<br/>Confirmation code=0x02: no fingers on the sensor;<br/>Confirmation code=0x03: unsuccessful entry<br/>Confirmation code=0x07: poor image quality;<br/></p>
+<p><b>Cancel instruction Cancel(0x30)<br/></b>Description: Cancel instruction<br/>Input Parameter: none<br/>Return Parameter: Confirmation code<br/>Instuction code: 0x30<br/>Command (or instruction) package format:<br/></p>
+<p>2 bytes 4bytes 1 byte 2 bytes 1 byte 2 bytes<br/>Header Module<br/></p>
+<p>address<br/>Package<br/>identifier<br/></p>
+<p>Package length Instruction code Checksum<br/></p>
+<p>0xEF01 xxxx 0x01 0x0003 0x30 sum</p>
+
+</div></div>
+<div style="page-break-before:always; page-break-after:always"><div><p>- 21 - www.hzgrow.com<br/></p>
+<p>Acknowledge package format:<br/>2 bytes 4bytes 1 byte 2 bytes 1 byte 2 bytes<br/>Header Module<br/></p>
+<p>address<br/>Package<br/>identifier<br/></p>
+<p>Package<br/>length<br/></p>
+<p>Confirmation<br/>code<br/></p>
+<p>Checksum<br/></p>
+<p>0xEF01 xxxx 0x07 0x0003 X sum<br/>Note 1: Confirmation code=0x00: cancel setting successful<br/></p>
+<p>Confirmation code=other: cancel setting failed<br/></p>
+<p><b>HandShake HandShake</b>&#65288;<b>0x40</b>&#65289;<br/>Description: Send handshake instructions to the module. If the module works normally, the<br/>confirmation code 0x00 will be returned. The upper computer can continue to send instructions to<br/>the module.If the confirmation code is other or no reply, it means that the device is abnormal.<br/>Input Parameter: none<br/>Return Parameter: Confirmation code<br/>Instuction code: 0x40<br/>Command (or instruction) package format:<br/></p>
+<p>2 bytes 4bytes 1 byte 2 bytes 1 byte 2 bytes<br/>Header Module<br/></p>
+<p>address<br/>Package<br/>identifier<br/></p>
+<p>Package length Instruction code Checksum<br/></p>
+<p>0xEF01 xxxx 0x01 0x0003 0x40 sum<br/></p>
+<p>Acknowledge package format:<br/>2 bytes 4bytes 1 byte 2 bytes 1 byte 2 bytes<br/>Header Module<br/></p>
+<p>address<br/>Package<br/>identifier<br/></p>
+<p>Package<br/>length<br/></p>
+<p>Confirmation<br/>code<br/></p>
+<p>Checksum<br/></p>
+<p>0xEF01 xxxx 0x07 0x0003 X sum<br/>Note 1: Confirmation code=0x00: the device is normal and can receive instructions;<br/></p>
+<p>Confirmation code=other: the device is abnormal.<br/>In addition, after the module is powered on, 0x55 will be automatically sent as a handshake sign. After<br/>the single-chip microcomputer detects 0x55, it can immediately send commands to enter the working<br/>state.<br/></p>
+<p><b>CheckSensor CheckSensor (0x36)<br/></b>Description: Check whether the sensor is normal<br/>Input Parameter: none<br/>Return Parameter: Confirmation code<br/>Instuction code: 0x36<br/>Command (or instruction) package format:<br/></p>
+<p>2 bytes 4bytes 1 byte 2 bytes 1 byte 2 bytes<br/>Header Module<br/></p>
+<p>address<br/>Package<br/>identifier<br/></p>
+<p>Package length Instruction code Checksum<br/></p>
+<p>0xEF01 xxxx 0x01 0x0003 0x36 sum</p>
+
+</div></div>
+<div style="page-break-before:always; page-break-after:always"><div><p>- 22 - www.hzgrow.com<br/></p>
+<p>Acknowledge package format:<br/>2 bytes 4bytes 1 byte 2 bytes 1 byte 2 bytes<br/>Header Module<br/></p>
+<p>address<br/>Package<br/>identifier<br/></p>
+<p>Package<br/>length<br/></p>
+<p>Confirmation<br/>code<br/></p>
+<p>Checksum<br/></p>
+<p>0xEF01 xxxx 0x07 0x0003 X sum<br/>Note 1: Confirmation code=0x00: the sensor is normal;<br/></p>
+<p>Confirmation code=0x29: the sensor is abnormal.<br/></p>
+<p><b>Get the algorithm library version GetAlgVer (0x39)<br/></b>Description: Get the algorithm library version<br/>Input Parameter: none<br/>Return Parameter: Confirmation code+AlgVer(algorithm library version string)<br/>Instuction code: 0x39<br/>Command (or instruction) package format:<br/></p>
+<p>2 bytes 4bytes 1 byte 2 bytes 1 byte 2 bytes<br/>Header Module<br/></p>
+<p>address<br/>Package<br/>identifier<br/></p>
+<p>Package length Instruction code Checksum<br/></p>
+<p>0xEF01 xxxx 0x01 0x0003 0x39 sum<br/></p>
+<p>Acknowledge package format:<br/>2 bytes 4bytes 1 byte 2 bytes 1 byte 32 byte 2 bytes<br/>Header Module<br/></p>
+<p>address<br/>Package<br/>identifier<br/></p>
+<p>Package<br/>length<br/></p>
+<p>Confirmation<br/>code<br/></p>
+<p>Random<br/>number<br/></p>
+<p>Checksum<br/></p>
+<p>0xEF01 xxxx 0x07 0x0023 X AlgVer sum<br/>Note 1: Confirmation code=0x00: success;<br/></p>
+<p>Confirmation code=0x01: error when receiving package;<br/></p>
+<p><b>Get the firmware version GetFwVer (0x3A)<br/></b>Description: Get the firmware version<br/>Input Parameter: none<br/>Return Parameter: Confirmation code+FwVer(Firmware version string)<br/>Instuction code: 0x3A<br/>Command (or instruction) package format:<br/></p>
+<p>2 bytes 4bytes 1 byte 2 bytes 1 byte 2 bytes<br/>Header Module<br/></p>
+<p>address<br/>Package<br/>identifier<br/></p>
+<p>Package length Instruction code Checksum<br/></p>
+<p>0xEF01 xxxx 0x01 0x0003 0x3A sum<br/>Acknowledge package format:<br/>2 bytes 4bytes 1 byte 2 bytes 1 byte 32 byte 2 bytes<br/>Header Module<br/></p>
+<p>address<br/>Package<br/>identifier<br/></p>
+<p>Package<br/>length<br/></p>
+<p>Confirmation<br/>code<br/></p>
+<p>Random<br/>number<br/></p>
+<p>Checksum<br/></p>
+<p>0xEF01 xxxx 0x07 0x0023 X FwVer sum<br/>Note 1: Confirmation code=0x00: success;</p>
+
+</div></div>
+<div style="page-break-before:always; page-break-after:always"><div><p>- 23 - www.hzgrow.com<br/></p>
+<p>Confirmation code=0x01: error when receiving package;<br/></p>
+<p><b>Read product information ReadProdInfo (0x3C)<br/></b>Description: Read product information<br/>Input Parameter: none<br/>Return Parameter: Confirmation code+ProdInfo(product information)<br/>Instuction code: 0x3C<br/>Command (or instruction) package format:<br/></p>
+<p>2 bytes 4bytes 1 byte 2 bytes 1 byte 2 bytes<br/>Header Module<br/></p>
+<p>address<br/>Package<br/>identifier<br/></p>
+<p>Package length Instruction code Checksum<br/></p>
+<p>0xEF01 xxxx 0x01 0x0003 0x3C sum<br/>Acknowledge package format:<br/>2 bytes 4bytes 1 byte 2 bytes 1 byte 46 byte 2 bytes<br/>Header Module<br/></p>
+<p>address<br/>Package<br/>identifier<br/></p>
+<p>Package<br/>length<br/></p>
+<p>Confirmation<br/>code<br/></p>
+<p>Product<br/>information<br/></p>
+<p>Checksu<br/>m<br/></p>
+<p>0xEF01 xxxx 0x07 0x0031 X ProdInfo sum<br/>Note 1: Confirmation code=0x00: success;<br/></p>
+<p>Confirmation code=0x01: error when receiving package;<br/></p>
+<p>Product information: store in the following order.For Numbers, the high byte comes first.For a<br/>string, the insufficient part is 0x00.<br/></p>
+<p><b>Code Bytes Meaning<br/></b>PARAM_FPM_MODEL 16 module type, ASCII<br/>PARAM_BN 4 Module batch number, ASCII<br/>PARAM_SN 8 Module serial number, ASCII<br/></p>
+<p>PARAM_HW_VER 2<br/>For the hardware version, the first byte represents the<br/>main version and the second byte represents the<br/>sub-version<br/></p>
+<p>PARAM_FPS_MODEL 8 Sensor type, ASCII<br/>PARAM_FPS_WIDTH 2 Sensor image width<br/>PARAM_FPS_HEIGHT 2 Sensor image height<br/>PARAM_TMPL_SIZE 2 Template size<br/>PARAM_TMPL_TOTAL 2 Fingerprint database size<br/></p>
+<p><b>Soft reset SoftRst (0x3D)<br/></b>Description: Send soft reset instruction to the module. If the module works normally, return<br/>confirmation code 0x00, and then perform reset operation.<br/>Input Parameter: none<br/>Return Parameter: Confirmation code<br/>Instuction code: 0x3D<br/>Command (or instruction) package format:</p>
+
+</div></div>
+<div style="page-break-before:always; page-break-after:always"><div><p>- 24 - www.hzgrow.com<br/></p>
+<p>2 bytes 4bytes 1 byte 2 bytes 1 byte 2 bytes<br/>Header Module<br/></p>
+<p>address<br/>Package<br/>identifier<br/></p>
+<p>Package length Instruction code Checksum<br/></p>
+<p>0xEF01 xxxx 0x01 0x0003 0x3D sum<br/>Acknowledge package format:<br/>2 bytes 4bytes 1 byte 2 bytes 1 byte 2 bytes<br/>Header Module<br/></p>
+<p>address<br/>Package<br/>identifier<br/></p>
+<p>Package<br/>length<br/></p>
+<p>Confirmation<br/>code<br/></p>
+<p>Checksum<br/></p>
+<p>0xEF01 xxxx 0x07 0x0003 X sum<br/>Note 1: Confirmation code=0x00: success;<br/></p>
+<p>Confirmation code=other: device is abnormal<br/>After module reset, 0x55 will be automatically sent as a handshake sign. After the single-chip<br/>microcomputer detects 0x55, it can immediately send commands to enter the working state.<br/></p>
+<p><b>Aura control AuraLedConfig (0 x35)<br/></b>Description: Aura LED control<br/>Input Parameter: Control code:Ctrl; Speed; ColorIndex;Times<br/>Return Parameter: Confirmation code<br/>Instuction code: 0x35<br/></p>
+<p>Command (or instruction) package format:<br/>2 bytes 4bytes 1 byte 2 bytes 1 byte 1 byte 1 byte 1 byte 1 byte 2 bytes<br/>Header Module<br/></p>
+<p>address<br/>Package<br/>identifier<br/></p>
+<p>Package<br/>length<br/></p>
+<p>Instruction<br/>code<br/></p>
+<p>Control<br/>code<br/></p>
+<p>Speed Color<br/>Index<br/></p>
+<p>Times Checks<br/>um<br/></p>
+<p>0xEF0<br/>1<br/></p>
+<p>xxxx<br/>0x01 0x0007 0x35 Ctrl Speed Color<br/></p>
+<p>Index<br/>Count sum<br/></p>
+<p>Control Code:<br/>Control<br/>code<br/></p>
+<p>0x01 0x02 0x03 0x04 0x05 0x06<br/></p>
+<p>Function breathing<br/>light<br/></p>
+<p>Flashing<br/>light<br/></p>
+<p>Light<br/>Always<br/>on<br/></p>
+<p>Light<br/>Always<br/>off<br/></p>
+<p>Light<br/>gradually<br/></p>
+<p>on<br/></p>
+<p>Light<br/>gradually<br/></p>
+<p>off<br/>Speed: 0x00-0xff, 256 gears,Minimum 5s cycle.<br/>It is effective for breathing lamp and flashing lamp,Light gradually on,Light gradually off<br/></p>
+<p>ColorIndex:<br/>Code 0x01 0x02 0x03<br/>Color Red Blue Purple<br/></p>
+<p>Number of cycles: 0- infinite, 1-255.<br/>It is effective for with breathing light and flashing light.</p>
+
+</div></div>
+<div style="page-break-before:always; page-break-after:always"><div><p>- 25 - www.hzgrow.com<br/></p>
+<p>Acknowledge package format:<br/>2 bytes 4bytes 1 byte 2 bytes 1 byte 2 bytes<br/>Header Module<br/></p>
+<p>address<br/>Package<br/>identifier<br/></p>
+<p>Package<br/>length<br/></p>
+<p>Confirmation<br/>code<br/></p>
+<p>Checksum<br/></p>
+<p>0xEF01 xxxx 0x07 0x0003 X sum<br/>Note 1: Confirmation code=0x00: success;<br/></p>
+<p>Confirmation code=0x01:error when receiving package;<br/></p>
+<p>Other instructions<br/><b>To generate a random code GetRandomCode<br/></b></p>
+<p>Description: to command the Module to generate a random number and return it to upper<br/>computer;Refer to 4.8 for more about Random Number Generator;<br/>Input Parameter: none<br/>Return Parameter: Confirmation code (1 byte)<br/>Instuction code: 14H<br/>Command (or instruction) package format:<br/>2 bytes 4bytes 1 byte 2 bytes 1 byte 2 bytes<br/>Header Module<br/></p>
+<p>address<br/>Package<br/>identifier<br/></p>
+<p>Package length Instruction<br/>code<br/></p>
+<p>Checksum<br/></p>
+<p>0xEF01 xxxx 01H 03H 14H 0018H<br/>Acknowledge package format:<br/></p>
+<p>2 bytes 4bytes 1 byte 2 bytes 1 byte 4 bytes 2 bytes<br/>Header Module<br/></p>
+<p>address<br/>Package<br/>identifier<br/></p>
+<p>Package<br/>length<br/></p>
+<p>Confirmation<br/>code<br/></p>
+<p>Random<br/>number<br/></p>
+<p>Checksum<br/></p>
+<p>0xEF01 xxxx 07H 07H xxH xxxx sum<br/>Note: Confirmation code=00H: generation success;<br/></p>
+<p>Confirmation code=01H: error when receiving package;<br/></p>
+<p><b>To read information page ReadInfPage<br/></b>Description: read information page(512bytes)<br/>Input Parameter: none<br/>Return Parameter: Confirmation code (1 byte)<br/>Instuction code: 16H<br/>Command (or instruction) package format:<br/>2 bytes 4bytes 1 byte 2 bytes 1 byte 2 bytes<br/>Header Module<br/></p>
+<p>address<br/>Package<br/>identifier<br/></p>
+<p>Package length Instruction<br/>code<br/></p>
+<p>Checksum<br/></p>
+<p>0xEF01 xxxx 01H 03H 16H sum<br/>Acknowledge package format:<br/></p>
+<p>2 bytes 4bytes 1 byte 2 bytes 1 byte 2 bytes<br/>Header Module<br/></p>
+<p>address<br/>Package<br/>identifier<br/></p>
+<p>Package<br/>length<br/></p>
+<p>Confirmation<br/>code<br/></p>
+<p>Checksum</p>
+
+</div></div>
+<div style="page-break-before:always; page-break-after:always"><div><p>- 26 - www.hzgrow.com<br/></p>
+<p>0xEF01 xxxx 07H 03H xxH sum<br/>Note 1: Confirmation code=00H: ready to transfer the following data packet;<br/></p>
+<p>Confirmation code=01H: error when receiving package;<br/>Confirmation code=0fH: can not transfer the following data packet;<br/></p>
+<p>2: Module shall transfer following data packet after responding to the upper computer.;<br/>3: The instruction doesn&#8217;t affect buffer contents.<br/></p>
+<p>Data package format:<br/>2 bytes 4bytes 1 byte 2 bytes N byte 2 bytes<br/>Header Module<br/></p>
+<p>address<br/>Package identifier Package<br/></p>
+<p>length<br/>Package<br/>content<br/></p>
+<p>Checksum<br/></p>
+<p>0xEF01 xxxx 0x02- have<br/>following packet<br/>0x08 - end packet<br/></p>
+<p>N+2 Information<br/>page<br/></p>
+<p>sum<br/></p>
+<p><b>To write note pad WriteNotepad<br/></b>Description: for upper computer to write data to the specified Flash page (refer to 4.1 for more<br/>about Note pad). Also see R<b>eadNotepad;<br/></b>Input Parameter: NotePageNum, user content (or data content)<br/>Return Parameter: Confirmation code (1 byte)<br/>Instuction code: 18H<br/>Command (or instruction) package format:<br/></p>
+<p>2 bytes 4bytes 1 byte 2 bytes 1 byte 1byte 32 bytes 2 bytes<br/>Header Module<br/></p>
+<p>address<br/>Package<br/>identifier<br/></p>
+<p>Package<br/>length<br/></p>
+<p>Instruction<br/>code<br/></p>
+<p>Page<br/>number<br/></p>
+<p>Data<br/>content<br/></p>
+<p>Checksum<br/></p>
+<p>0xEF01 xxxx 01H 36 18H 0~15 content sum<br/></p>
+<p>Acknowledge package format:<br/>2 bytes 4bytes 1 byte 2 bytes 1 byte 2 bytes<br/>Header Module address Package<br/></p>
+<p>identifier<br/>Package<br/>length<br/></p>
+<p>Confirmation code Checksum<br/></p>
+<p>0xEF01 xxxx 07H 03H xxH sum<br/>Note: Confirmation code=00H: write success;<br/></p>
+<p>Confirmation code=01H: error when receiving package;<br/></p>
+<p><b>To read note pad ReadNotepad<br/></b>Description: to read the specified page&#8217;s data content; Refer to 4.1 for more about user note pad.<br/>Also see<b>WriteNotepad</b>.<br/>Input Parameter: none<br/>Return Parameter: Confirmation code (1 byte) + data content<br/>Instuction code: 19H<br/>Command (or instruction) package format:<br/></p>
+<p>2 bytes 4bytes 1 byte 2 bytes 1 byte 1byte 2 bytes</p>
+
+</div></div>
+<div style="page-break-before:always; page-break-after:always"><div><p>- 27 - www.hzgrow.com<br/></p>
+<p>Header Module<br/>address<br/></p>
+<p>Package<br/>identifier<br/></p>
+<p>Package<br/>length<br/></p>
+<p>Instruction<br/>code<br/></p>
+<p>Page<br/>number<br/></p>
+<p>Checksum<br/></p>
+<p>0xEF01 xxxx 01H 04H 19H 0~15 xxH<br/>Acknowledge package format:<br/></p>
+<p>2 bytes 4bytes 1 byte 2 bytes 1 byte 32bytes 2 bytes<br/>Header Module<br/></p>
+<p>address<br/>Package<br/>identifier<br/></p>
+<p>Package<br/>length<br/></p>
+<p>Confirmation<br/>code<br/></p>
+<p>User content Checksum<br/></p>
+<p>0xEF01 xxxx 07H 3+32 xxH User content sum<br/>Note: Confirmation code=00H: read success;<br/></p>
+<p>Confirmation code=01H: error when receiving package;<br/></p>
+<p>Instruction Table<br/><b>Classified by functions<br/></b></p>
+<p><b>type num code description Type num Code description<br/></b></p>
+<p><b>System<br/>-related<br/></b></p>
+<p>1 13H To verify password<br/></p>
+<p><b>Finerprintprocessing<br/></b></p>
+<p>13 08H to upload template<br/>2 12H To set password 14 09H To download template<br/>3 15H To set device address 15 06H To store template;<br/>4 0EH To set system<br/></p>
+<p>Parameter<br/>16 07H to read/load template<br/></p>
+<p>5 17H Port control 17 0CH to delete tempates<br/>6 0FH To read system<br/></p>
+<p>Parameter<br/>18 0DH to empty the library<br/></p>
+<p>7 1DH To read finger<br/>template numbers<br/></p>
+<p>19 03H Carry out precise<br/>matching of two<br/>templates;<br/></p>
+<p><b>Finerprintprocessing<br/></b></p>
+<p>8 01H Collect finger image 20 04H Search the finger library<br/>9 0AH To upload image<br/>10 0BH To download image<br/></p>
+<p><b>others<br/></b></p>
+<p>21 14H to get random code<br/>11 02H To generate character<br/></p>
+<p>file from image<br/>22 18H to write note pad<br/></p>
+<p>12 05H To combine character<br/>files and generate<br/>template<br/></p>
+<p>23 19H To read note pad</p>
+
+</div></div>
+<div style="page-break-before:always; page-break-after:always"><div><p>- 28 - www.hzgrow.com<br/></p>
+<p><b>Classified by instruction code<br/>code identifier Description Code Identifier Description<br/></b>01H GenImg Collect finger image 0DH Empty to empty the library<br/>02H Img2Tz To generate character file<br/></p>
+<p>from image<br/>0EH SetSysPara To set system Parameter<br/></p>
+<p>03H Match Carry out precise<br/>matching of two<br/>templates;<br/></p>
+<p>0FH ReadSysPara To read system<br/>Parameter<br/></p>
+<p>04H Serach Search the finger library 12H SetPwd To set password<br/>05H RegModel To combine character files<br/></p>
+<p>and generate template<br/>13H VfyPwd To verify password<br/></p>
+<p>06H Store To store template; 14H GetRandomCo<br/>de<br/></p>
+<p>to get random code<br/></p>
+<p>07H LoadChar to read/load template 15H SetAdder To set device address<br/>08H UpChar to upload template 16H ReadInfPage Read information page<br/>09H DownChr to download template 17H Control Port control<br/>0AH UpImage To upload image 18H WriteNotepad to write note pad<br/>0BH DownImage To download image 19H ReadNotepad To read note pad<br/>0CH DeletChar to delete tempates 1DH TempleteNum To read finger template<br/></p>
+<p>numbers<br/>0x1F ReadIndexT<br/></p>
+<p>able<br/>Read fingerprint template<br/>index table<br/></p>
+<p>0x28 GetImageEx Fingerprint image collection<br/>extension command<br/></p>
+<p>0x30 Cancel Cancel instruction 0x40 HandShake HandShake<br/>0x36 Check<br/></p>
+<p>Sensor<br/>CheckSensor 0x39 GetAlgVer Get the algorithm library<br/></p>
+<p>version<br/>0x3A GetFwVer Get the firmware version 0x3C ReadProdInfo Read product<br/></p>
+<p>information<br/>0x3D SoftRst Soft reset 0x35 Aura control AuraLedConfig</p>
+
+</div></div>
+<div style="page-break-before:always; page-break-after:always"><div><p>- 29 - www.hzgrow.com<br/></p>
+<p>&#8550; Reference Circuit</p>
+
+</div></div>
+</body></html>

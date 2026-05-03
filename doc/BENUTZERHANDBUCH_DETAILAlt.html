@@ -1,0 +1,1416 @@
+﻿<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FingerScanner LGI - Benutzerhandbuch</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #fef5e7 0%, #fdebd0 50%, #fad7a0 100%);
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+        
+        h1 {
+            color: #7e8ba3;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            border-bottom: 3px solid #d4a574;
+            padding-bottom: 10px;
+        }
+        
+        h2 {
+            color: #6b8e7f;
+            font-size: 1.8em;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            border-left: 5px solid #a8c9a5;
+            padding-left: 15px;
+        }
+        
+        h3 {
+            color: #8a7d9f;
+            font-size: 1.3em;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        
+        h4 {
+            color: #9d8566;
+            font-size: 1.1em;
+            margin-top: 15px;
+            margin-bottom: 8px;
+        }
+        
+        p {
+            margin-bottom: 15px;
+            text-align: justify;
+            color: #4a5568;
+        }
+        
+        ul, ol {
+            margin-left: 30px;
+            margin-bottom: 15px;
+        }
+        
+        li {
+            margin-bottom: 8px;
+            color: #4a5568;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        th {
+            background: linear-gradient(135deg, #b8c9d6 0%, #9fb3c8 100%);
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+        }
+        
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #e8e8e8;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #faf8f5;
+        }
+        
+        tr:hover {
+            background-color: #f5f3ed;
+        }
+        
+        code {
+            background: #fef6f0;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            color: #c77155;
+            border: 1px solid #e8d4c5;
+        }
+        
+        pre {
+            background: #3a4655;
+            color: #e8e8e8;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+        
+        pre code {
+            background: none;
+            border: none;
+            color: #e8e8e8;
+        }
+        
+        .qr-box {
+            text-align: center;
+            padding: 30px;
+            background: #f5f2ed;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 2px dashed #b8a78c;
+        }
+        
+        .qr-placeholder {
+            font-size: 80px;
+            color: #9d8566;
+        }
+        
+        .alert {
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+            border-left: 5px solid;
+        }
+        
+        .alert-info {
+            background: #e3f0f7;
+            border-color: #7eb3d4;
+            color: #2c5368;
+        }
+        
+        .alert-warning {
+            background: #fef4e6;
+            border-color: #dca96a;
+            color: #7d5a2f;
+        }
+        
+        .alert-success {
+            background: #e8f5e9;
+            border-color: #81c784;
+            color: #2e5d32;
+        }
+        
+        .alert-danger {
+            background: #fde8e8;
+            border-color: #d89797;
+            color: #6b3838;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 5px 10px;
+            background: #b5c9d3;
+            color: white;
+            border-radius: 3px;
+            font-size: 0.85em;
+            margin-right: 5px;
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 18px;
+            margin: 20px 0;
+        }
+        
+        .feature-card {
+            background: #faf8f5;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e8e0d5;
+        }
+        
+        hr {
+            border: none;
+            border-top: 2px solid #e8e0d5;
+            margin: 30px 0;
+        }
+        
+        .page-break {
+            page-break-after: always;
+        }
+        
+        @media print {
+            body {
+                background: white !important;
+                padding: 0 !important;
+            }
+            
+            .container {
+                box-shadow: none !important;
+                padding: 15mm !important;
+                max-width: 100% !important;
+                background: white !important;
+            }
+            
+            .page-break {
+                page-break-after: always;
+                break-after: page;
+            }
+            
+            .pdf-download-btn {
+                display: none !important;
+            }
+            
+            h1, h2, h3 {
+                page-break-after: avoid;
+                break-after: avoid;
+            }
+            
+            table {
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+            
+            .feature-grid {
+                display: block;
+            }
+            
+            .feature-card {
+                display: block;
+                margin-bottom: 10px;
+                page-break-inside: avoid;
+            }
+            
+            /* Bessere Schriftarten fuer PDF */
+            body {
+                font-size: 11pt;
+                line-height: 1.5;
+            }
+            
+            h1 {
+                font-size: 24pt;
+            }
+            
+            h2 {
+                font-size: 18pt;
+            }
+            
+            h3 {
+                font-size: 14pt;
+            }
+            
+            code {
+                font-size: 9pt;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 1.8em;
+            }
+            
+            h2 {
+                font-size: 1.4em;
+            }
+        }
+        
+        /* PDF Download Button */
+        .pdf-download-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #d89797 0%, #c77c7c 100%);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(216, 151, 151, 0.3);
+            z-index: 9999;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .pdf-download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(216, 151, 151, 0.4);
+        }
+        
+        .pdf-download-btn:active {
+            transform: translateY(0);
+        }
+        
+        @media print {
+            .pdf-download-btn {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- PDF Download Button -->
+    <button class="pdf-download-btn" onclick="downloadPDF()">📥 Als PDF speichern</button>
+    
+    <div class="container">
+        <h1>📘 FingerScanner LGI</h1>
+        <h2>Technisches Handbuch (Detail)</h2>
+        
+        <hr>
+        
+        <h2>🎯 Produktübersicht</h2>
+        <p>Der <strong>ESP32 Fingerscanner</strong> ist ein professionelles, vollständig konfigurierbares Zutrittskontrollsystem auf Basis des ESP32-Mikrocontrollers mit Grow R503 Fingerabdrucksensor. Das System bietet moderne Smart-Home-Integration über MQTT, eine intuitive Weboberfläche und umfangreiche Automatisierungsmöglichkeiten.</p>
+        
+        <h3>✨ Hauptmerkmale</h3>
+        <div class="feature-grid">
+            <div class="feature-card">✅ Biometrische Zutrittskontrolle mit Grow R503 Fingerabdrucksensor</div>
+            <div class="feature-card">✅ Bis zu 4 schaltbare Relais/Ausgänge</div>
+            <div class="feature-card">✅ Smart-Home-Integration via MQTT</div>
+            <div class="feature-card">✅ Web-Oberfläche für Verwaltung</div>
+            <div class="feature-card">✅ Over-the-Air (OTA) Updates</div>
+            <div class="feature-card">✅ Tedee Smart Lock Integration optional</div>
+            <div class="feature-card">✅ Temperatur-/Feuchtigkeits-Sensor (DHT22) optional</div>
+            <div class="feature-card">✅ Telegram-Benachrichtigungen optional</div>
+            <div class="feature-card">✅ Touch-Ring/Klingelfunktion</div>
+            <div class="feature-card">✅ Automatische Beleuchtung</div>
+            <div class="feature-card">✅ NTP-Zeitsynchronisation</div>
+            <div class="feature-card">✅ LED-Statusanzeige (8 Farben, 6 Modi)</div>
+            <div class="feature-card">✅ Manipulationsschutz durch Sensor-Pairing</div>
+            <div class="feature-card">✅ Watchdog-Überwachung</div>
+        </div>
+        
+        <div class="page-break"></div>
+        
+        <h2>📦 Lieferumfang</h2>
+        <ul>
+            <li>ESP32 Development Board (empfohlen: ESP32-DevKitC mit 4MB Flash)</li>
+            <li>Grow R503 Fingerabdrucksensor (grün/gelb Kabel)</li>
+            <li>Relaismodul (optional, je nach Konfiguration)</li>
+            <li>DHT22 Temperatur-/Feuchtigkeitssensor (optional)</li>
+            <li>Netzteil 5V/2A</li>
+            <li>USB-Kabel für Ersteinrichtung</li>
+            <li>Diese Bedienungsanleitung</li>
+        </ul>
+        
+        <h2>🔧 Technische Daten</h2>
+        <table>
+            <tr>
+                <th>Spezifikation</th>
+                <th>Wert</th>
+            </tr>
+            <tr>
+                <td>Mikrocontroller</td>
+                <td>ESP32 (240 MHz Dual-Core)</td>
+            </tr>
+            <tr>
+                <td>Speicher</td>
+                <td>4MB Flash, 520KB RAM</td>
+            </tr>
+            <tr>
+                <td>WLAN</td>
+                <td>802.11 b/g/n (2.4 GHz)</td>
+            </tr>
+            <tr>
+                <td>Fingerabdrucksensor</td>
+                <td>Grow R503 (500 DPI, bis zu 200 Templates)</td>
+            </tr>
+            <tr>
+                <td>Betriebsspannung</td>
+                <td>5V DC via USB oder externe Versorgung</td>
+            </tr>
+            <tr>
+                <td>Stromaufnahme</td>
+                <td>~150-400mA (abhängig von Peripherie)</td>
+            </tr>
+            <tr>
+                <td>Ausgänge</td>
+                <td>4x GPIO (konfigurierbar für Relais)</td>
+            </tr>
+            <tr>
+                <td>Eingänge</td>
+                <td>Touch-Sensor (GPIO5), DHT22 (GPIO25)</td>
+            </tr>
+            <tr>
+                <td>Betriebstemperatur</td>
+                <td>-10°C bis +50°C</td>
+            </tr>
+            <tr>
+                <td>Abmessungen</td>
+                <td>ESP32: 55 x 28 mm, R503: 56 x 20 x 21.5 mm</td>
+            </tr>
+        </table>
+        
+        <div class="page-break"></div>
+        
+        <h2>� Inhaltsverzeichnis</h2>
+        <ul>
+            <li><a href="#quickstart">Schnellstart-Anleitung</a></li>
+            <li><a href="#webui">Weboberfläche</a></li>
+            <li><a href="#settings">Einstellungen</a></li>
+            <li><a href="#mqtt">MQTT-Integration</a></li>
+            <li><a href="#architektur">Betriebsmodi & Architektur</a></li>
+            <li><a href="#ha-example">Home Assistant Beispiel</a></li>
+            <li><a href="#led">LED-Statusanzeige</a></li>
+            <li><a href="#sicherheit">Sicherheit</a></li>
+            <li><a href="#pinbelegung">Pinbelegung</a></li>
+            <li><a href="#fehlersuche">Fehlersuche</a></li>
+            <li><a href="#wartung">Wartung & Pflege</a></li>
+            <li><a href="#faq">FAQ</a></li>
+            <li><a href="#rechtlich">Rechtliche Hinweise</a></li>
+            <li><a href="#version">Versionsinformation & Build-Optionen</a></li>
+        </ul>
+        
+        <div class="page-break"></div>
+        
+        <h2 id="quickstart">�🚀 Schnellstart-Anleitung</h2>
+        
+        <h3>1. Erstkonfiguration über WiFi-Hotspot</h3>
+        <p>Der ESP32 Fingerscanner erstellt beim ersten Start automatisch einen WiFi-Hotspot:</p>
+        
+        <div class="alert alert-info">
+            <strong>WiFi-Zugangsdaten:</strong><br>
+            <strong>SSID:</strong> <code>FingerscannerConfig</code><br>
+            <strong>Passwort:</strong> <code>12345678</code>
+        </div>
+        
+        <div class="qr-box">
+            <div id="qrcode" style="display: inline-block;"></div>
+            <h4>QR-Code zum schnellen Verbinden</h4>
+            <p>Scannen Sie diesen QR-Code mit Ihrem Smartphone</p>
+            <code id="wifi-string">WIFI:T:WPA;S:FingerscannerConfig;P:12345678;;</code>
+        </div>
+        
+        <h4>Verbindungsschritte:</h4>
+        <ol>
+            <li><strong>Smartphone mit WiFi-Hotspot verbinden:</strong>
+                <ul>
+                    <li>Öffnen Sie die WiFi-Einstellungen Ihres Smartphones</li>
+                    <li>Wählen Sie das Netzwerk <strong>"FingerscannerConfig"</strong></li>
+                    <li>Geben Sie das Passwort <strong>"12345678"</strong> ein</li>
+                </ul>
+            </li>
+            <li><strong>Konfigurationsseite öffnen:</strong>
+                <ul>
+                    <li>Browser öffnen und zu <code>http://192.168.4.1</code> navigieren</li>
+                    <li>Alternativ: Die Captive-Portal-Seite öffnet sich automatisch</li>
+                </ul>
+            </li>
+            <li><strong>WLAN-Zugangsdaten eingeben:</strong>
+                <ul>
+                    <li>Ihr heimisches WLAN-Netzwerk auswählen</li>
+                    <li>WLAN-Passwort eingeben</li>
+                    <li><strong>"Speichern"</strong> klicken</li>
+                </ul>
+            </li>
+            <li><strong>ESP32 startet neu:</strong>
+                <ul>
+                    <li>Das Gerät verbindet sich mit Ihrem WLAN</li>
+                    <li>Die LED am Sensor blinkt während der Verbindung</li>
+                </ul>
+            </li>
+            <li><strong>IP-Adresse ermitteln:</strong>
+                <ul>
+                    <li>Schauen Sie in Ihrem Router nach der IP-Adresse des Geräts</li>
+                    <li>Hostname: <strong>"Fingerscanner"</strong> (per mDNS: <code>http://Fingerscanner.local</code>)</li>
+                </ul>
+            </li>
+        </ol>
+        
+        <div class="page-break"></div>
+        
+        <h3>2. Zugriff auf die Weboberfläche</h3>
+        <p>Nach erfolgreicher WLAN-Verbindung können Sie über folgende Adressen auf das System zugreifen:</p>
+        <ul>
+            <li><strong>IP-Adresse:</strong> <code>http://192.168.x.x</code> (von Router vergeben)</li>
+            <li><strong>mDNS-Name:</strong> <code>http://Fingerscanner.local</code> (auf unterstützten Geräten)</li>
+        </ul>
+        
+        <div class="alert alert-warning">
+            <strong>Standard-Login:</strong><br>
+            <strong>Benutzername:</strong> <code>admin</code><br>
+            <strong>Passwort:</strong> <em>(bei Erstinstallation kein Passwort - bitte sofort ändern!)</em>
+        </div>
+        
+        <h2 id="webui">🖥️ Bedienung der Weboberfläche</h2>
+        
+        <h3>📍 Hauptseite (<code>/</code>)</h3>
+        <p><strong>Funktionen:</strong></p>
+        <ul>
+            <li><strong>Live-Status-Anzeige:</strong>
+                <ul>
+                    <li>WiFi-Qualität und Signal-Stärke</li>
+                    <li>MQTT-Verbindungsstatus</li>
+                    <li>Chip-Temperatur</li>
+                    <li>Anzahl verbundener MQTT-Clients (im Broker-Modus)</li>
+                </ul>
+            </li>
+            <li><strong>Fingerabdruck-Verwaltung:</strong>
+                <ul>
+                    <li>Liste aller gespeicherten Fingerabdrücke</li>
+                    <li>Bearbeiten: Name ändern</li>
+                    <li>Löschen: Fingerabdruck entfernen</li>
+                    <li>Download: Template als Datei speichern</li>
+                    <li>Upload: Template von Datei laden</li>
+                </ul>
+            </li>
+            <li><strong>Neue Fingerabdrücke anlernen:</strong>
+                <ul>
+                    <li>Button <strong>"Finger einlernen"</strong> klicken</li>
+                    <li>Namen eingeben (z.B. "Max Mustermann")</li>
+                    <li>5x den gleichen Finger auflegen</li>
+                    <li>LED am Sensor zeigt Fortschritt (grün = erfolgreich, rot = Fehler)</li>
+                </ul>
+            </li>
+            <li><strong>Relais/Ausgänge schalten:</strong>
+                <ul>
+                    <li>Bis zu 4 konfigurierbare Schaltflächen</li>
+                    <li>Ein/Aus-Steuerung per Klick</li>
+                    <li>Automatische MQTT-Benachrichtigung (optional)</li>
+                    <li>Beschriftung individuell anpassbar</li>
+                </ul>
+            </li>
+            <li><strong>Touch-Ring/Klingel:</strong>
+                <ul>
+                    <li>Berühren Sie den Sensor (Metalloberfläche)</li>
+                    <li>Klingel-Signal wird ausgelöst (GPIO21)</li>
+                    <li>Bei Regen deaktivierbar (MQTT: <code>fingerscanner/ignoreTouchRing</code>)</li>
+                </ul>
+            </li>
+        </ul>
+        
+        <div class="page-break"></div>
+        
+        <h3 id="settings">⚙️ Einstellungen (<code>/settings</code>)</h3>
+        
+        <h4>1. WiFi-Einstellungen</h4>
+        <ul>
+            <li>SSID und Passwort ändern</li>
+            <li>Statische IP konfigurieren (optional)</li>
+            <li>Hostname ändern (Standard: "Fingerscanner")</li>
+        </ul>
+        
+        <h4>2. MQTT-Konfiguration</h4>
+        <p><strong>Option A: Als MQTT-Client (zu externem Broker verbinden)</strong></p>
+        <ul>
+            <li>MQTT-Server-Adresse eingeben:
+                <ul>
+                    <li>IP-Adresse: <code>192.168.1.100</code></li>
+                    <li>Hostname: <code>SmartBroker</code></li>
+                    <li>mDNS: <code>SmartBroker.local</code></li>
+                    <li>Domain: <code>broker.example.com</code></li>
+                </ul>
+            </li>
+            <li>Port (Standard: 1883)</li>
+            <li>Benutzername und Passwort (falls benötigt)</li>
+            <li>Topic-Präfix (Standard: "fingerscanner")</li>
+        </ul>
+        
+        <p><strong>Option B: Als MQTT-Broker (integrierter Server)</strong></p>
+        <ul>
+            <li>MQTT-Server-Feld leer lassen</li>
+            <li>ESP32 startet eigenen MQTT-Broker auf Port 1883</li>
+            <li>Andere Geräte können sich verbinden</li>
+            <li>mDNS-Service: <code>_mqtt._tcp</code> wird automatisch registriert</li>
+        </ul>
+        
+        <h4>3. Zeit & Zeitzone</h4>
+        <ul>
+            <li>NTP-Server (Standard: <code>pool.ntp.org</code>)</li>
+            <li>Zeitzone: <code>CET-1CEST,M3.5.0/2,M10.5.0/3</code> (MEZ/MESZ)</li>
+            <li>GMT-Offset: +1 Stunde (Deutschland)</li>
+        </ul>
+        
+        <h4>4. Standort (für Sonnenauf-/-untergang)</h4>
+        <ul>
+            <li>Breitengrad (z.B. 48.1351 für München)</li>
+            <li>Längengrad (z.B. 11.5820 für München)</li>
+            <li>Automatische Beleuchtungssteuerung basierend auf Dämmerung</li>
+        </ul>
+        
+        <h4>5. Ausgänge/Relais konfigurieren</h4>
+        <ul>
+            <li>Bis zu 4 Ausgänge (GPIO 18, 19, 23, 26)</li>
+            <li>Button-Beschriftung ändern</li>
+            <li>Ein-/Aus-Dauer (Impuls oder Dauerschaltung)</li>
+            <li>MQTT-Publish aktivieren/deaktivieren
+                <ul>
+                    <li><strong>Stern (*) im Namen = keine MQTT-Nachricht</strong></li>
+                </ul>
+            </li>
+            <li><strong>Output 5 (Klingel-Pin):</strong> Der Klingel-Ausgang (GPIO21) kann optional als vollwertiger zusätzlicher Schaltausgang (Output 5) verwendet werden, wenn die automatische Klingelfunktion deaktiviert ist. Konfigurierbar via UI mit Delay-Funktion (Delay=0 deaktiviert den Ausgang).</li>
+        </ul>
+        
+        <h4>6. Fingerabdrucksensor-Einstellungen</h4>
+        <ul>
+            <li>Sensor-Pairing (Schutz vor Sensor-Austausch)</li>
+            <li>Template-Größe (Speicherplatz pro Fingerabdruck)</li>
+            <li>Erkennungsschwelle (1-400, Standard: 50)</li>
+        </ul>
+        
+        <h4>7. LED-Ring am Sensor</h4>
+        <ul>
+            <li>8 Farben: Rot, Grün, Blau, Lila, Cyan, Gelb, Kaltweiß, Warmweiß</li>
+            <li>6 Modi: Aus, Ein, Blinken, Atmen, Einblenden, Ausblenden</li>
+            <li>Geschwindigkeit: 0-255 (klein = schnell)</li>
+            <li>Zyklen: 0 = dauerhaft, 1-255 = Anzahl Wiederholungen</li>
+        </ul>
+        
+        <div class="page-break"></div>
+        
+        <h3>🔄 Firmware-Update (OTA)</h3>
+        <p><strong>Over-the-Air Updates ohne USB-Kabel:</strong></p>
+        <ol>
+            <li>Einstellungen öffnen</li>
+            <li>Zum Bereich <strong>"OTA-Update"</strong> scrollen</li>
+            <li>Firmware-Datei auswählen (<code>.bin</code>)</li>
+            <li><strong>"Update starten"</strong> klicken</li>
+            <li>Fortschrittsbalken beobachten</li>
+            <li>ESP32 startet automatisch neu</li>
+        </ol>
+        
+        <div class="alert alert-danger">
+            <strong>⚠️ Während des Updates:</strong>
+            <ul style="margin-left: 20px; margin-top: 10px;">
+                <li>Stromversorgung nicht unterbrechen!</li>
+                <li>Keine anderen Aktionen ausführen</li>
+                <li>Update dauert ca. 30-60 Sekunden</li>
+            </ul>
+        </div>
+        
+        <h2 id="mqtt">📡 MQTT-Integration</h2>
+        <p>Der Fingerscanner kann via MQTT in Ihr Smart-Home-System integriert werden (z.B. Home Assistant, openHAB, ioBroker, Node-RED).</p>
+        
+        <h3>MQTT-Topics (Standard-Präfix: <code>fingerscanner/</code>)</h3>
+        
+        <h4>📤 Publish (ESP32 → Broker)</h4>
+        <table>
+            <tr>
+                <th>Topic</th>
+                <th>Wert</th>
+                <th>Beschreibung</th>
+            </tr>
+            <tr>
+                <td><code>fingerscanner/ring</code></td>
+                <td><code>on</code> / <code>off</code></td>
+                <td>Klingel/Touch-Ring wurde betätigt</td>
+            </tr>
+            <tr>
+                <td><code>fingerscanner/matchId</code></td>
+                <td><code>1-200</code> / <code>-1</code></td>
+                <td>ID des erkannten Fingers (-1 = keine Übereinstimmung)</td>
+            </tr>
+            <tr>
+                <td><code>fingerscanner/matchName</code></td>
+                <td><code>"Max"</code></td>
+                <td>Name des erkannten Benutzers</td>
+            </tr>
+            <tr>
+                <td><code>fingerscanner/matchConfidence</code></td>
+                <td><code>1-400</code></td>
+                <td>Übereinstimmungsgrad (höher = besser)</td>
+            </tr>
+            <tr>
+                <td><code>fingerscanner/button1-4</code></td>
+                <td><code>on</code> / <code>off</code></td>
+                <td>Status Ausgang 1-4</td>
+            </tr>
+            <tr>
+                <td><code>fingerscanner/temperature</code></td>
+                <td><code>22.5</code></td>
+                <td>Temperatur in °C (DHT22)</td>
+            </tr>
+            <tr>
+                <td><code>fingerscanner/humidity</code></td>
+                <td><code>55.2</code></td>
+                <td>Luftfeuchtigkeit in % (DHT22)</td>
+            </tr>
+            <tr>
+                <td><code>fingerscanner/status</code></td>
+                <td><code>online</code> / <code>offline</code></td>
+                <td>Verfügbarkeit (LWT)</td>
+            </tr>
+        </table>
+        
+        <h4>📥 Subscribe (Broker → ESP32)</h4>
+        <table>
+            <tr>
+                <th>Topic</th>
+                <th>Wert</th>
+                <th>Beschreibung</th>
+            </tr>
+            <tr>
+                <td><code>fingerscanner/ignoreTouchRing</code></td>
+                <td><code>true</code> / <code>false</code></td>
+                <td>Touch-Ring deaktivieren (z.B. bei Regen)</td>
+            </tr>
+            <tr>
+                <td><code>fingerscanner/button1-4/set</code></td>
+                <td><code>on</code> / <code>off</code></td>
+                <td>Ausgang 1-4 schalten</td>
+            </tr>
+        </table>
+        
+        <div class="page-break"></div>
+        
+        <h2 id="architektur">🧠 Betriebsmodi & Architektur (Detail)</h2>
+        
+        <h3>Betriebsmodi</h3>
+        <p>Der FingerScanner LGI kann in zwei verschiedenen Betriebsmodi betrieben werden:</p>
+        
+        <h4>Modus 1: MQTT-Client</h4>
+        <p>Das System verbindet sich zu einem externen MQTT-Broker (z.B. Mosquitto, Home Assistant, ioBroker):</p>
+        <ul>
+            <li><strong>Konfiguration:</strong> MQTT-Server-Adresse und Port eingeben</li>
+            <li><strong>Authentifizierung:</strong> Optional mit Benutzername und Passwort</li>
+            <li><strong>Zentralisierung:</strong> Ein zentraler Broker verwaltet mehrere Geräte</li>
+            <li><strong>Topologie:</strong> Stern-Topologie mit zentralem Broker</li>
+            <li><strong>Anwendungsfall:</strong> Integration in bestehendes Smart-Home-System (Home Assistant, ioBroker, etc.)</li>
+        </ul>
+        
+        <h4>Modus 2: MQTT-Broker (Integriert)</h4>
+        <p>Das System startet seinen eigenen MQTT-Broker und fungiert als zentraler Knoten:</p>
+        <ul>
+            <li><strong>Konfiguration:</strong> MQTT-Server-Feld leer lassen</li>
+            <li><strong>Port:</strong> Standard 1883 (mDNS Service: <code>_mqtt._tcp</code>)</li>
+            <li><strong>Zentralisierung:</strong> Das FingerScanner-Gerät ist der zentrale Broker</li>
+            <li><strong>Topologie:</strong> Stern-Topologie mit diesem Gerät im Zentrum</li>
+            <li><strong>Anwendungsfall:</strong> Eigenständiges System ohne externen Broker; andere Geräte können sich verbinden</li>
+        </ul>
+        
+        <h3>Partnerbetrieb & Gerätekommunikation</h3>
+        <p><strong>Mehrere Geräte im gleichen Netzwerk:</strong></p>
+        <ul>
+            <li><strong>Unterschiedliche Hostnames:</strong> Jedes Gerät muss einen eindeutigen Hostname haben (z.B. „Fingerscanner", „Fingerscanner-2", „Fingerscanner-Garage")</li>
+            <li><strong>Topics pro Gerät:</strong> Jedes Gerät publiziert auf seinem Topic-Präfix (Standard: „fingerscanner")
+                <ul>
+                    <li>Gerät 1: <code>fingerscanner/matchId</code>, <code>fingerscanner/button1/set</code></li>
+                    <li>Gerät 2: <code>fingerscanner-2/matchId</code>, <code>fingerscanner-2/button1/set</code></li>
+                </ul>
+            </li>
+            <li><strong>Kreuzsteurung:</strong> Ein Gerät kann die Ausgänge eines anderen Geräts steuern, indem es ein anderes Topic subscribt
+                <ul>
+                    <li>Beispiel: Bei Gerät 1 Fingerabdruck erkannt → Gerät 2 Ausgang schalten</li>
+                    <li>Realisierung: Gerät 1 publiziert <code>fingerscanner/matchId</code>, Gerät 2 subscribt darauf</li>
+                    <li>Oder: External (via Home Assistant) Logik zwischen Geräten orchestrieren</li>
+                </ul>
+            </li>
+        </ul>
+        
+        <h3>MQTT Topic-Flows & Szenarien</h3>
+        
+        <h4>Szenario 1: Tür-Zugriff mit automatischem Licht</h4>
+        <pre><code>// Gerät „Haustür":
+fingerscanner-door/matchId = 5          // Finger erkannt (ID=5)
+fingerscanner-door/matchName = "Max"
+
+// Externe Automatisierung (Home Assistant / Node-RED):
+// Wenn matchId > 0 → Schalte Licht an
+
+light/living_room/set = "on"           // Licht-Topic
+fingerscanner-door/button1/set = "on"  // Türöffner aktivieren (3s Impuls)
+</code></pre>
+        
+        <h4>Szenario 2: Ring-Bell zu Handy-Benachrichtigung</h4>
+        <pre><code>// Gerät berührt → Ring publiziert:
+fingerscanner/ring = "on"
+
+// Externe Automatisierung:
+// Sende Telegram/Push-Nachricht: "Klingel betätigt!"
+// Optional: Relais bei anderem Gerät aktivieren
+</code></pre>
+        
+        <h4>Szenario 3: Master-Slave Betrieb</h4>
+        <pre><code>// Konfiguration:
+- Gerät A: MQTT-Client → verbindet zu Broker B
+- Gerät B: MQTT-Broker (integriert) mit Hostname „master"
+
+// Gerät A: publiziert auf „fingerscanner-a/matchId"
+// Gerät B kann abonnieren: fingerscanner-a/matchId
+// → Zentrale Kontrolle & Monitoring
+</code></pre>
+        
+        <h3>Status & Debugging (LWT - Last Will & Testament)</h3>
+        <ul>
+            <li><strong>Online-Status:</strong> <code>fingerscanner/status = "online"</code> nach Verbindung</li>
+            <li><strong>Offline-Erkennung:</strong> Bei Verbindungsverlust publiziert Broker automatisch <code>"offline"</code></li>
+            <li><strong>Nützlich für:</strong> Verfügbarkeitskontrolle in Home Assistant, Benachrichtigungen bei Ausfall</li>
+        </ul>
+        
+        <h3>Topic-Präfix & Namenskonventionen</h3>
+        <ul>
+            <li><strong>Standard-Präfix:</strong> „fingerscanner"</li>
+            <li><strong>Änderbar in Einstellungen:</strong> Für mehrere Geräte eindeutige Präfixe setzen</li>
+            <li><strong>Empfehlung:</strong>
+                <ul>
+                    <li>Haustür: <code>fingerscanner-haustuer</code> oder <code>fs-door</code></li>
+                    <li>Garage: <code>fingerscanner-garage</code> oder <code>fs-garage</code></li>
+                    <li>Büro: <code>fingerscanner-office</code> oder <code>fs-office</code></li>
+                </ul>
+            </li>
+        </ul>
+        
+        <div class="page-break"></div>
+        
+        <h3 id="ha-example">Beispiel: Home Assistant Integration</h3>
+        <pre><code># configuration.yaml
+
+mqtt:
+  sensor:
+    - name: "Fingerscanner Temperatur"
+      state_topic: "fingerscanner/temperature"
+      unit_of_measurement: "°C"
+      device_class: temperature
+    
+    - name: "Fingerscanner Letzter Zugriff"
+      state_topic: "fingerscanner/matchName"
+  
+  binary_sensor:
+    - name: "Fingerscanner Klingel"
+      state_topic: "fingerscanner/ring"
+      payload_on: "on"
+      payload_off: "off"
+      device_class: occupancy
+  
+  switch:
+    - name: "Haustür Relais"
+      command_topic: "fingerscanner/button1/set"
+      state_topic: "fingerscanner/button1"
+      payload_on: "on"
+      payload_off: "off"
+
+automation:
+  - alias: "Tür öffnen bei erkanntem Fingerabdruck"
+    trigger:
+      platform: mqtt
+      topic: "fingerscanner/matchId"
+    condition:
+      condition: template
+      value_template: "{{ trigger.payload | int > 0 }}"
+    action:
+      - service: switch.turn_on
+        entity_id: switch.haustur_relais
+      - delay: "00:00:03"
+      - service: switch.turn_off
+        entity_id: switch.haustur_relais</code></pre>
+        
+        <h2 id="led">🎨 LED-Statusanzeige (Grow R503)</h2>
+        <p>Der Fingerabdrucksensor verfügt über eine integrierte RGB-LED mit verschiedenen Signalen:</p>
+        
+        <table>
+            <tr>
+                <th>Farbe</th>
+                <th>Modus</th>
+                <th>Bedeutung</th>
+            </tr>
+            <tr>
+                <td>🟢 Grün</td>
+                <td>Dauerhaft</td>
+                <td>Bereit für Fingerabdruck</td>
+            </tr>
+            <tr>
+                <td>🔵 Blau</td>
+                <td>Pulsierend</td>
+                <td>Verarbeitung läuft</td>
+            </tr>
+            <tr>
+                <td>🟢 Grün</td>
+                <td>1x Blinken</td>
+                <td>Fingerabdruck erfolgreich erkannt</td>
+            </tr>
+            <tr>
+                <td>🔴 Rot</td>
+                <td>2x Blinken</td>
+                <td>Zugriff verweigert / Nicht erkannt</td>
+            </tr>
+            <tr>
+                <td>🟣 Lila</td>
+                <td>Pulsierend</td>
+                <td>Enroll-Modus aktiv</td>
+            </tr>
+            <tr>
+                <td>🟡 Gelb</td>
+                <td>Blinken</td>
+                <td>Warnung / Fehler</td>
+            </tr>
+            <tr>
+                <td>⚪ Weiß</td>
+                <td>Dauerhaft</td>
+                <td>Warte auf Netzwerk</td>
+            </tr>
+        </table>
+        
+        <div class="page-break"></div>
+        
+        <h2 id="sicherheit">🔒 Sicherheit & Manipulationsschutz</h2>
+        
+        <h3>Sensor-Pairing</h3>
+        <p>Der Fingerabdrucksensor wird beim ersten Start mit dem ESP32 gepaart:</p>
+        <ul>
+            <li>Eindeutiger Pairing-Code wird generiert und gespeichert</li>
+            <li>Bei Sensor-Austausch wird Pairing erkannt</li>
+            <li>Fingerabdruck-Matching wird deaktiviert (Klingel bleibt funktional)</li>
+            <li><strong>Manuelles Re-Pairing</strong> über Weboberfläche möglich</li>
+        </ul>
+        
+        <h3>Empfohlene Sicherheitsmaßnahmen:</h3>
+        <ol>
+            <li>✅ <strong>Admin-Passwort sofort ändern</strong> (Standard: kein Passwort)</li>
+            <li>✅ <strong>MQTT-Authentifizierung aktivieren</strong> (Benutzername + Passwort)</li>
+            <li>✅ <strong>HTTPS-Zugriff konfigurieren</strong> (falls extern erreichbar)</li>
+            <li>✅ <strong>Firmware regelmäßig aktualisieren</strong></li>
+            <li>✅ <strong>Netzwerk-Isolation</strong> (eigenes VLAN für IoT-Geräte)</li>
+            <li>✅ <strong>Watchdog aktiv lassen</strong> (automatischer Neustart bei Fehler)</li>
+        </ol>
+        
+        <h2 id="pinbelegung">📐 Pinbelegung (ESP32)</h2>
+        <table>
+            <tr>
+                <th>GPIO</th>
+                <th>Funktion</th>
+                <th>Beschreibung</th>
+            </tr>
+            <tr>
+                <td>GPIO16</td>
+                <td>RX2 (grün)</td>
+                <td>Fingerabdrucksensor Empfang</td>
+            </tr>
+            <tr>
+                <td>GPIO17</td>
+                <td>TX2 (gelb)</td>
+                <td>Fingerabdrucksensor Senden</td>
+            </tr>
+            <tr>
+                <td>GPIO5</td>
+                <td>Touch-Sensor</td>
+                <td>Kapazitiver Touch-Ring/Klingel</td>
+            </tr>
+            <tr>
+                <td>GPIO23</td>
+                <td>Relais 1</td>
+                <td>Hauptausgang (z.B. Türöffner)</td>
+            </tr>
+            <tr>
+                <td>GPIO19</td>
+                <td>Relais 2</td>
+                <td>Ausgang 2 (z.B. Garage)</td>
+            </tr>
+            <tr>
+                <td>GPIO18</td>
+                <td>Relais 3</td>
+                <td>Ausgang 3 (z.B. Beleuchtung)</td>
+            </tr>
+            <tr>
+                <td>GPIO26</td>
+                <td>Relais 4</td>
+                <td>Ausgang 4 (Reserve)</td>
+            </tr>
+            <tr>
+                <td>GPIO22</td>
+                <td>LED</td>
+                <td>Externe Statusanzeige</td>
+            </tr>
+            <tr>
+                <td>GPIO21</td>
+                <td>Klingel/Ring</td>
+                <td>Klingel-Ausgang (Impulssignal)</td>
+            </tr>
+            <tr>
+                <td>GPIO27</td>
+                <td>DHT22</td>
+                <td>Temperatur-/Feuchtigkeitssensor</td>
+            </tr>
+        </table>
+        
+        <div style="text-align: center; margin: 20px 0; padding: 20px; background: #f9f9f9; border-radius: 8px;">
+            <p><strong>📊 ESP32 Pinbelegungs-Diagramm</strong></p>
+            <img src="ESP32Pin.jpg" style="max-width: 100%; height: auto; border: 1px solid #ccc; border-radius: 5px;" alt="ESP32 Pinbelegung Diagramm" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22%3E%3Crect width=%22400%22 height=%22300%22 fill=%22%23f0f0f0%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 font-size=%2220%22%3EPinbelegungs-Diagramm%3C/text%3E%3Ctext x=%2250%25%22 y=%2260%25%22 text-anchor=%22middle%22 font-size=%2214%22 fill=%22%23666%22%3EBild konnten nicht geladen werden%3C/text%3E%3C/svg%3E'">
+        </div>
+        
+        <div class="page-break"></div>
+        
+        <h2 id="fehlersuche">🔧 Fehlersuche & Problembehebung</h2>
+        
+        <h3>Problem: ESP32 erstellt keinen WiFi-Hotspot</h3>
+        <p><strong>Lösung:</strong></p>
+        <ol>
+            <li>Sensor 10 Sekunden lang berühren beim Booten</li>
+            <li>ESP32 wechselt in WiFi-Config-Modus</li>
+            <li>LED blinkt schnell (Hotspot aktiv)</li>
+        </ol>
+        
+        <h3>Problem: Weboberfläche nicht erreichbar</h3>
+        <p><strong>Mögliche Ursachen:</strong></p>
+        <ul>
+            <li>❌ Falsche IP-Adresse → Router-Einstellungen prüfen</li>
+            <li>❌ mDNS nicht unterstützt → IP-Adresse direkt verwenden</li>
+            <li>❌ Firewall blockiert Zugriff → Port 80 freigeben</li>
+            <li>❌ ESP32 nicht im gleichen Netzwerk → WLAN-Einstellungen prüfen</li>
+        </ul>
+        <p><strong>Lösung:</strong></p>
+        <ul>
+            <li>IP-Adresse über Router ermitteln</li>
+            <li>Ping-Test: <code>ping Fingerscanner.local</code></li>
+            <li>Seriellen Monitor prüfen (USB-Verbindung)</li>
+        </ul>
+        
+        <h3>Problem: Fingerabdruck wird nicht erkannt</h3>
+        <p><strong>Mögliche Ursachen:</strong></p>
+        <ul>
+            <li>❌ Finger zu trocken/schmutzig → Finger reinigen</li>
+            <li>❌ Falscher Winkel → Finger gerade auflegen</li>
+            <li>❌ Sensor verschmutzt → mit weichem Tuch reinigen</li>
+            <li>❌ Schwellwert zu hoch → in Einstellungen reduzieren (Standard: 50)</li>
+        </ul>
+        <p><strong>Lösung:</strong></p>
+        <ul>
+            <li>Fingerabdruck neu anlernen</li>
+            <li>Mehrere Fingerabdrücke für gleiche Person speichern</li>
+            <li>Erkennungsschwelle in Einstellungen anpassen</li>
+        </ul>
+        
+        <h3>Problem: MQTT-Verbindung schlägt fehl</h3>
+        <p><strong>Mögliche Ursachen:</strong></p>
+        <ul>
+            <li>❌ Falsche Server-Adresse/Port</li>
+            <li>❌ Authentifizierung fehlgeschlagen</li>
+            <li>❌ Broker nicht erreichbar</li>
+            <li>❌ Firewall blockiert Port 1883</li>
+        </ul>
+        <p><strong>Lösung:</strong></p>
+        <ul>
+            <li>MQTT-Broker-Status prüfen (z.B. Mosquitto)</li>
+            <li>Verbindung testen: <code>mosquitto_sub -h 192.168.x.x -t fingerscanner/#</code></li>
+            <li>Logs in Weboberfläche prüfen</li>
+            <li>Alternative: Integrierten Broker verwenden (Server-Feld leer lassen)</li>
+        </ul>
+        
+        <div class="page-break"></div>
+        
+        <h2 id="wartung">📋 Wartung & Pflege</h2>
+        
+        <h3>Regelmäßige Wartung (monatlich):</h3>
+        <ol>
+            <li>✅ Fingerabdrucksensor reinigen (weiches Tuch)</li>
+            <li>✅ Firmware-Updates prüfen</li>
+            <li>✅ Backup der Fingerabdrücke erstellen (Download)</li>
+            <li>✅ Relais-Funktion testen</li>
+            <li>✅ MQTT-Logs prüfen (auf Fehler)</li>
+        </ol>
+        
+        <h3>Jährliche Wartung:</h3>
+        <ol>
+            <li>✅ Stromversorgung überprüfen (Netzteil, Kabel)</li>
+            <li>✅ Relais ggf. austauschen (bei Verschleiß)</li>
+            <li>✅ Sicherheitseinstellungen überprüfen (Passwörter ändern)</li>
+            <li>✅ Neue Firmware-Features prüfen</li>
+        </ol>
+        
+        <h2 id="faq">🎓 Tipps & Tricks</h2>
+        
+        <div class="alert alert-success">
+            <strong>Tipp 1: Mehrere Fingerabdrücke pro Person</strong><br>
+            Speichern Sie Daumen, Zeigefinger und Mittelfinger jeder Person. So funktioniert der Zugang auch bei verletztem Finger.
+        </div>
+        
+        <div class="alert alert-success">
+            <strong>Tipp 2: Fingerabdrücke bei verschiedenen Bedingungen anlernen</strong><br>
+            Lernen Sie Finger sowohl trocken als auch leicht feucht an. Das verbessert die Erkennungsrate.
+        </div>
+        
+        <div class="alert alert-success">
+            <strong>Tipp 3: Backup nicht vergessen!</strong><br>
+            Laden Sie regelmäßig ein Backup der Fingerabdrücke herunter. Nach einem Factory Reset können Sie diese wiederherstellen.
+        </div>
+        
+        <div class="alert alert-success">
+            <strong>Tipp 4: Stern (*) im Button-Namen</strong><br>
+            Wenn ein Button-Name einen Stern enthält (z.B. "Licht*"), wird beim Schalten keine MQTT-Nachricht gesendet. Nützlich für lokale Tests.
+        </div>
+        
+        <div class="alert alert-success">
+            <strong>Tipp 5: Zeitgesteuerte Automatisierung</strong><br>
+            Nutzen Sie die Sonnenauf-/-untergangs-Berechnung für automatische Außenbeleuchtung. Kein separater Timer nötig!
+        </div>
+        
+        <h2 id="faq">🎯 Häufig gestellte Fragen (FAQ)</h2>
+        
+        <table>
+            <tr>
+                <th>Frage</th>
+                <th>Antwort</th>
+            </tr>
+            <tr>
+                <td>Wie viele Fingerabdrücke kann ich speichern?</td>
+                <td>Bis zu 200 Fingerabdrücke, abhängig von der gewählten Template-Größe.</td>
+            </tr>
+            <tr>
+                <td>Funktioniert das System ohne Internet?</td>
+                <td>Ja! Das System arbeitet komplett lokal. Internet wird nur für NTP-Zeit und Telegram benötigt.</td>
+            </tr>
+            <tr>
+                <td>Kann ich mehrere ESP32 im gleichen Netzwerk betreiben?</td>
+                <td>Ja, ändern Sie den Hostnamen in den Einstellungen, um Konflikte zu vermeiden.</td>
+            </tr>
+            <tr>
+                <td>Wie sicher sind die gespeicherten Fingerabdrücke?</td>
+                <td>Es werden keine Originalabdrücke gespeichert, sondern nur mathematische Hash-Werte (Templates). Ein Rekonstruieren ist nicht möglich.</td>
+            </tr>
+            <tr>
+                <td>Was passiert bei Stromausfall?</td>
+                <td>Alle Einstellungen und Fingerabdrücke bleiben gespeichert (Flash-Speicher). ESP32 startet automatisch neu.</td>
+            </tr>
+            <tr>
+                <td>Unterstützt das System 5 GHz WLAN?</td>
+                <td>Nein, nur 2.4 GHz. Das ist eine Hardware-Einschränkung des ESP32.</td>
+            </tr>
+            <tr>
+                <td>Wie lange dauert die Fingerabdruck-Erkennung?</td>
+                <td>Weniger als 1 Sekunde vom Auflegen bis zur Entscheidung.</td>
+            </tr>
+        </table>
+        
+        <div class="page-break"></div>
+        
+        <h2>✅ Checkliste nach Installation</h2>
+        
+        <table>
+            <tr>
+                <th>✓</th>
+                <th>Aufgabe</th>
+            </tr>
+            <tr>
+                <td>☐</td>
+                <td>WiFi-Verbindung hergestellt</td>
+            </tr>
+            <tr>
+                <td>☐</td>
+                <td>Admin-Passwort geändert</td>
+            </tr>
+            <tr>
+                <td>☐</td>
+                <td>MQTT konfiguriert (Client oder Broker)</td>
+            </tr>
+            <tr>
+                <td>☐</td>
+                <td>Zeitzone eingestellt</td>
+            </tr>
+            <tr>
+                <td>☐</td>
+                <td>Standort für Sonnenauf-/-untergang konfiguriert</td>
+            </tr>
+            <tr>
+                <td>☐</td>
+                <td>Mindestens 2 Fingerabdrücke angelernt</td>
+            </tr>
+            <tr>
+                <td>☐</td>
+                <td>Relais/Ausgänge getestet</td>
+            </tr>
+            <tr>
+                <td>☐</td>
+                <td>Backup der Fingerabdrücke erstellt</td>
+            </tr>
+            <tr>
+                <td>☐</td>
+                <td>Firmware-Version überprüft</td>
+            </tr>
+            <tr>
+                <td>☐</td>
+                <td>Sensor-Pairing verifiziert</td>
+            </tr>
+        </table>
+        
+        <h2 id="rechtlich">⚖️ Rechtliche Hinweise</h2>
+        
+        <h3>Datenschutz (DSGVO)</h3>
+        <p>Fingerabdruck-Daten sind <strong>biometrische Daten</strong> und unterliegen besonderen Schutzvorschriften:</p>
+        <ul>
+            <li>✅ Lokale Speicherung (nicht in Cloud)</li>
+            <li>✅ Nur Hash-Werte (Templates), keine Originalabdrücke</li>
+            <li>✅ Verschlüsselte Übertragung empfohlen</li>
+            <li>✅ Nutzer muss Einwilligung zur Speicherung geben</li>
+        </ul>
+        
+        <h3>Gewährleistung</h3>
+        <ul>
+            <li>Gerät für Privatgebrauch konzipiert</li>
+            <li>Keine Haftung für Sach- oder Personenschäden</li>
+            <li>Installation auf eigene Verantwortung</li>
+            <li>Elektrische Installation nur durch Fachpersonal</li>
+        </ul>
+        
+        <h2 id="version">📝 Versionsinformation</h2>
+        <p><strong>Aktuelle Firmware-Version:</strong> 2.2.404<br>
+        <strong>Builddatum:</strong> 18.01.2026</p>
+        
+        <p><strong>Hauptkomponenten:</strong></p>
+        <ul>
+            <li>Arduino Framework (ESP-IDF)</li>
+            <li>PlatformIO Build-System</li>
+            <li>ESPAsyncWebServer</li>
+            <li>AsyncMqttClient</li>
+            <li>Adafruit Fingerprint Sensor Library</li>
+            <li>ArduinoJson</li>
+            <li>ElegantOTA</li>
+        </ul>
+        
+        <h2>🔨 Build-Optionen & Konfigurierbare Features</h2>
+        <p>Das System kann mit unterschiedlichen Feature-Sets kompiliert werden (PlatformIO Environments):</p>
+        
+        <h3>Umgebungen (Environments) in platformio.ini</h3>
+        
+        <h4>env:min (Minimale Variante)</h4>
+        <ul>
+            <li><strong>Zweck:</strong> Speicherbewusste Variante für ältere oder RAM-limitierte Systeme</li>
+            <li><strong>Aktivierte Features:</strong> Core-Funktionalität (Fingerprint, Web, MQTT-Client)</li>
+            <li><strong>Deaktivierte Features:</strong>
+                <ul>
+                    <li>USE_DOWNLOAD_UPLOAD = 0 (keine Template-Downloads)</li>
+                    <li>USE_DHT = 0 (kein Temperatursensor)</li>
+                    <li>USE_TELEGRAM = 0 (keine Telegram-Benachrichtigungen)</li>
+                    <li>USE_TEDEE = 0 (keine Tedee Smart Lock Integration)</li>
+                </ul>
+            </li>
+            <li><strong>Flash-Größe:</strong> Minimiert für Geräte mit kleinerem Flash-Speicher</li>
+        </ul>
+        
+        <h4>env:max (Maximale Variante - Standard)</h4>
+        <ul>
+            <li><strong>Zweck:</strong> Vollständig ausgestattete Variante mit allen Features</li>
+            <li><strong>Aktivierte Features:</strong>
+                <ul>
+                    <li>USE_DOWNLOAD_UPLOAD = 1 (Template-Download/Upload via Web)</li>
+                    <li>USE_DHT = 1 (DHT22 Temperatur-/Feuchtigkeitssensor)</li>
+                    <li>USE_TELEGRAM = 1 (Telegram-Benachrichtigungen)</li>
+                    <li>USE_TEDEE = 1 (Tedee Smart Lock Integration)</li>
+                    <li>MQTT-Broker-Modus</li>
+                    <li>Erweiterte Debugging-Optionen</li>
+                </ul>
+            </li>
+            <li><strong>Speicheranforderung:</strong> ~2.5-3.0 MB Flash + 200 KB RAM</li>
+            <li><strong>Empfohlen für:</strong> Systeme mit 4 MB Flash (Standard ESP32)</li>
+        </ul>
+        
+        <h4>env:dev (Entwicklungsvariante - nur für Debugging)</h4>
+        <ul>
+            <li><strong>Zweck:</strong> Erweiterte Debug-Ausgaben und Logging</li>
+            <li><strong>Features:</strong> Alle Features wie max + erweiterte Logs</li>
+            <li><strong>Hinweis:</strong> Nicht für Produktiv-Einsatz empfohlen</li>
+        </ul>
+        
+        <h3>Compile-Time Feature Flags</h3>
+        <p>In <code>platformio.ini</code> konfigurierbar:</p>
+        <pre><code>[env:max]
+build_flags =
+    -D USE_DOWNLOAD_UPLOAD=1   ; Template-Download/Upload aktivieren
+    -D USE_DHT=1               ; DHT22 Sensor aktivieren
+    -D USE_TELEGRAM=1          ; Telegram-Benachrichtigungen aktivieren
+    -D USE_TEDEE=1             ; Tedee Smart Lock Integration aktivieren
+    -D LOGGING=1               ; Erweiterte Logs aktivieren
+
+[env:min]
+build_flags =
+    -D USE_DOWNLOAD_UPLOAD=0   ; Ausschalten = Speicher sparen
+    -D USE_DHT=0
+    -D USE_TELEGRAM=0
+    -D USE_TEDEE=0
+</code></pre>
+        
+        <h3>Build-Befehl</h3>
+        <pre><code># Maximale Variante bauen:
+pio run -e max
+
+# Minimale Variante bauen:
+pio run -e min
+
+# Filesystem (SPIFFS) bauen:
+pio run -e max -t buildfs
+
+# Hochladen (max) mit Filesystem:
+pio run -e max -t uploadfs; pio run -e max -t upload
+</code></pre>
+        
+        <h2>Software-Architektur</h2>
+        <p>Das System folgt einer modularen Architektur:</p>
+        <ul>
+            <li><strong>main.cpp:</strong> Hauptprogramm, Initialisierung, Event-Loop</li>
+            <li><strong>FingerprintManager:</strong> Sensor-Kommunikation, Template-Verwaltung</li>
+            <li><strong>SettingsManager:</strong> Konfiguration, WiFi, MQTT, Persistierung (Preferences)</li>
+            <li><strong>SolarCalc:</strong> Sonnenauf-/-untergang Berechnung für Automatisierung</li>
+            <li><strong>Web-Interface:</strong> HTML/JavaScript im SPIFFS mit Server-Sent Events (SSE) für Live-Updates</li>
+            <li><strong>MQTT Integration:</strong> AsyncMqttClient (Client) + ESPAsyncMQTTBroker (optionaler Broker)</li>
+        </ul>
+        
+        <hr>
+        
+        <div style="text-align: center; margin-top: 40px; padding: 20px; background: #ecf0f1; border-radius: 10px;">
+            <h2 style="color: #2c3e50;">🎉 Vielen Dank für Ihr Vertrauen in FingerScanner LGI! 🎉</h2>
+            <p>Bei Fragen oder Problemen stehen wir Ihnen gerne zur Verfügung.</p>
+        </div>
+        
+        <div style="text-align: center; margin-top: 20px; color: #7f8c8d; font-size: 0.9em;">
+            <p><em>Dieses Handbuch wurde automatisch generiert und ist auf dem Stand der Firmware-Version 2.2.404 vom 18.01.2026.</em></p>
+            <p><em>Änderungen und Irrtümer vorbehalten. Technische Daten können ohne Ankündigung geändert werden.</em></p>
+        </div>
+    </div>
+    
+    <!-- QR Code Generator Library -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    
+    <!-- html2pdf.js Library für PDF-Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <script>
+        // QR-Code generieren
+        window.addEventListener('load', function() {
+            const wifiString = "WIFI:T:WPA;S:FingerscannerConfig;P:12345678;;";
+            
+            // QR-Code erstellen
+            const qrcode = new QRCode(document.getElementById("qrcode"), {
+                text: wifiString,
+                width: 256,
+                height: 256,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.M
+            });
+        });
+        
+        function downloadPDF() {
+            // Zeige Lade-Animation
+            const btn = document.querySelector('.pdf-download-btn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '⏳ Wird erstellt...';
+            btn.disabled = true;
+            
+            // PDF-Optionen konfigurieren
+            const opt = {
+                margin: [10, 10, 10, 10],
+                filename: 'FingerScanner_LGI_Technisch_Handbuch.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { 
+                    scale: 2,
+                    useCORS: true,
+                    logging: false,
+                    letterRendering: true
+                },
+                jsPDF: { 
+                    unit: 'mm', 
+                    format: 'a4', 
+                    orientation: 'portrait',
+                    compress: true
+                },
+                pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+            };
+            
+            // Button temporär ausblenden während PDF-Erstellung
+            btn.style.display = 'none';
+            
+            // Container-Element für PDF
+            const element = document.querySelector('.container');
+            
+            // PDF erstellen und herunterladen
+            html2pdf().set(opt).from(element).save().then(() => {
+                // Button wieder einblenden und zurücksetzen
+                btn.style.display = 'inline-block';
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }).catch((error) => {
+                console.error('PDF-Erstellung fehlgeschlagen:', error);
+                btn.style.display = 'inline-block';
+                btn.innerHTML = '❌ Fehler';
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }, 2000);
+            });
+        }
+        
+        // Tastenkombination Strg+P abfangen für konsistente Erfahrung
+        document.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+                e.preventDefault();
+                downloadPDF();
+            }
+        });
+        
+        // Automatische PDF-Generierung via PowerShell-Script
+        // Führen Sie im Terminal aus: .\doc\generate_pdf.ps1
+        // Oder mit vollem Pfad:
+        // powershell -ExecutionPolicy Bypass -File "d:\!FingerPrint\###1A-Parip69-Fingerprint_Original\doc\generate_pdf.ps1"
+    </script>
+</body>
+</html>

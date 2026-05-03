@@ -1,0 +1,100 @@
+<!-- Beschreibung: 🎉🎉2.0.0 erste wo alles get mit dem Templade dowenload🎉🎉 -->
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>Login</title>
+  <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+  <link rel="stylesheet" href="/bootstrap.min.css">
+  <style>
+    body {
+      background-color: #3f3f3f;
+    }
+
+    .container {
+      margin-bottom: 10px;
+    }
+
+    .login-container {
+      background-color: #8d8d8d;
+      padding: 30px 20px 20px 20px;
+      border-radius: 10px;
+      box-shadow: 0px 0px 10px #5fe7f9;
+      border: 1px solid #ffc6c6;
+      max-width: 400px;
+      margin: 40px auto 20px auto;
+    }
+
+    .login-title {
+      color: #fff;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    label {
+      color: #222;
+      font-weight: bold;
+    }
+
+    .form-control {
+      background-color: #dfdddd;
+      border: 1px solid #ffc6c6;
+      border-radius: 8px;
+      box-shadow: 0 0 6px #5fe7f933;
+      color: #222;
+    }
+
+    .btn-primary {
+      background-color: #5CB85C;
+      border: none;
+      border-radius: 5px;
+      color: #fff;
+      font-weight: bold;
+      padding: 10px 20px;
+      margin-top: 10px;
+    }
+
+    .btn-primary:hover {
+      background-color: #449d44;
+    }
+
+    .footer-settings-container {
+      margin-top: 20px;
+    }
+
+    .footer-nav {
+      margin-top: 15px;
+    }
+
+    .alert-custom {
+      background-color: #dfdddd;
+      border: 1px solid #ffc6c6;
+      color: #544f4f;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="login-container">
+      <h2 class="login-title">Login</h2>
+      <form action="/login" method="post">
+        <div class="form-group">
+          <label for="password">Passwort:</label>
+          <input type="password" id="password" name="password" class="form-control" required>
+        </div>
+        <div class="form-group text-center">
+          <button type="submit" class="btn btn-primary">Einloggen</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</body>
+
+</html>

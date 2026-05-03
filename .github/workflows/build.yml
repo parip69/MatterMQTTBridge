@@ -1,0 +1,73 @@
+name: Firmware Build & Download-Links
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        envname: [max, min]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install PlatformIO
+        run: pip install platformio
+
+      - name: Build ${{ matrix.envname }}
+        run: pio run -e ${{ matrix.envname }}
+
+      - name: Build Filesystem (${{ matrix.envname }})
+        run: pio run -e ${{ matrix.envname }} -t buildfs
+
+      - name: Collect artifacts (${{ matrix.envname }})
+        run: |
+          mkdir -p artifacts/${{ matrix.envname }}
+          cp .pio/build/${{ matrix.envname }}/*.bin artifacts/${{ matrix.envname }}/ || true
+          cp .pio/build/${{ matrix.envname }}/firmware.elf artifacts/${{ matrix.envname }}/ || true
+
+      - name: Upload artifacts (${{ matrix.envname }})
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware-${{ matrix.envname }}
+          path: artifacts/${{ matrix.envname }}
+          retention-days: 2
+
+  announce:
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Issue mit Download-Link erstellen
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const buildUrl = `${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`;
+            const title = `Neue Firmware verfügbar (${new Date().toLocaleString('de-DE', { timeZone: 'Europe/Berlin' })})`;
+            const body = [
+              "**Build erfolgreich!**",
+              "- PlatformIO Umgebung: max & min",
+              "- Alle Firmware/Filesystem-Dateien stehen hier zum Download bereit (2 Tage gültig):",
+              "",
+              `👉 [Zu den Downloads (GitHub Actions Run)](${buildUrl})`,
+              "",
+              "Du findest die Downloads als *Artifacts* direkt unten auf der GitHub-Actions-Seite.",
+              "",
+              "*Erstellt automatisch von GitHub Actions.*"
+            ].join("\n");
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title,
+              body,
+              labels: ['firmware', 'build', 'download']
+            });

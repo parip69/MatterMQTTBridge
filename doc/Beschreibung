@@ -1,0 +1,44 @@
+Projektbeschreibung: Fingerscanner Parip69
+
+**Projektname:** Fingerscanner Parip69
+
+**Kurzbeschreibung:**
+Fingerscanner Parip69 ist eine ESP32-basierte Zugang-/Automationslösung mit Fingerabdrucksensor (z.B. R503), Web-UI, MQTT (Client oder interner Broker), OTA-Updates und optionalen Modulen (z.B. Tedee, Telegram, DHT22). Ziel ist ein stabiler, modularer Betrieb im lokalen Netzwerk – inklusive Live-Status (SSE), Logging und konfigurierbaren Ausgängen.
+
+**Hauptfunktionen:**
+1. **Fingerabdruck (R503):**
+   - Verifizieren/Enroll/Verwaltung (bis zu 200 Slots, abhängig vom Sensor)
+   - LED-Ring/Aura-LED-Steuerung (Statusfeedback)
+
+2. **Ausgänge / Aktionen:**
+   - Mehrere konfigurierbare Outputs (Relais/Klingel/Ring etc.)
+   - Optionale Verzögerungen/Schaltzeiten pro Ausgang
+
+3. **MQTT (flexibel):**
+   - Betrieb als MQTT-Client zu einem externen Broker ODER als interner Broker
+   - Publish/Subscribe für Status, Events und Steuerbefehle
+   - Root-Topic frei konfigurierbar (Default: "fingerscanner")
+
+4. **Weboberfläche:**
+   - Konfiguration (WLAN, MQTT, NTP/Timezone, Module)
+   - Fingerprint-Verwaltung und Statusanzeigen
+   - Live-Events/Logs via Server-Sent Events (SSE)
+
+5. **Zeit / Logik (optional):**
+   - NTP-Zeitbasis
+   - Sonnenauf-/untergangsberechnung (Latitude/Longitude + Offsets) für Automationen
+
+6. **Optionale Module (per Build-Flags):**
+   - Telegram Benachrichtigungen
+   - Tedee Smart-Lock Integration
+   - DHT22 Sensor (Temperatur/Feuchte)
+
+**Technik-Stack (Auszug):**
+- ESP32 (Arduino Framework, PlatformIO)
+- AsyncWebServer + SSE
+- AsyncMqttClient / optional interner Broker
+- Preferences (NVS) für Settings
+- ElegantOTA (OTA-Update über Web)
+
+**Hinweis:**
+Drittanbieter-Bibliotheken und Frameworks behalten ihre jeweiligen Lizenzen. Das Projekt selbst fokussiert auf eigenständige Implementierung der Geräte-Logik, Settings- und Integrationsmodule.

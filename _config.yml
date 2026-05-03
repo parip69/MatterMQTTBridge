@@ -1,0 +1,4 @@
+theme: jekyll-theme-cayman
+markdown: GFM
+title: Fingerscanner Parip69
+description: ESP32-Fingerscanner mit Web-UI, MQTT (Client/Broker), OTA und optionalen Modulen

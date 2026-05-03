@@ -1,0 +1,91 @@
+doc/Projekt-Links-und-Zugangsdaten.md
+############################################################
+# ZENTRALE STRATEGIE: Standardmäßig alles ignorieren (*)
+# und nur die wirklich benötigten Projektartefakte whitelisten.
+# Dadurch bleiben versehentliche große/temporäre Dateien draußen.
+############################################################
+
+# 1) Global alles ignorieren
+*
+
+# 2) Ausnahmen (Whiteliste) – WICHTIG: Verzeichnisse zuerst selbst, dann Inhalte
+!/.gitignore
+# .version_lock explizit NICHT mehr whitelisten -> bleibt ignoriert
+!/platformio.ini
+!/partitions.csv
+!/partitions*.csv
+!/update_version_in_code.py
+!/update_backup_projekt_and_firmware.py
+!/README.md
+!/README.de.md
+!/CHANGELOG.md
+!/LICENSE
+!/_config.yml
+!/src/
+!/src/**
+!/data/
+!/data/**
+!/doc/
+!/doc/**
+!/.github/
+!/.github/**
+!/agent_worklog.md
+!/AGENTS.md
+!/xyz_Github_Befehle.md
+!/xyzPromt.md
+!/.github/copilot-instructions.md
+!/.github/copilot-instructions-de.md
+!/Handbuch/
+!/Handbuch/**
+
+# 3) Innerhalb freigegebener Bereiche gezielt wieder ignorieren
+# Build-/Cache-/Werkzeug-Ordner
+.pio/
+build/
+cmake-build*/
+esp-idf/
+tools/
+rxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/
+
+# VS Code Konfiguration (lokal)
+.vscode/
+.local-history/
+
+# Backup & Archive (auch falls versehentlich in freigegebenen Ordnern)
+Backup/
+MyBackup/
+My1AZipBackup/
+*.tar
+*.bak
+
+# Firmware Artefakte
+*.bin
+*.elf
+*.map
+*.hex
+
+# Python / Cache
+__pycache__/
+*.pyc
+
+# System / Editor Reste
+Thumbs.db
+Desktop.ini
+.history/
+
+# Geheimnisse
+secrets.h
+
+# Nicht benötigte Fremd-Repos
+ESPAsyncMQTTBroker/
+
+# Projekt-spezifische Einzelausschlüsse
+doc/wiring.pptx
+build_errors.txt
+builds
+
+# Optionale Beispiel-/Lib-Verzeichnisse NICHT mehr automatisch tracken
+lib/
+
+# Ende
+############################################################

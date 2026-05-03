@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>WiFi Konfiguration</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+    <style>
+        :root {
+            --bg: #2f2f2f;
+            --panel: #6f6f6f;
+            --panel2: #dfdddd;
+            --textOnDark: #f2f2f2;
+            --border: #ffc6c6;
+            --glow: rgba(95, 231, 249, .35);
+            --focus: rgba(91, 192, 222, .55);
+            --success: #5CB85C;
+            --successHover: #449d44;
+            --info: #5bc0de;
+            --infoHover: #31b0d5;
+            --radius: 14px
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        html,
+        body {
+            min-height: 100vh
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+            color: var(--textOnDark)
+        }
+
+        .page {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            padding-left: max(16px, env(safe-area-inset-left));
+            padding-right: max(16px, env(safe-area-inset-right));
+            padding-top: max(16px, env(safe-area-inset-top));
+            padding-bottom: max(16px, env(safe-area-inset-bottom))
+        }
+
+        .panel {
+            max-width: 600px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: 0 0 18px var(--glow);
+            padding: 14px;
+            margin: 0 auto
+        }
+
+        @media (max-height:520px) {
+            .page {
+                align-items: stretch
+            }
+
+            .panel {
+                max-height: calc(100vh - 32px);
+                overflow: auto;
+                -webkit-overflow-scrolling: touch
+            }
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 10px
+        }
+
+        h1 {
+            margin: 0 0 6px 0;
+            font-size: clamp(18px, 4.5vw, 26px);
+            color: var(--textOnDark);
+            letter-spacing: .2px;
+            word-break: break-word
+        }
+
+        .subtitle {
+            margin: 0;
+            font-size: .95rem;
+            opacity: .92
+        }
+
+        .hint {
+            background: var(--panel2);
+            color: #2b2b2b;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 10px 12px;
+            line-height: 1.35;
+            font-size: .98rem;
+            margin: 12px 0
+        }
+
+        .hint small {
+            display: block;
+            margin-top: 6px;
+            color: #333;
+            opacity: .95;
+            font-size: .9rem
+        }
+
+        form {
+            margin: 0
+        }
+
+        .field {
+            margin: 10px 0;
+            display: flex;
+            flex-direction: column
+        }
+
+        label {
+            display: block;
+            margin: 0 0 6px 0;
+            font-weight: 650;
+            color: #1b1b1b
+        }
+
+        .input {
+            min-width: 0;
+            background: var(--panel2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 12px;
+            font-size: 1rem;
+            color: #1a1a1a;
+            outline: none;
+            transition: box-shadow .2s ease, border-color .2s ease
+        }
+
+        .input:focus {
+            border-color: #5bc0de;
+            box-shadow: 0 0 0 3px var(--focus)
+        }
+
+        .help {
+            margin: 6px 0 0 0;
+            font-size: .92rem;
+            color: #1f1f1f;
+            opacity: .92
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 14px
+        }
+
+        .btn {
+            border: none;
+            border-radius: 12px;
+            padding: 12px 14px;
+            font-size: 1rem;
+            font-weight: 750;
+            cursor: pointer;
+            color: #fff;
+            box-shadow: 0 1px 6px rgba(0, 0, 0, .22);
+            transition: transform .06s ease, filter .18s ease, background .18s ease;
+            flex: 1 1 240px;
+            max-width: 260px
+        }
+
+        @media (max-width:420px) {
+            .btn {
+                max-width: none
+            }
+        }
+
+        .btn:active {
+            transform: scale(.99)
+        }
+
+        .btn-success {
+            background: var(--success)
+        }
+
+        .btn-success:hover {
+            background: var(--successHover)
+        }
+
+        .btn-info {
+            background: var(--info)
+        }
+
+        .btn-info:hover {
+            background: var(--infoHover)
+        }
+
+        .panel-inner {
+            margin: 2px;
+            border-radius: 12px;
+            padding: 14px;
+            background: linear-gradient(180deg, rgba(91, 192, 222, .12), rgba(255, 255, 255, .06));
+            border: 1px solid rgba(255, 198, 198, .78);
+            box-shadow: inset 0 0 0 1px rgba(91, 192, 222, .28), 0 0 10px rgba(95, 231, 249, .16)
+        }
+
+        .panel-inner label {
+            color: #101010
+        }
+
+        input:-webkit-autofill {
+            -webkit-text-fill-color: #1a1a1a;
+            transition: background-color 5000s ease-in-out 0s;
+            box-shadow: 0 0 0 1000px var(--panel2) inset;
+            border: 1px solid var(--border)
+        }
+    </style>
+</head>
+
+<body>
+    <main class="page">
+        <section class="panel" role="region" aria-label="WiFi Konfiguration">
+            <header>
+                <h1>%HOSTNAME%</h1>
+                <p class="subtitle">WiFi-Konfigurationsmodus</p>
+            </header>
+            <div class="hint" role="note"><b>Access-Point-Modus aktiv</b><br /> 1. Verbinde dich mit dem WLAN des
+                Geräts.<br /> 2. Speichere die Einstellungen – das Gerät startet neu und verbindet sich mit deinem WLAN.
+                <small>Falls die Verbindung fehlschlägt: Sensor beim Einschalten 10s gedrückt halten, um hierher
+                    zurückzukehren.</small>
+            </div>
+            <div class="panel-inner">
+                <form action="/save" method="get" autocomplete="off">
+                    <div class="field"><label for="ssid">SSID</label><input id="ssid" name="ssid" class="input"
+                            type="text" placeholder="SSID Ihres WLANs" value="%WIFI_SSID%" required
+                            autocapitalize="none" autocorrect="off" spellcheck="false" /></div>
+                    <div class="field"><label for="password">WLAN-Passwort</label><!-- Immer Klartext --><input
+                            id="password" name="password" class="input" type="text" placeholder="Passwort Ihres WLANs"
+                            value="%WIFI_PASSWORD%" required autocapitalize="none" autocorrect="off"
+                            spellcheck="false" />
+                        <p class="help">Neues Passwort hier eingeben.</p>
+                    </div>
+                    <div class="field"><label for="hostname">Hostname</label><input id="hostname" name="hostname"
+                            class="input" type="text" placeholder="Hostname des Fingerscanners" value="%HOSTNAME%"
+                            required autocapitalize="none" autocorrect="off" spellcheck="false" />
+                        <p class="help">Name im Netzwerk. Standard: Fingerscanner.</p>
+                    </div>
+                    <div class="field"><label for="passwordSetup">Passwort für Homepage-Setup</label><input
+                            id="passwordSetup" name="passwordSetup" class="input" type="text"
+                            placeholder="Setup-Passwort" value="%PASSWORD_SETUP_WiFi_CONFIG%" autocapitalize="none"
+                            autocorrect="off" spellcheck="false" />
+                        <p class="help">Hier wird das Passwort für die WWW gesetzt.</p>
+                    </div>
+                    <div class="actions"><button id="save" name="save" class="btn btn-success" type="submit"> Speichern
+                            &amp; Neustart
+                        </button><!-- Absoluter Pfad ist robuster (egal, unter welcher URL die Seite liegt) --><button
+                            id="btnFirmwareUpdate" name="btnFirmwareUpdate" class="btn btn-info" type="button"
+                            onclick="fetch('/otaPrepare').then(()=>window.location='/update')"> Firmware-Update </button></div>
+                </form>
+            </div>
+        </section>
+    </main>
+</body>
+
+</html>
