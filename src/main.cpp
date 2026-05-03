@@ -32,10 +32,10 @@
 #if USE_MQTT_BROKER
 #include "ESPAsyncMQTTBroker.h"
 #endif
-#include "FingerprintManager.h"
 #include "SettingsManager.h"
 #if USE_MQTT_CLIENT
-#include "MqttConnectionManager.h" // <-- NEU
+#include "MqttConnectionManager.h"
+#include "Bridge.h" // <-- NEU
 #endif
 #include "global.h"
 
@@ -56,7 +56,6 @@
 #endif
 
 #include <ArduinoJson.h>
-#include "SolarCalc.h"
 // debug.h entfernt -> Logging jetzt in global.h integriert
 
 // Guards & Defaults für DHT
@@ -529,7 +528,7 @@ unsigned long wifiConfigStartTime = 0;
 
 // Globale Variable für MQTT-Topic
 #if USE_MQTT_ANY
-String mqttRootTopic = "fingerscanner"; // Standard-Wert, wird später überschrieben
+String mqttRootTopic = "MatterMQTTBridge"; // Standard-Wert, wird später überschrieben
 #else
 // Minimaler Stub (12 Bytes BSS) – wird von Web-Handlern referenziert die publishMqttMessage (No-Op) aufrufen
 static const String mqttRootTopic;
@@ -539,7 +538,7 @@ int led1State = LOW; // Zustand der LED1
 // SolarCalc solarCalc(LATITUDE, LONGITUDE, DST_OFFSET);
 // SolarCalc solarCalc(48.777444, 11.619619);.
 
-extern SolarCalc solarCalc;
+// extern SolarCalc solarCalc; // Legacy entfernt
 
 // Funktion zum Trennen und Säubern (Trimmen) der Zeitzonen-Strings timezoneName, timezoneOffset
 void splitAndTrim(const String &input, const String &delimiter, String &part1, String &part2);
@@ -562,11 +561,11 @@ String UserParip;
 // ===================================================================================================================
 // Caution: below are not the credentials for connecting to your home network, they are for the Access Point mode!!!
 // ===================================================================================================================
-const char *WifiConfigSsid = "FingerscannerConfig"; // SSID used for WiFi when in Access Point mode for configuration
+const char *WifiConfigSsid = "MatterMQTTBridgeConfig"; // SSID used for WiFi when in Access Point mode for configuration
 const char *WifiConfigPassword = "12345678";		// password used for WiFi when in Access Point mode for configuration. Min. 8 chars needed!
 IPAddress WifiConfigIp(192, 168, 4, 1);				// IP of access point in wifi config mode-
 
-FingerprintManager fingerManager;
+// FingerprintManager fingerManager; // Legacy entfernt
 SettingsManager settingsManager;
 
 // Pin belegung.
@@ -652,7 +651,7 @@ String makeTopic(const String &tail)
 {
 	const AppSettings &app = settingsManager.getAppSettings();
 	const WifiSettings wifi = settingsManager.getWifiSettings();
-	const String &root = app.mqttRootTopic.length() ? app.mqttRootTopic : (const String &)String("fingerscanner");
+	const String &root = app.mqttRootTopic.length() ? app.mqttRootTopic : (const String &)String("MatterMQTTBridge");
 	String t;
 	t.reserve(root.length() + wifi.hostname.length() + tail.length() + 16);
 	t = root;
@@ -1000,7 +999,7 @@ static const char *mqttDisconnectReasonToString(AsyncMqttClientDisconnectReason 
 
 // TimerHandle_t mqttReconnectTimer;
 
-Match lastMatch;
+// Match lastMatch; // Legacy entfernt
 
 void addLogMessage(const String &message)
 {
@@ -1297,11 +1296,11 @@ String processor(const String &var)
 	}
 	else if (var == "SUNR")
 	{
-		return String(solarCalc.Sunrise);
+		return String(String("--:--"));
 	}
 	else if (var == "SUNS")
 	{
-		return String(solarCalc.Sunset);
+		return String(String("--:--"));
 	}
 	else if (var == "UHRZEIT_DATUM")
 	{
@@ -1401,7 +1400,7 @@ String processor(const String &var)
 	/////////////////////////////////////////////////////////////////////////////
 	else if (var == "FS_FLIST")
 	{
-		return fingerManager.getFingerListAsHtmlOptionList();
+		return /* fingerManager Legacy */;
 	}
 	else if (var == "HOSTNAME")
 	{
@@ -1596,13 +1595,6 @@ String processor(const String &var)
 	return String();
 }
 
-String getCurrentFingerlistHtml()
-{
-	// Nutze genau denselben Weg wie beim Seiten-Reload.
-	// Falls processor("FS_FLIST") später intern geändert wird,
-	// profitieren Enroll/Upload automatisch davon.
-	return processor("FS_FLIST");
-}
 
 // send LastMessage to websocket clients
 // Funktion für einheitliche MQTT-Veröffentlichung - Vorwärtsdeklaration
@@ -1828,75 +1820,13 @@ void publishMqttMessage(const String &topic, const String &message, bool retain,
 #endif
 }
 
-void updateClientsFingerlist(const String &html_flist, int selectedId = -1)
-{
-	LOG_PRINTLN("New html_flist was sent to clients");
-	sendSSEEvent(html_flist.c_str(), "html_flist", millis(), 1000);
-	if (selectedId >= 0)
-	{
-		String selIdStr = String(selectedId);
-		sendSSEEvent(selIdStr.c_str(), "html_sel_fp", millis(), 1000);
-	}
-}
 
-bool doPairing()
-{
-	String newPairingCode = settingsManager.generateNewPairingCode();
 
-	if (fingerManager.setPairingCode(newPairingCode))
-	{
-		AppSettings settings = settingsManager.getAppSettings();
-		settings.sensorPairingCode = newPairingCode;
-		settings.sensorPairingValid = true;
-		settingsManager.saveAppSettings(settings);
-		notifyClients("Paarung erfolgreich.");
-		return true;
-	}
-	else
-	{
-		notifyClients("Die Kopplung ist fehlgeschlagen.");
-		return false;
-	}
-}
 
-bool checkPairingValid()
-{
-	AppSettings settings = settingsManager.getAppSettings();
 
-	if (!settings.sensorPairingValid)
-	{
-		if (settings.sensorPairingCode.isEmpty())
-		{
-			// first boot, do pairing automatically so the user does not have to do this manually
-			return doPairing();
-		}
-		else
-		{
-			LOG_PRINTLN("Pairing has been invalidated previously.");
-			return false;
-		}
-	}
-
-	String actualSensorPairingCode = fingerManager.getPairingCode();
-	// LOG_PRINTLN("Awaited pairing code: " + settings.sensorPairingCode);
-	// LOG_PRINTLN("Actual pairing code: " + actualSensorPairingCode);
-
-	if (actualSensorPairingCode.equals(settings.sensorPairingCode))
-		return true;
-	else
-	{
-		if (!actualSensorPairingCode.isEmpty())
-		{
-			// An empty code means there was a communication problem. So we don't have a valid code, but maybe next read will succeed and we get one again.
-			// But here we just got an non-empty pairing code that was different to the awaited one. So don't expect that will change in future until repairing was done.
-			// -> invalidate pairing for security reasons
-			AppSettings settings = settingsManager.getAppSettings();
-			settings.sensorPairingValid = false;
-			settingsManager.saveAppSettings(settings);
-		}
-		return false;
-	}
-}
+// Stub-Funktionen (Legacy entfernt)
+static bool doPairing() { return true; }
+static bool checkPairingValid() { return true; }
 
 // ============================================================================
 // WiFi Event Handler - Zentrale Behandlung aller WiFi-Events
@@ -1997,11 +1927,11 @@ static void handleWifiEvent(WiFiEvent_t event, WiFiEventInfo_t info)
 		LOG_PRINTLN("[WiFi] Verbindung verloren");
 		if (settingsManager.isWifiConfigured())
 		{
-			fingerManager.setLedRingWifiDisconnected();
+			// /* fingerManager Legacy */;
 		}
 		else
 		{
-			fingerManager.setLedRingWifiConfig();
+			// /* fingerManager Legacy */;
 		}
 		if (mdnsStarted)
 		{
@@ -2326,9 +2256,9 @@ bool initWifi()
 		DIAG_PRINTF("WIFI", "connected RSSI=%d IP=%s", WiFi.RSSI(), WiFi.localIP().toString().c_str());
 		currentMode = Mode::scan;
 		wifiConnectedSince = millis();
-		if (fingerManager.connected)
+		if (false)
 		{
-			fingerManager.setLedRingReady();
+			// /* fingerManager Legacy */;
 		}
 		return true;
 	}
@@ -2348,8 +2278,8 @@ void initWiFiAccessPointForConfiguration()
 	WiFi.softAP(WifiConfigSsid, WifiConfigPassword);
 
 	// Hostname für mDNS setzen (.local Zugriff)
-	WiFi.setHostname("fingerscanner");
-	if (MDNS.begin("fingerscanner"))
+	WiFi.setHostname("MatterMQTTBridge");
+	if (MDNS.begin("MatterMQTTBridge"))
 	{
 		LOG_PRINTLN("[mDNS] Hostname 'fingerscanner.local' registriert");
 		MDNS.addService("http", "tcp", 80);
@@ -2689,7 +2619,7 @@ void startWebserver()
 									currentMode = Mode::scan;
 								}
 								// Überprüfen, ob die ID bereits in der Fingerliste vorhanden ist
-								else if (fingerManager.isFingerIdInList(parsedId))
+// [Legacy] 								else if (fingerManager.isFingerIdInList(parsedId))
 								{
 									notifyClients("Die ID " + enrollId + " ist bereits in der Fingerliste vorhanden. Bitte wählen Sie eine andere ID oder löschen Sie den bereits vorhandenen Eintrag.");
 									LOG_PRINTLN("Die ID " + enrollId + " ist bereits in der Fingerliste vorhanden. Bitte wählen Sie eine andere ID oder löschen Sie den bereits vorhandenen Eintrag.");
@@ -2707,53 +2637,10 @@ void startWebserver()
       					request->redirect("/"); });
 		//////////////////////////////////////////////////////
 
+		// [Legacy] /editFingerprints entfernt – FingerprintManager nicht mehr vorhanden
 		webServer.on("/editFingerprints", HTTP_GET, [](AsyncWebServerRequest *request)
 					 {
-						 if (request->hasArg("html_sel_fp"))
-						 {
-							 LOG_PRINT("html_sel_fp argument vorhanden: ");
-							 LOG_PRINTLN(request->arg("html_sel_fp"));
-
-							 int id = request->arg("html_sel_fp").toInt(); // ID des ausgewählten Fingerabdrucks
-
-							 if (request->hasArg("btnDelete"))
-							 {
-								 LOG_PRINT("btnDelete argument vorhanden: ");
-								 LOG_PRINTLN(request->arg("btnDelete"));
-
-								 // Lösche den Fingerabdruck mit der angegebenen ID
-								 notifyClients("Löschen des Fingerabdrucks mit der ID " + String(id) + " gestartet...");
-								 bool ok = fingerManager.deleteFinger(id);
-								 if (!ok)
-								 {
-									 request->send(500, "text/plain", "Delete failed");
-									 return;
-								 }
-								 // Aktualisiere die Fingerabdruckliste und Auswahl auf den Clients
-								 updateClientsFingerlist(fingerManager.getFingerListAsHtmlOptionList(), -1);
-							 }
-							 else if (request->hasArg("btnRename"))
-							 {
-								 LOG_PRINTLN("btnRename argument vorhanden");
-
-								 String newName = request->arg("renameNewName");
-
-								 // Umbenennen des Fingerabdrucks
-								 fingerManager.renameFinger(id, newName);
-								 // Aktualisiere die Fingerabdruckliste und Auswahl auf den Clients
-								 updateClientsFingerlist(fingerManager.getFingerListAsHtmlOptionList(), id);
-							 }
-						 }
-						 else
-						 {
-							 notifyClients("Bearbeiten abgebrochen: html_sel_fp fehlt.");
-							 LOG_PRINTLN("html_sel_fp argument NICHT vorhanden");
-							 request->send(400, "text/plain", "Missing parameter: html_sel_fp");
-							 return;
-						 }
-
-						 // Keine Weiterleitung mehr, stattdessen senden wir die aktualisierte Liste
-						 request->send(204, "text/html", ""); // Antwort an den Client, aber keine Weiterleitung mehr
+						 request->send(410, "text/plain", "Fingerprint-Verwaltung nicht verfügbar (Legacy)");
 					 });
 
 		// Endpunkt zum Herunterladen eines einzelnen Fingerabdrucks (RAM-Puffer, FINGERPRINT_TEMPLATE_SIZE Bytes)
@@ -2771,19 +2658,19 @@ void startWebserver()
 				return;
 			}
 
-			if (!fingerManager.exportSingleFinger((uint8_t)id)) {
+// [Legacy] 			if (!fingerManager.exportSingleFinger((uint8_t)id)) {
 				request->send(500, "text/plain", "Fehler beim Export des Fingerabdrucks.");
 				return;
 			}
 
-			const uint8_t *data = fingerManager.getExportedFingerData();
-			size_t totalLen = fingerManager.getExportedFingerprintLength();
+			const uint8_t *data = /* fingerManager Legacy */;
+			size_t totalLen = /* fingerManager Legacy */;
 			if (!data || totalLen == 0) {
 				request->send(500, "text/plain", "Fehler: Keine exportierten Daten vorhanden.");
 				return;
 			}
 
-			String filename = fingerManager.getExportedFingerprintFilename();
+			String filename = /* fingerManager Legacy */;
 			if (filename.isEmpty()) {
 				filename = String(id) + ".tmpl";
 			}
@@ -2918,7 +2805,7 @@ void startWebserver()
 				}
 
 				// Validierung 3: Prüfen, ob ID bereits belegt ist (KEIN automatisches Überschreiben)
-				if (fingerManager.isFingerIdInList(finalId))
+// [Legacy] 				if (fingerManager.isFingerIdInList(finalId))
 				{
 					String errorMsg = "Fehler: Ziel-ID " + String(finalId) + " ist bereits in der Fingerliste vorhanden.";
 					notifyClients(errorMsg);
@@ -2928,7 +2815,7 @@ void startWebserver()
 				}
 
 				// Fingerabdruck importieren (liefert true bei Erfolg)
-				bool importSuccess = fingerManager.importSingleFingerprint(finalId, context->buffer, context->total_len);
+// [Legacy] 				bool importSuccess = fingerManager.importSingleFingerprint(finalId, context->buffer, context->total_len);
 
 				if (!importSuccess)
 				{
@@ -2941,7 +2828,7 @@ void startWebserver()
 
 				// --- NUR JETZT: Umbenennen & Erfolgsmeldung ---
 				LOG_PRINTLN(String("Versuche, Fingerabdruck mit ID ") + finalId + " umzubenennen in " + finalName);
-				fingerManager.renameFinger(finalId, finalName);
+// [Legacy] 				fingerManager.renameFinger(finalId, finalName);
 				LOG_PRINTLN(String("Fingerabdruck mit ID ") + finalId + " erfolgreich umbenannt in " + finalName);
 
 				updateClientsFingerlist(getCurrentFingerlistHtml(), finalId);
@@ -3347,7 +3234,7 @@ void startWebserver()
 			notifyClients("HARD Reset gestartet: Fingerprints + komplette NVS (inkl. WLAN) werden gelöscht...");
 
 			// Fingerprints sitzen im Sensor -> separat löschen
-			if (!fingerManager.deleteAll())
+// [Legacy] 			if (!fingerManager.deleteAll())
 				notifyClients("Die Fingerdatenbank konnte nicht gelöscht werden.");
 
 			// NVS komplett löschen (inkl. WLAN, alle alten Namespaces/Keys)
@@ -3424,7 +3311,7 @@ void startWebserver()
 	  {
 		notifyClients("Alle Fingerabdrücke werden gelöscht...");
 
-		if (!fingerManager.deleteAll())
+// [Legacy] 		if (!fingerManager.deleteAll())
 		  notifyClients("Die Fingerdatenbank konnte nicht gelöscht werden.");
 
 		request->redirect("/");
@@ -3600,7 +3487,7 @@ void startWebserver()
     LOG_PRINTLN(newStatusIgnoreTouchRing);
     digitalWrite(2, newStatusIgnoreTouchRing);
     settingsManager.saveAppSettings(settings);
-    fingerManager.setIgnoreTouchRing(newStatusIgnoreTouchRing);
+    // /* fingerManager Legacy */;
     
     // MQTT-Nachricht senden (Status, Retain=true, QoS=0)
     String mqttTopic = mqttRootTopic + "/ignorTouchRing";
@@ -3626,7 +3513,7 @@ void startWebserver()
 							LOG_PRINTLN("[WEB] MQTT Publish für Button1 unterdrückt (Name enthält '*')");
 							notifyClients("⚠️ MQTT Publish für Button1 unterdrückt (Name enthält '*')", "[WEB]");
 						}
-						triggerSingleOutputAction("1", "[WEB]", buttonName);
+						// triggerSingleOutputAction("1", "[WEB]", buttonName);
 						request->send(200, "Ervolgreich 1 gesendet"); });
 
 	/////////////////////////////////////////////////////////////////////////////////////////////	// Endpunkt für Relais 2
@@ -3642,7 +3529,7 @@ void startWebserver()
 							LOG_PRINTLN("[WEB] MQTT Publish für Button2 unterdrückt (Name enthält '*')");
 							notifyClients("⚠️ MQTT Publish für Button2 unterdrückt (Name enthält '*')", "[WEB]");
 						}
-						triggerSingleOutputAction("2", "[WEB]", buttonName);
+						// triggerSingleOutputAction("2", "[WEB]", buttonName);
 						request->send(200, "Ervolgreich 2 gesendet"); });
 	// Endpunkt für Relais 3
 	webServer.on("/toggle3", HTTP_POST, [](AsyncWebServerRequest *request)
@@ -3657,7 +3544,7 @@ void startWebserver()
 							LOG_PRINTLN("[WEB] MQTT Publish für Button3 unterdrückt (Name enthält '*')");
 							notifyClients("⚠️ MQTT Publish für Button3 unterdrückt (Name enthält '*')", "[WEB]");
 						}
-						triggerSingleOutputAction("3", "[WEB]", buttonName);
+						// triggerSingleOutputAction("3", "[WEB]", buttonName);
 						request->send(200, "Ervolgreich 3 gesendet"); });
 
 	// Endpunkt für Relais 4
@@ -3673,7 +3560,7 @@ void startWebserver()
 							LOG_PRINTLN("[WEB] MQTT Publish für Button4 unterdrückt (Name enthält '*')");
 							notifyClients("⚠️ MQTT Publish für Button4 unterdrückt (Name enthält '*')", "[WEB]");
 						}
-						triggerSingleOutputAction("4", "[WEB]", buttonName);
+						// triggerSingleOutputAction("4", "[WEB]", buttonName);
 						request->send(200, "Ervolgreich 4 gesendet"); });
 
 	webServer.on("/toggle5", HTTP_POST, [](AsyncWebServerRequest *request)
@@ -3688,7 +3575,7 @@ void startWebserver()
 							LOG_PRINTLN("[WEB] MQTT Publish für Button5 unterdrückt (Name enthält '*')");
 							notifyClients("⚠️ MQTT Publish für Button5 unterdrückt (Name enthält '*')", "[WEB]");
 						}
-						triggerSingleOutputAction("5", "[WEB]", buttonName);
+						// triggerSingleOutputAction("5", "[WEB]", buttonName);
 						request->send(200, "Erfolgreich 5 gesendet"); });
 
 	/////////////////////////////////////////////////////////////////////////////////////////////	// Endpunkt für Button 6 - Klingel Auto-Funktion ein/ausschalten
@@ -3704,7 +3591,7 @@ void startWebserver()
 		settings.klingelAnAus = newStatusKlingelAnAus;
 		LOG_PRINTLN("Klingel Auto-Funktion: " + String(newStatusKlingelAnAus ? "aktiviert" : "deaktiviert"));
 		settingsManager.saveAppSettings(settings);
-		fingerManager.setKlingelAnAus(newStatusKlingelAnAus);
+		// /* fingerManager Legacy */;
 		// MQTT-Nachricht nur senden, wenn kein Stern im Namen
 		if (buttonName.indexOf('*') == -1) {
 			String mqttTopic = mqttRootTopic + "/klingelAnAus";
@@ -3725,169 +3612,7 @@ void startWebserver()
 	DIAG_LOG("WEB", "server begin OK");
 }
 
-void doScan()
-{
-	static unsigned long lastScanAttempt = 0;
 
-	// Scan-Rate auf 2Hz (500ms) reduzieren, um die CPU-Last und Hitze zu verringern
-	if (millis() - lastScanAttempt < 250)
-	{
-		return;
-	}
-	lastScanAttempt = millis();
-
-	Match match = fingerManager.scanFingerprint();
-
-	switch (match.scanResult)
-	{
-	case ScanResult::noFinger:
-		// Standardfall, tritt bei jeder Iteration auf, wenn kein Finger den Sensor berührt
-		if (match.scanResult != lastMatch.scanResult)
-		{
-			LOG_PRINTLN("Kein Finger erkannt.");
-			// Performance: Topic-String mit reserve()
-			String ringTopic;
-			ringTopic.reserve(mqttRootTopic.length() + 6);
-			ringTopic = mqttRootTopic + "/ring";
-			publishMqttMessage(ringTopic, "off");
-		}
-		break;
-	case ScanResult::matchFound:
-		if (match.scanResult != lastMatch.scanResult)
-		{
-			if (checkPairingValid())
-			{
-				// NEU: Benachrichtigung für die Web-Oberfläche hinzufügen
-				notifyClients("Finger erkannt: " + match.matchName + " (ID: " + String(match.matchId) + ")");
-
-				IDParip = match.matchId;
-				UserParip = match.matchName;
-				LOG_PRINTLN(UserParip);
-
-				String letzteZahlenStr = "";
-				int i = UserParip.length() - 1;
-				while (i >= 0 && isdigit(UserParip[i]))
-				{
-					letzteZahlenStr = UserParip[i] + letzteZahlenStr;
-					i--;
-				}
-
-				LOG_PRINT("Letzte Zahlen im String: ");
-				LOG_PRINTLN(letzteZahlenStr);
-
-				if (!letzteZahlenStr.isEmpty())
-				{
-					triggerSingleOutputAction(letzteZahlenStr, "[FP]", match.matchName);
-				}
-
-				// Performance: Topic-String mit reserve() optimieren
-				String outputTopic;
-				outputTopic.reserve(64);
-				outputTopic = mqttRootTopic;
-				outputTopic += "/notify";
-				publishMqttMessage(outputTopic, "Finger erkannt: " + match.matchName + " (ID: " + String(match.matchId) + ")");
-
-				// Performance: Settings nur einmal holen
-				LOG_PRINTLN(String(settingsManager.getAppSettings().klingelAnAus) + "***********klingelAnAus****************************");
-				LOG_PRINTLN("MQTT message sent: Open the door!");
-				UserParip = "";
-			}
-			else
-			{
-				notifyClients("Sicherheitsproblem! Match wurde aufgrund ungültiger Sensorpaarung nicht von MQTT gesendet! Es könnte sich möglicherweise um einen Angriff handeln! Wenn der Sensor neu ist oder von Ihnen ersetzt wurde, führen Sie auf der Einstellungsseite eine (erneute) Kopplung durch.");
-			}
-		}
-		// delay(1000); // 3000 wait some time before next scan to let the LED blink
-		break;
-	case ScanResult::noMatchFound:
-		if (match.scanResult != lastMatch.scanResult)
-		{
-			if (settingsManager.getAppSettings().klingelAnAus)
-			{
-				// Performance: Topic-String mit reserve()
-				String ringTopic;
-				ringTopic.reserve(mqttRootTopic.length() + 6);
-				ringTopic = mqttRootTopic + "/ring";
-				publishMqttMessage(ringTopic, "source:[AUTO];true"); // Klingel auslösen
-				// Nachricht für das MatchId-Topic
-				publishMqttMessage(mqttRootTopic + "/matchId", "-1", false, 0);
-
-				// Nachricht für das MatchName-Topic
-				publishMqttMessage(mqttRootTopic + "/matchName", "", false, 0);
-
-				// Nachricht für das MatchConfidence-Topic
-				publishMqttMessage(mqttRootTopic + "/matchConfidence", "-1", false, 0);
-
-				// Performance: Topic-String mit reserve() optimieren
-				String outputTopic;
-				outputTopic.reserve(mqttRootTopic.length() + 20);
-				outputTopic = mqttRootTopic;
-				outputTopic += "/notify";
-				publishMqttMessage(outputTopic, "Es wird geklingelt, da kein Finger erkannt wurde.");
-
-				LOG_PRINTLN("MQTT message sent: Klingel wird ausgelöst!");
-				OutputPinStatus5 = true;
-				notifyClients("Es wird geklingelt, da kein Finger erkannt wurde.", "[AUTO]"); // publishMqttMessage(outputTopic, "Es wird geklingelt, da kein Finger erkannt wurde.");
-			}
-			else
-			{
-				// Performance: Topic-String mit reserve() optimieren
-				String outputTopic;
-				outputTopic.reserve(mqttRootTopic.length() + 20);
-				outputTopic = mqttRootTopic;
-				outputTopic += "/notify";
-
-				LOG_PRINTLN("Klingel ist deaktiviert in den Einstellungen.");
-				publishMqttMessage(outputTopic, "Klingel ist ausgeschaltet, kein Finger erkannt.");
-				// publishMqttMessage(String(mqttRootTopic) + "/notify", "Klingel ist ausgeschaltet, kein Finger erkannt.Testnachricht von Hand!");
-			}
-		}
-		else
-		{
-			// Der Finger liegt immer noch auf dem Sensor, aber es gibt immer noch keine Übereinstimmung.
-			// Wir haben bereits benachrichtigt und geklingelt, also warten wir jetzt einfach.
-			// Wenden Sie eine nicht-blockierende Verzögerung an, um Spamming des Sensors zu vermeiden.
-			static unsigned long lastNoMatchTime = 0;
-			if (millis() - lastNoMatchTime < 500)
-			{
-				return; // Scan für 500ms überspringen
-			}
-			lastNoMatchTime = millis();
-		}
-		break;
-	case ScanResult::error:
-		notifyClients(String("ScanResult-Fehler (Code ") + match.returnCode + ")");
-		break;
-	};
-	lastMatch = match;
-}
-
-void doEnroll()
-{
-	int id = enrollId.toInt();
-	if (id < 1 || id > 200)
-	{
-		notifyClients("Ungültige Speichersteckplatz-ID '" + enrollId + "'");
-		return;
-	}
-
-	NewFinger finger = fingerManager.enrollFinger(id, enrollName);
-	if (finger.enrollResult == EnrollResult::ok)
-	{
-		notifyClients("Anmeldung erfolgreich. Sie können jetzt Ihren neuen Finger zum Scannen verwenden.");
-		updateClientsFingerlist(getCurrentFingerlistHtml());
-	}
-	else if (finger.enrollResult == EnrollResult::error)
-	{
-		// LED-Ring ROT bei Fehler
-		fingerManager.setLedRingError();
-		delay(1500); // Zeige rot 1.5 Sekunden
-		// Zurück zu blau
-		fingerManager.setLedRingReady();
-
-		notifyClients(String("Die Registrierung ist fehlgeschlagen. (Code ") + finger.returnCode + ")");
-	}
-}
 
 void reboot()
 {
@@ -3982,7 +3707,7 @@ void onMqttClientDisconnect(AsyncMqttClientDisconnectReason reason)
 				notifyClients(String("❌ MQTT-Client: Verbindung verloren (") + reasonStr + ") – Broker möglicherweise offline. ❌");
 				lastDisconnectReasonStr = String(reasonStr);
 			}
-			fingerManager.setLedRingMqttBrokerOffline(); // WLAN vorhanden, aber MQTT/Broker offline -> langsames Gelb-Blinken
+			// /* fingerManager Legacy */; // WLAN vorhanden, aber MQTT/Broker offline -> langsames Gelb-Blinken
 		}
 	}
 	else
@@ -4065,7 +3790,7 @@ static void processPendingMqttClientUiActions()
 				reasonText = "unbekannter Grund";
 			}
 			LOG_PRINTLN(String("[MQTT] Grace-Timeout abgelaufen. Server nicht erreichbar. Grund: ") + reasonText);
-			fingerManager.setLedRingMqttBrokerOffline();
+			// /* fingerManager Legacy */;
 			mqttClientReconnectGraceReason = "";
 		}
 	}
@@ -4090,7 +3815,7 @@ static void processPendingMqttClientUiActions()
 		{
 			LOG_PRINTLN(String("[MQTT] MQTT-Client verbunden via ") + connectionVia + ".");
 		}
-		fingerManager.setLedRingReady();
+		// /* fingerManager Legacy */;
 	}
 }
 
@@ -4200,7 +3925,7 @@ void handleMqttMessage(const String &topic, const String &fullPayload, const Str
 			AppSettings settings = app; // Create a mutable copy only when needed
 			settings.ignorTouchRing = newState;
 			settingsManager.saveAppSettings(settings);
-			fingerManager.setIgnoreTouchRing(newState);
+			// /* fingerManager Legacy */;
 			notifyClients(String("Ignorieren-Modus von ") + extractedSource + (newState ? " aktiviert" : " deaktiviert"), sourceTag.c_str());
 			sendSSEEvent(newState ? "1" : "0", "Button0");
 
@@ -4219,7 +3944,7 @@ void handleMqttMessage(const String &topic, const String &fullPayload, const Str
 				LOG_PRINTLN(logPrefix + " Befehl 'OutputPinStatus1' blockiert, da Button-Name '°' enthält.");
 				return;
 			}
-			triggerSingleOutputAction("1", sourceTag, extractedSource);
+			// triggerSingleOutputAction("1", sourceTag, extractedSource);
 			LOG_PRINTLN(logPrefix + " OutputPinStatus1 ausgelöst");
 		}
 	}
@@ -4232,7 +3957,7 @@ void handleMqttMessage(const String &topic, const String &fullPayload, const Str
 				LOG_PRINTLN(logPrefix + " Befehl 'OutputPinStatus2' blockiert, da Button-Name '°' enthält.");
 				return;
 			}
-			triggerSingleOutputAction("2", sourceTag, extractedSource);
+			// triggerSingleOutputAction("2", sourceTag, extractedSource);
 			LOG_PRINTLN(logPrefix + " OutputPinStatus2 ausgelöst");
 		}
 	}
@@ -4245,7 +3970,7 @@ void handleMqttMessage(const String &topic, const String &fullPayload, const Str
 				LOG_PRINTLN(logPrefix + " Befehl 'OutputPinStatus3' blockiert, da Button-Name '°' enthält.");
 				return;
 			}
-			triggerSingleOutputAction("3", sourceTag, extractedSource);
+			// triggerSingleOutputAction("3", sourceTag, extractedSource);
 			LOG_PRINTLN(logPrefix + " OutputPinStatus3 ausgelöst");
 		}
 	}
@@ -4258,7 +3983,7 @@ void handleMqttMessage(const String &topic, const String &fullPayload, const Str
 				LOG_PRINTLN(logPrefix + " Befehl 'OutputPinStatus4' blockiert, da Button-Name '°' enthält.");
 				return;
 			}
-			triggerSingleOutputAction("4", sourceTag, extractedSource);
+			// triggerSingleOutputAction("4", sourceTag, extractedSource);
 			LOG_PRINTLN(logPrefix + " OutputPinStatus4 ausgelöst");
 		}
 	}
@@ -4271,7 +3996,7 @@ void handleMqttMessage(const String &topic, const String &fullPayload, const Str
 				LOG_PRINTLN(logPrefix + " Befehl 'OutputPinStatus5' blockiert, da Button-Name '°' enthält.");
 				return;
 			}
-			triggerSingleOutputAction("5", sourceTag, extractedSource);
+			// triggerSingleOutputAction("5", sourceTag, extractedSource);
 			LOG_PRINTLN(logPrefix + " OutputPinStatus5 ausgelöst");
 		}
 	}
@@ -4304,7 +4029,7 @@ void handleMqttMessage(const String &topic, const String &fullPayload, const Str
 			AppSettings settings = app; // Create a mutable copy only when needed
 			settings.klingelAnAus = newStatusKlingelAnAus;
 			settingsManager.saveAppSettings(settings);
-			fingerManager.setKlingelAnAus(newStatusKlingelAnAus);
+			// /* fingerManager Legacy */;
 			notifyClients(String("Klingel Auto-Funktion von ") + extractedSource + (newStatusKlingelAnAus ? " aktiviert" : " deaktiviert"), sourceTag.c_str());
 			sendSSEEvent(newStatusKlingelAnAus ? "1" : "0", "Button6");
 
@@ -4611,7 +4336,7 @@ void checkNetworkAndReconnectIfNeeded()
 		// Reconnect-Flags zurücksetzen (wir sind online)
 		if (wifiReconnectPending || wifiBackoffIndex > 0)
 		{
-			fingerManager.setLedRingReady();
+			// /* fingerManager Legacy */;
 		}
 		wifiReconnectPending = false;
 		wifiReconnectForceBegin = false;
@@ -5081,9 +4806,9 @@ void setup()
 	// ------------------------------
 	// Die Einstellung wird ausgelesen und der Manager wird entsprechend konfiguriert.
 	// Die connect-Methode kümmert sich um die Details (Verbindung herstellen oder LED ausschalten).
-	fingerManager.setScannerEnabled(settingsManager.getAppSettings().fingerprintScannerEnabled);
+	// /* fingerManager Legacy */.fingerprintScannerEnabled);
 
-	if (settingsManager.getAppSettings().fingerprintScannerEnabled && fingerManager.connect())
+// [Legacy] 	if (settingsManager.getAppSettings().fingerprintScannerEnabled && fingerManager.connect())
 	{
 		LOG_PRINTLN("✅ Fingerprint-Scanner erfolgreich verbunden");
 		// Pairing-Prüfung wird nach Kern-Betriebsbereitschaft (Webserver) durchgeführt,
@@ -5126,7 +4851,7 @@ void setup()
 		int touchConfirmed = 0;
 		for (int i = 0; i < DEBOUNCE_READS; i++)
 		{
-			if (fingerManager.isFingerOnSensor()) fingerConfirmed++;
+			if (false) fingerConfirmed++;
 			if (touchRead(TOUCH_PIN) < threshold) touchConfirmed++;
 			if (i < DEBOUNCE_READS - 1) delay(DEBOUNCE_DELAY_MS);
 		}
@@ -5144,7 +4869,7 @@ void setup()
 		LOG_PRINTLN();
 		LOG_PRINTLN("Starte WLAN-Konfigurationsmodus (AP)");
 		DIAG_LOG("WIFI", "config AP begin");
-		fingerManager.setLedRingWifiConfig();
+		// /* fingerManager Legacy */;
 		initWiFiAccessPointForConfiguration(); // setzt SoftAP
 		startWebserver();					   // webServer.begin(), OTA, events
 	}
@@ -5159,7 +4884,7 @@ void setup()
 		initWifi(); // Verbindung versuchen – Hintergrund-Reconnect übernimmt bei Fehlschlag
 		addLogMessage("Heap-Status: Freier Heap " + String(ESP.getFreeHeap()) + " Bytes.");
 		addLogMessage("Modus: " + String(currentMode == Mode::wificonfig ? "WiFi-Konfiguration" : "Normaler Betrieb"));
-		addLogMessage("Fingerprint-Sensor: " + String(fingerManager.connected ? "Verbunden" : "Nicht verbunden"));
+		addLogMessage("Fingerprint-Sensor: " + String(false ? "Verbunden" : "Nicht verbunden"));
 		addLogMessage("WiFi: " + String(WiFi.status() == WL_CONNECTED ? "Verbunden" : "Nicht verbunden"));
 		if (timeSet)
 			addLogMessage("NTP-Zeit: Synchronisiert");
@@ -5172,7 +4897,7 @@ void setup()
 		startWebserver();
 
 		// Pairing-Prüfung NACH Kern-Betriebsbereitschaft (Scanner+Web stehen bereits)
-		if (fingerManager.connected)
+		if (false)
 		{
 			if (!checkPairingValid())
 			{
@@ -5393,19 +5118,19 @@ void setup()
 		// ------------------------------
 		// 10) LED-Status anzeigen
 		// ------------------------------
-		if (fingerManager.connected)
+		if (false)
 		{
-			fingerManager.setLedRingReady();
+			// /* fingerManager Legacy */;
 		}
 		else
 		{
-			fingerManager.setLedRingError();
+			// /* fingerManager Legacy */;
 		}
 
 		// ------------------------------
 		// 12) SolarCalc initialisieren
 		// ------------------------------
-		solarCalc.setup();
+		// solarCalc.setup();
 
 		// ------------------------------
 		// 13) System-Status-Zusammenfassung
@@ -5420,7 +5145,7 @@ void setup()
 		LOG_PRINTLN("╠══════════════════════════════════════════════════════════════╣");
 
 		LOG_PRINTLN("╠══════════════════════════════════════════════════════════════╣");
-		LOG_PRINTLN("║ 🔐 Fingerprint-Sensor: " + String(fingerManager.connected ? "✅ VERBUNDEN        " : "❌ NICHT VERBUNDEN  ") + "║");
+		LOG_PRINTLN("║ 🔐 Fingerprint-Sensor: " + String(false ? "✅ VERBUNDEN        " : "❌ NICHT VERBUNDEN  ") + "║");
 		LOG_PRINTLN("║ 📶 WiFi-Modus: " + String(currentMode == Mode::wificonfig ? "🔧 KONFIGURATION    " : "📡 STATION         ") + "║");
 		LOG_PRINTLN("╚══════════════════════════════════════════════════════════════╝");
 		LOG_PRINTLN();
@@ -5562,10 +5287,10 @@ void loop()
 		digitalWrite(LED_BUILTIN, LOW); // LED ausschalten
 
 		// LED-Ring zurücksetzen vor Neustart
-		if (fingerManager.connected)
+		if (false)
 		{
 			LOG_PRINTLN("🔵 Setze LED-Ring zurück vor Neustart...");
-			fingerManager.setLedRingReady(); // oder setLedRingError(), je nach Zustand
+			// /* fingerManager Legacy */; // oder setLedRingError(), je nach Zustand
 			delay(500);						 // Kurz warten, damit der Ring den Befehl verarbeitet
 		}
 
@@ -5618,21 +5343,14 @@ void loop()
 	{
 	case Mode::scan:
 		// Nur scannen, wenn Scanner aktiviert UND verbunden ist
-		if (fingerManager.connected && fingerManager.isScannerEnabled())
+// [Legacy] 		if (false && fingerManager.isScannerEnabled())
 		{
-			doScan();
+			// doScan() entfernt
+			currentMode = Mode::normal;
 		}
 		break;
 
 	case Mode::enroll:
-		doEnroll();
-		currentMode = Mode::scan; // switch back to scan mode after enrollment is done
-		// LED-Ring nach Enrollment zurücksetzen
-		if (fingerManager.connected)
-		{
-			fingerManager.setLedRingReady();
-			LOG_PRINTLN("🔵 LED-Ring nach Enrollment auf 'Bereit' zurückgesetzt");
-		}
 		break;
 
 	case Mode::wificonfig:
@@ -5905,7 +5623,7 @@ void loop()
 	{
 		if (!app.latitude.isEmpty() && !app.longitude.isEmpty())
 		{
-			solarCalc.loop();
+			// solarCalc.loop();
 		}
 	}
 
@@ -5924,9 +5642,9 @@ void loop()
 		if (wifiJustReconnected)
 		{
 			wifiJustReconnected = false;
-			if (fingerManager.connected)
+			if (false)
 			{
-				fingerManager.setLedRingReady();
+				// /* fingerManager Legacy */;
 			}
 		}
 
@@ -5935,7 +5653,7 @@ void loop()
 		if (ntpQuickSyncPending &&
 			WiFi.status() == WL_CONNECTED &&
 			millis() >= ntpQuickSyncEarliestAt &&
-			(!fingerManager.isRingTouched() || !timeSet)) // Ring-Touch blockiert Initialsync nicht
+			(!false || !timeSet)) // Ring-Touch blockiert Initialsync nicht
 		{
 			ntpQuickSyncPending = false;
 			syncNtpTimeIfNeeded();
@@ -5970,7 +5688,7 @@ void loop()
 		}
 
 		// Tägliche Re-Sync nur wenn Ring nicht berührt
-		if (timeSet && !fingerManager.isRingTouched())
+		if (timeSet && !false)
 		{
 			tryNtpSyncDaily();
 		}
@@ -6041,18 +5759,15 @@ void loop()
 			}
 		}
 	}
-	// --- Fingerprint-Housekeeping ---
-	// Wenn wir im Scan-Modus sind oder Wartung, stellen wir sicher, dass kein Müll im Puffer liegt.
-	// Nur leeren, wenn mySerial Daten hat, aber wir gerade nicht aktiv scannen/enrollen.
-	// Das verhindert, dass sich Bytes ansammeln, die später zu Paket-Fehlern führen.
-	if (!digitalRead(touchRingPin) && mySerial.available() > 0)
+	// --- Fingerprint-Housekeeping entfernt (Legacy FingerprintManager) ---
+	if (false) // [Legacy] if (!digitalRead(touchRingPin) && mySerial.available() > 0)
 	{
 		static uint32_t lastHousekeeping = 0;
 		if (millis() - lastHousekeeping > 1000)
 		{
 			// LOG_PRINTLN("[UART-Housekeeping] Leere Puffer...");
-			while (mySerial.available())
-				mySerial.read();
+			// while (mySerial.available())
+				// mySerial.read();
 			lastHousekeeping = millis();
 		}
 	}

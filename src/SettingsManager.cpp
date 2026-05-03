@@ -1,6 +1,5 @@
 // Beschreibung: 🎉2.0.0 erste wo alles get mit dem Templade dowenload🎉
 #include "SettingsManager.h"
-#include <Crypto.h>
 #include "global.h"
 
 bool SettingsManager::loadWifiSettings()
@@ -49,34 +48,8 @@ bool SettingsManager::loadAppSettings()
     loaded.mqttRootTopic = preferences.getString("mqttRootTopic", loaded.mqttRootTopic);
     loaded.ntpServer = preferences.getString("ntpServer", loaded.ntpServer);
     loaded.ntpOffset = preferences.getString("ntpOffset", loaded.ntpOffset);
-    loaded.latitude = preferences.getString("latitude", loaded.latitude);
-    loaded.longitude = preferences.getString("longitude", loaded.longitude);
     loaded.passwordSetup = preferences.getString("passwordSetup", loaded.passwordSetup);
     loaded.enablePassword = preferences.getString("enablePassword", loaded.enablePassword);
-    loaded.sunriseOffset = preferences.getString("sunriseOffset", loaded.sunriseOffset);
-    loaded.sunsetOffset = preferences.getString("sunsetOffset", loaded.sunsetOffset);
-
-    loaded.toggleButton0 = preferences.getString("toggleButton0", loaded.toggleButton0);
-    loaded.toggleButton1 = preferences.getString("toggleButton1", loaded.toggleButton1);
-    loaded.toggleButton2 = preferences.getString("toggleButton2", loaded.toggleButton2);
-    loaded.toggleButton3 = preferences.getString("toggleButton3", loaded.toggleButton3);
-    loaded.toggleButton4 = preferences.getString("toggleButton4", loaded.toggleButton4);
-    loaded.toggleButton5 = preferences.getString("toggleButton5", loaded.toggleButton5);
-    loaded.toggleButton6 = preferences.getString("toggleButton6", loaded.toggleButton6);
-
-    loaded.delayButton1 = preferences.getString("delayButton1", loaded.delayButton1);
-    loaded.delayButton2 = preferences.getString("delayButton2", loaded.delayButton2);
-    loaded.delayButton3 = preferences.getString("delayButton3", loaded.delayButton3);
-    loaded.delayButton4 = preferences.getString("delayButton4", loaded.delayButton4);
-    loaded.delayButton5 = preferences.getString("delayButton5", loaded.delayButton5);
-    loaded.delayButton6 = preferences.getString("delayButton6", loaded.delayButton6);
-
-    loaded.sensorPin = preferences.getString("sensorPin", loaded.sensorPin);
-    loaded.sensorPairingCode = preferences.getString("pairingCode", loaded.sensorPairingCode);
-    loaded.sensorPairingValid = preferences.getBool("pairingValid", loaded.sensorPairingValid);
-    loaded.ignorTouchRing = preferences.getBool("ignorTouchRing", loaded.ignorTouchRing);
-    loaded.klingelAnAus = preferences.getBool("klingelAnAus", loaded.klingelAnAus);
-    loaded.fingerprintScannerEnabled = preferences.getBool("fpEnabled", loaded.fingerprintScannerEnabled);
 
 #if USE_TELEGRAM
     loaded.telegram_enabled = preferences.getBool("tg_enabled", loaded.telegram_enabled);
@@ -90,6 +63,31 @@ bool SettingsManager::loadAppSettings()
 #endif
 #endif
 
+
+    // Legacy-Felder (Phase 2 entfernen)
+    loaded.latitude = preferences.getString("latitude", loaded.latitude);
+    loaded.longitude = preferences.getString("longitude", loaded.longitude);
+    loaded.sunriseOffset = preferences.getString("sunriseOffset", loaded.sunriseOffset);
+    loaded.sunsetOffset = preferences.getString("sunsetOffset", loaded.sunsetOffset);
+    loaded.toggleButton0 = preferences.getString("toggleButton0", loaded.toggleButton0);
+    loaded.toggleButton1 = preferences.getString("toggleButton1", loaded.toggleButton1);
+    loaded.toggleButton2 = preferences.getString("toggleButton2", loaded.toggleButton2);
+    loaded.toggleButton3 = preferences.getString("toggleButton3", loaded.toggleButton3);
+    loaded.toggleButton4 = preferences.getString("toggleButton4", loaded.toggleButton4);
+    loaded.toggleButton5 = preferences.getString("toggleButton5", loaded.toggleButton5);
+    loaded.toggleButton6 = preferences.getString("toggleButton6", loaded.toggleButton6);
+    loaded.delayButton1 = preferences.getString("delayButton1", loaded.delayButton1);
+    loaded.delayButton2 = preferences.getString("delayButton2", loaded.delayButton2);
+    loaded.delayButton3 = preferences.getString("delayButton3", loaded.delayButton3);
+    loaded.delayButton4 = preferences.getString("delayButton4", loaded.delayButton4);
+    loaded.delayButton5 = preferences.getString("delayButton5", loaded.delayButton5);
+    loaded.delayButton6 = preferences.getString("delayButton6", loaded.delayButton6);
+    loaded.sensorPin = preferences.getString("sensorPin", loaded.sensorPin);
+    loaded.sensorPairingCode = preferences.getString("pairingCode", loaded.sensorPairingCode);
+    loaded.sensorPairingValid = preferences.getBool("pairingValid", loaded.sensorPairingValid);
+    loaded.ignorTouchRing = preferences.getBool("ignorTouchRing", loaded.ignorTouchRing);
+    loaded.klingelAnAus = preferences.getBool("klingelAnAus", loaded.klingelAnAus);
+    loaded.fingerprintScannerEnabled = preferences.getBool("fpEnabled", loaded.fingerprintScannerEnabled);
     loaded.wifiRssiDisconnectThreshold = preferences.getInt("wifiRssiD", loaded.wifiRssiDisconnectThreshold);
     loaded.wifiRoamImproveDb = normalizeWifiRoamImproveDb(preferences.getInt("wifiRoamImp", loaded.wifiRoamImproveDb));
     loaded.wifiRoamMinRssi = normalizeWifiRoamMinRssi(preferences.getInt("wifiRoamMin", loaded.wifiRoamMinRssi));
@@ -193,34 +191,9 @@ void SettingsManager::saveAppSettings()
     preferences.putString("mqttRootTopic", localCopy.mqttRootTopic);
     preferences.putString("ntpServer", localCopy.ntpServer);
     preferences.putString("ntpOffset", localCopy.ntpOffset);
-    preferences.putString("latitude", localCopy.latitude);
-    preferences.putString("longitude", localCopy.longitude);
     preferences.putString("passwordSetup", localCopy.passwordSetup);
     preferences.putString("enablePassword", localCopy.enablePassword);
-    preferences.putString("sunriseOffset", localCopy.sunriseOffset);
-    preferences.putString("sunsetOffset", localCopy.sunsetOffset);
 
-    preferences.putString("toggleButton0", localCopy.toggleButton0);
-    preferences.putString("toggleButton1", localCopy.toggleButton1);
-    preferences.putString("toggleButton2", localCopy.toggleButton2);
-    preferences.putString("toggleButton3", localCopy.toggleButton3);
-    preferences.putString("toggleButton4", localCopy.toggleButton4);
-    preferences.putString("toggleButton5", localCopy.toggleButton5);
-    preferences.putString("toggleButton6", localCopy.toggleButton6);
-
-    preferences.putString("delayButton1", localCopy.delayButton1);
-    preferences.putString("delayButton2", localCopy.delayButton2);
-    preferences.putString("delayButton3", localCopy.delayButton3);
-    preferences.putString("delayButton4", localCopy.delayButton4);
-    preferences.putString("delayButton5", localCopy.delayButton5);
-    preferences.putString("delayButton6", localCopy.delayButton6);
-
-    preferences.putString("sensorPin", localCopy.sensorPin);
-    preferences.putString("pairingCode", localCopy.sensorPairingCode);
-    preferences.putBool("pairingValid", localCopy.sensorPairingValid);
-    preferences.putBool("ignorTouchRing", localCopy.ignorTouchRing);
-    preferences.putBool("klingelAnAus", localCopy.klingelAnAus);
-    preferences.putBool("fpEnabled", localCopy.fingerprintScannerEnabled);
 
 #if USE_TELEGRAM
     preferences.putBool("tg_enabled", localCopy.telegram_enabled);
@@ -232,6 +205,31 @@ void SettingsManager::saveAppSettings()
 #endif
 #endif
 
+
+    // Legacy-Felder (Phase 2 entfernen)
+    preferences.putString("latitude", localCopy.latitude);
+    preferences.putString("longitude", localCopy.longitude);
+    preferences.putString("sunriseOffset", localCopy.sunriseOffset);
+    preferences.putString("sunsetOffset", localCopy.sunsetOffset);
+    preferences.putString("toggleButton0", localCopy.toggleButton0);
+    preferences.putString("toggleButton1", localCopy.toggleButton1);
+    preferences.putString("toggleButton2", localCopy.toggleButton2);
+    preferences.putString("toggleButton3", localCopy.toggleButton3);
+    preferences.putString("toggleButton4", localCopy.toggleButton4);
+    preferences.putString("toggleButton5", localCopy.toggleButton5);
+    preferences.putString("toggleButton6", localCopy.toggleButton6);
+    preferences.putString("delayButton1", localCopy.delayButton1);
+    preferences.putString("delayButton2", localCopy.delayButton2);
+    preferences.putString("delayButton3", localCopy.delayButton3);
+    preferences.putString("delayButton4", localCopy.delayButton4);
+    preferences.putString("delayButton5", localCopy.delayButton5);
+    preferences.putString("delayButton6", localCopy.delayButton6);
+    preferences.putString("sensorPin", localCopy.sensorPin);
+    preferences.putString("pairingCode", localCopy.sensorPairingCode);
+    preferences.putBool("pairingValid", localCopy.sensorPairingValid);
+    preferences.putBool("ignorTouchRing", localCopy.ignorTouchRing);
+    preferences.putBool("klingelAnAus", localCopy.klingelAnAus);
+    preferences.putBool("fpEnabled", localCopy.fingerprintScannerEnabled);
     preferences.putInt("wifiRssiD", localCopy.wifiRssiDisconnectThreshold);
     localCopy.wifiRoamImproveDb = normalizeWifiRoamImproveDb(localCopy.wifiRoamImproveDb);
     localCopy.wifiRoamMinRssi = normalizeWifiRoamMinRssi(localCopy.wifiRoamMinRssi);
@@ -369,37 +367,3 @@ bool SettingsManager::deleteWifiSettings()
     return rc;
 }
 
-String SettingsManager::generateNewPairingCode()
-{
-
-    /* Create a SHA256 hash */
-    SHA256 hasher;
-
-    WifiSettings currentWifi = getWifiSettings();
-    AppSettings currentApp = getAppSettings();
-
-    /* Put some unique values as input in our new hash */
-    hasher.doUpdate(String(esp_random()).c_str()); // random number
-    hasher.doUpdate(String(millis()).c_str());     // time since boot
-    hasher.doUpdate(getTimestampString().c_str()); // current time (if NTP is available)
-    hasher.doUpdate(currentApp.mqttUsername.c_str());
-    hasher.doUpdate(currentApp.mqttPassword.c_str());
-    hasher.doUpdate(currentWifi.ssid.c_str());
-    hasher.doUpdate(currentWifi.password.c_str());
-
-    /* Compute the final hash */
-    byte hash[SHA256_SIZE];
-    hasher.doFinal(hash);
-
-    // Convert our 32 byte hash to 32 chars long hex string. When converting the entire hash to hex we would need a length of 64 chars.
-    // But because we only want a length of 32 we only use the first 16 bytes of the hash. I know this will increase possible collisions,
-    // but for detecting a sensor replacement (which is the use-case here) it will still be enough.
-    char hexString[33];
-    hexString[32] = 0; // null termination
-    for (byte i = 0; i < 16; i++)
-    {
-        sprintf(hexString + 2 * i, "%02x", hash[i]);
-    }
-
-    return String(hexString);
-}
