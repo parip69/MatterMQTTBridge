@@ -2,7 +2,7 @@
 //******************************************************
 //         Main of Fingerscanner Parip69.
 // nur hier die start wert der version Aendern.OK=======
-// @version: 2.2.788 <br> Builddatum 20:10:27 02-05.2026
+// @version: 2.2.789 <br> Builddatum 20:52:45 03-05.2026
 //****************************************************
 #ifndef USE_MQTT_BROKER
 #define USE_MQTT_BROKER 1
@@ -98,7 +98,7 @@
 
 #include <ESPmDNS.h>
 //////////////////////////////////////////////////////////////////////
-const char* firmwareVersion = "2.2.788 <br> Builddatum 20:10:27 02-05.2026"; // Firmware Versio
+const char* firmwareVersion = "2.2.789 <br> Builddatum 20:52:45 03-05.2026"; // Firmware Versio
 // ===== UPLOAD-KONTEXT für multipart-Verarbeitung =====
 // Hilfs-Struktur, um Daten vom Upload- zum Request-Handler zu transportieren
 #if USE_DOWNLOAD_UPLOAD
