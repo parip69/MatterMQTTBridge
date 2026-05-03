@@ -57,3 +57,17 @@
 **Versionszeilen:** UNBERÜHRT (alle Versionszeilen unverändert)
 
 **Status:** Kompilierbarkeit statisch geprüft – keine Compile-Fehler durch Legacy-Typen mehr erkennbar. Build-Lauf nicht möglich (kein Internetzugang im CI für PlatformIO-Pakete).
+
+## 2. Session - Phase-1 Cleanup Nachbesserung
+
+**Aufgabe:** Kompilier-Fehler aus Phase-1-Cleanup beheben
+
+**Durchgeführte Aktionen:**
+- `src/SettingsManager.h`: Doppelte `latitude`/`longitude` Felder (Zeile 52-54) entfernt
+- `src/main.cpp`: `/editFingerprints`-Route durch Stub (410) ersetzt – `updateClientsFingerlist()` und `getCurrentFingerlistHtml()` sind ohne FingerprintManager undefiniert
+- Alle anderen Legacy-Includes (`DHTManager.h`, `Tedee.h`, `Nuki.h`, `Telegram.h`) bleiben korrekt per `#if USE_DHT/TEDEE/NUKI/TELEGRAM` abgesichert
+- `USE_DOWNLOAD_UPLOAD=0` (platformio.ini) – `/uploadFinger`-Route bereits per `#if USE_DOWNLOAD_UPLOAD` korrekt abgesichert
+
+**Geänderte Dateien:**
+- `src/SettingsManager.h` (Duplikat-Felder entfernt)
+- `src/main.cpp` (/editFingerprints-Stub)

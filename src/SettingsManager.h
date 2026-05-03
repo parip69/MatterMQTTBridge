@@ -50,8 +50,6 @@ struct AppSettings
   int wifiRoamMinRssi = WIFI_ROAM_MIN_RSSI_DEFAULT;
 
   // ---- Legacy-Felder (Phase 2: entfernen, wenn UI/Webserver bereinigt) ----
-  String latitude = "";
-  String longitude = "";
   String sunriseOffset = "0";
   String sunsetOffset = "0";
   String toggleButton0 = "Button0";

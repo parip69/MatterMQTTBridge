@@ -2637,53 +2637,10 @@ void startWebserver()
       					request->redirect("/"); });
 		//////////////////////////////////////////////////////
 
+		// [Legacy] /editFingerprints entfernt – FingerprintManager nicht mehr vorhanden
 		webServer.on("/editFingerprints", HTTP_GET, [](AsyncWebServerRequest *request)
 					 {
-						 if (request->hasArg("html_sel_fp"))
-						 {
-							 LOG_PRINT("html_sel_fp argument vorhanden: ");
-							 LOG_PRINTLN(request->arg("html_sel_fp"));
-
-							 int id = request->arg("html_sel_fp").toInt(); // ID des ausgewählten Fingerabdrucks
-
-							 if (request->hasArg("btnDelete"))
-							 {
-								 LOG_PRINT("btnDelete argument vorhanden: ");
-								 LOG_PRINTLN(request->arg("btnDelete"));
-
-								 // Lösche den Fingerabdruck mit der angegebenen ID
-								 notifyClients("Löschen des Fingerabdrucks mit der ID " + String(id) + " gestartet...");
-// [Legacy] 								 bool ok = fingerManager.deleteFinger(id);
-								 if (!ok)
-								 {
-									 request->send(500, "text/plain", "Delete failed");
-									 return;
-								 }
-								 // Aktualisiere die Fingerabdruckliste und Auswahl auf den Clients
-								 updateClientsFingerlist(/* fingerManager Legacy */, -1);
-							 }
-							 else if (request->hasArg("btnRename"))
-							 {
-								 LOG_PRINTLN("btnRename argument vorhanden");
-
-								 String newName = request->arg("renameNewName");
-
-								 // Umbenennen des Fingerabdrucks
-// [Legacy] 								 fingerManager.renameFinger(id, newName);
-								 // Aktualisiere die Fingerabdruckliste und Auswahl auf den Clients
-								 updateClientsFingerlist(/* fingerManager Legacy */, id);
-							 }
-						 }
-						 else
-						 {
-							 notifyClients("Bearbeiten abgebrochen: html_sel_fp fehlt.");
-							 LOG_PRINTLN("html_sel_fp argument NICHT vorhanden");
-							 request->send(400, "text/plain", "Missing parameter: html_sel_fp");
-							 return;
-						 }
-
-						 // Keine Weiterleitung mehr, stattdessen senden wir die aktualisierte Liste
-						 request->send(204, "text/html", ""); // Antwort an den Client, aber keine Weiterleitung mehr
+						 request->send(410, "text/plain", "Fingerprint-Verwaltung nicht verfügbar (Legacy)");
 					 });
 
 		// Endpunkt zum Herunterladen eines einzelnen Fingerabdrucks (RAM-Puffer, FINGERPRINT_TEMPLATE_SIZE Bytes)
