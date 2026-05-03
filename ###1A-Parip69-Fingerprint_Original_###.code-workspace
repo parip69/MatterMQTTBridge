@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"name": "MatterMQTTBridge",
+			"path": "."
+		}
+	],
+	"settings": {
+		// === Projektspezifische Einstellungen (optional) ===
+		// Hier können bei Bedarf projektweite Einstellungen hinzugefügt werden.
+		// Persönliche Einstellungen gehören in .vscode/settings.json (wird ignoriert).
+	}
+}

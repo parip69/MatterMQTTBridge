@@ -1,10 +1,11 @@
-# GitHub Copilot Anweisungen für Fingerscanner
+# GitHub Copilot Anweisungen für MatterMQTTBridge
 
 **⚠️ ACHTUNG FÜR JULES / GITHUB COPILOT: Diese Datei ist für Sie geschrieben!**
 
 ---
 
-## 🚨 REGEL #1: VERSIONSNUMMERN NIEMALS ÄNDERN
+Dieses Projekt heißt **MatterMQTTBridge**. Es ist ein eigenständiges ESP32-Projekt.
+Es ist **kein Fingerprint-Projekt**. Fingerprint-Logik gehört nicht hierher.
 
 **KRITISCH!** Jede Datei in diesem Projekt startet mit einer Versionsnummer:
 ```

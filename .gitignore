@@ -22,6 +22,7 @@ doc/Projekt-Links-und-Zugangsdaten.md
 !/LICENSE
 !/PROJECT_RULES.md
 !/TODO_BRIDGE.md
+!/*.code-workspace
 !/_config.yml
 !/src/
 !/src/**
