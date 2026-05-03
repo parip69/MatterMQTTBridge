@@ -1,185 +1,37 @@
-{
+﻿{
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "🚀 Build & Upload FS + FW",
-      "type": "shell",
-      "command": "$env:P69_BACKUP_MODE='skip'; & 'C:\\Users\\gerha\\.platformio\\penv\\Scripts\\platformio.exe' run -e bridge -t buildfs; $env:P69_BACKUP_MODE='skip'; & 'C:\\Users\\gerha\\.platformio\\penv\\Scripts\\platformio.exe' run -e bridge -t uploadfs; Write-Host 'Warte 3s nach FS-Upload...'; Start-Sleep -Seconds 3; $env:P69_BACKUP_MODE='final'; & 'C:\\Users\\gerha\\.platformio\\penv\\Scripts\\platformio.exe' run -e bridge -t upload",
-      "group": {
-        "kind": "build",
-        "isDefault": true
-      },
-      "problemMatcher": [
-        "$platformio"
-      ],
-      "presentation": {
-        "reveal": "always",
-        "panel": "shared"
-      }
-    },
-    {
-      "label": "🔨 Nur Build (kein Upload)",
+      "label": "B Bridge",
       "type": "shell",
       "command": "$env:P69_BACKUP_MODE='skip'; & 'C:\\Users\\gerha\\.platformio\\penv\\Scripts\\platformio.exe' run -e bridge",
+      "group": { "kind": "build", "isDefault": true },
+      "problemMatcher": ["$platformio"],
+      "presentation": { "reveal": "always", "panel": "shared" }
+    },
+    {
+      "label": "U ALL",
+      "type": "shell",
+      "command": "$env:P69_BACKUP_MODE='skip'; & 'C:\\Users\\gerha\\.platformio\\penv\\Scripts\\platformio.exe' run -e bridge -t buildfs; $env:P69_BACKUP_MODE='skip'; & 'C:\\Users\\gerha\\.platformio\\penv\\Scripts\\platformio.exe' run -e bridge -t uploadfs; Write-Host 'Warte 3s...'; Start-Sleep -Seconds 3; $env:P69_BACKUP_MODE='final'; & 'C:\\Users\\gerha\\.platformio\\penv\\Scripts\\platformio.exe' run -e bridge -t upload",
       "group": "build",
-      "problemMatcher": [
-        "$platformio"
-      ],
-      "presentation": {
-        "reveal": "always",
-        "panel": "shared"
-      }
+      "problemMatcher": ["$platformio"],
+      "presentation": { "reveal": "always", "panel": "shared" }
     },
     {
-      "label": "OBSOLETE_PLACEHOLDER",
+      "label": "B FS",
       "type": "shell",
-      "command": "echo obsolete",
-    {
-      "label": "🚀 Dev - Quick Upload",
-      "type": "shell",
-      "command": "$env:P69_BACKUP_MODE='final'; & 'C:\\Users\\gerha\\.platformio\\penv\\Scripts\\platformio.exe' run -e dev -t upload",
+      "command": "$env:P69_BACKUP_MODE='skip'; & 'C:\\Users\\gerha\\.platformio\\penv\\Scripts\\platformio.exe' run -e bridge -t buildfs",
       "group": "build",
-      "problemMatcher": []
+      "problemMatcher": ["$platformio"],
+      "presentation": { "reveal": "always", "panel": "shared" }
     },
     {
-      "label": "Build, Upload & Monitor",
+      "label": "U FS",
       "type": "shell",
-      "command": "$env:P69_BACKUP_MODE='final'; & 'C:\\Users\\gerha\\.platformio\\penv\\Scripts\\platformio.exe' run -t upload -t monitor",
-      "group": {
-        "kind": "build",
-        "isDefault": false
-      },
-      "problemMatcher": [
-        "$platformio"
-      ],
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": false,
-        "panel": "dedicated",
-        "showReuseMessage": true,
-        "clear": true
-      }
-    },
-    {
-      "label": "Monitor",
-      "type": "shell",
-      "command": "C:\\Users\\gerha\\.platformio\\penv\\Scripts\\platformio.exe device monitor",
-      "group": "test",
-      "isBackground": true,
-      "problemMatcher": []
-    },
-    {
-      "label": "Build Filesystem (SPIFFS)",
-      "type": "shell",
-      "command": "$env:P69_BACKUP_MODE='final'; & 'C:\\Users\\gerha\\.platformio\\penv\\Scripts\\platformio.exe' run -t buildfs",
+      "command": "$env:P69_BACKUP_MODE='skip'; & 'C:\\Users\\gerha\\.platformio\\penv\\Scripts\\platformio.exe' run -e bridge -t uploadfs",
       "group": "build",
-      "problemMatcher": [
-        "$platformio"
-      ]
-    },
-    {
-      "label": "Upload Filesystem (SPIFFS)",
-      "type": "shell",
-      "command": "$env:P69_BACKUP_MODE='final'; & 'C:\\Users\\gerha\\.platformio\\penv\\Scripts\\platformio.exe' run -t uploadfs",
-      "group": "build",
-      "problemMatcher": [
-        "$platformio"
-      ]
-    },
-    {
-      "label": "Clean",
-      "type": "shell",
-      "command": "C:\\Users\\gerha\\.platformio\\penv\\Scripts\\platformio.exe run -t clean",
-      "group": "build",
-      "problemMatcher": []
-    },
-    {
-      "label": "Full Clean & Build",
-      "type": "shell",
-      "command": "& 'C:\\Users\\gerha\\.platformio\\penv\\Scripts\\platformio.exe' run -t clean; $env:P69_BACKUP_MODE='final'; & 'C:\\Users\\gerha\\.platformio\\penv\\Scripts\\platformio.exe' run",
-      "group": "build",
-      "problemMatcher": [
-        "$platformio"
-      ]
-    },
-    {
-      "label": "Build FS & FW",
-      "type": "shell",
-      "command": "$env:P69_BACKUP_MODE='skip'; & 'C:\\Users\\gerha\\.platformio\\penv\\Scripts\\platformio.exe' run -t buildfs; $env:P69_BACKUP_MODE='final'; & 'C:\\Users\\gerha\\.platformio\\penv\\Scripts\\platformio.exe' run",
-      "group": "build",
-      "problemMatcher": [
-        "$platformio"
-      ]
-    },
-    {
-      "label": "Upload FS & FW",
-      "type": "shell",
-      "command": "$env:P69_BACKUP_MODE='skip'; & 'C:\\Users\\gerha\\.platformio\\penv\\Scripts\\platformio.exe' run -t uploadfs; Write-Host 'Warte 3s nach SPIFFS-Upload...'; Start-Sleep -Seconds 3; $env:P69_BACKUP_MODE='final'; & 'C:\\Users\\gerha\\.platformio\\penv\\Scripts\\platformio.exe' run -t upload",
-      "group": "build",
-      "problemMatcher": [
-        "$platformio"
-      ]
-    },
-    {
-      "label": "Build (min)",
-      "type": "shell",
-      "command": "& 'C:\\Users\\gerha\\.platformio\\penv\\Scripts\\platformio.exe' run -e min -t clean; $env:P69_BACKUP_MODE='skip'; & 'C:\\Users\\gerha\\.platformio\\penv\\Scripts\\platformio.exe' run -e min -t buildfs; $env:P69_BACKUP_MODE='final'; & 'C:\\Users\\gerha\\.platformio\\penv\\Scripts\\platformio.exe' run -e min",
-      "group": "build",
-      "problemMatcher": [
-        "$platformio"
-      ]
-    },
-    {
-      "label": "Upload (min)",
-      "type": "shell",
-      "command": "& 'C:\\Users\\gerha\\.platformio\\penv\\Scripts\\platformio.exe' run -e min -t clean; $env:P69_BACKUP_MODE='skip'; & 'C:\\Users\\gerha\\.platformio\\penv\\Scripts\\platformio.exe' run -e min -t uploadfs; Write-Host 'Warte 3s nach SPIFFS-Upload...'; Start-Sleep -Seconds 3; $env:P69_BACKUP_MODE='final'; & 'C:\\Users\\gerha\\.platformio\\penv\\Scripts\\platformio.exe' run -e min -t upload",
-      "group": "build",
-      "problemMatcher": [
-        "$platformio"
-      ]
-    },
-    {
-      "label": "Build (max)",
-      "type": "shell",
-      "command": "& 'C:\\Users\\gerha\\.platformio\\penv\\Scripts\\platformio.exe' run -t clean; $env:P69_BACKUP_MODE='skip'; & 'C:\\Users\\gerha\\.platformio\\penv\\Scripts\\platformio.exe' run -e max -t buildfs; $env:P69_BACKUP_MODE='final'; & 'C:\\Users\\gerha\\.platformio\\penv\\Scripts\\platformio.exe' run -e max",
-      "group": "build",
-      "problemMatcher": [
-        "$platformio"
-      ]
-    },
-    {
-      "label": "Upload (max)",
-      "type": "shell",
-      "command": "& 'C:\\Users\\gerha\\.platformio\\penv\\Scripts\\platformio.exe' run -t clean; $env:P69_BACKUP_MODE='skip'; & 'C:\\Users\\gerha\\.platformio\\penv\\Scripts\\platformio.exe' run -e max -t uploadfs; Write-Host 'Warte 3s nach SPIFFS-Upload...'; Start-Sleep -Seconds 3; $env:P69_BACKUP_MODE='final'; & 'C:\\Users\\gerha\\.platformio\\penv\\Scripts\\platformio.exe' run -e max -t upload",
-      "group": "build",
-      "problemMatcher": [
-        "$platformio"
-      ]
-    },
-    {
-      "label": "Build+Upload FS & FW (max)",
-      "type": "shell",
-      "command": "& 'C:\\Users\\gerha\\.platformio\\penv\\Scripts\\platformio.exe' run -t clean; $env:P69_BACKUP_MODE='skip'; & 'C:\\Users\\gerha\\.platformio\\penv\\Scripts\\platformio.exe' run -e max -t buildfs; $env:P69_BACKUP_MODE='skip'; & 'C:\\Users\\gerha\\.platformio\\penv\\Scripts\\platformio.exe' run -e max -t uploadfs; Write-Host 'Warte 3s nach SPIFFS-Upload...'; Start-Sleep -Seconds 3; $env:P69_BACKUP_MODE='skip'; & 'C:\\Users\\gerha\\.platformio\\penv\\Scripts\\platformio.exe' run -e max; $env:P69_BACKUP_MODE='final'; & 'C:\\Users\\gerha\\.platformio\\penv\\Scripts\\platformio.exe' run -e max -t upload",
-      "group": "build",
-      "problemMatcher": [
-        "$platformio"
-      ]
-    },
-    {
-      "label": "Build (Ro)",
-      "type": "shell",
-      "command": "& 'C:\\Users\\gerha\\.platformio\\penv\\Scripts\\platformio.exe' run -e Ro -t clean; $env:P69_BACKUP_MODE='skip'; & 'C:\\Users\\gerha\\.platformio\\penv\\Scripts\\platformio.exe' run -e Ro -t buildfs; $env:P69_BACKUP_MODE='final'; & 'C:\\Users\\gerha\\.platformio\\penv\\Scripts\\platformio.exe' run -e Ro",
-      "group": "build",
-      "problemMatcher": [
-        "$platformio"
-      ]
-    },
-    {
-      "label": "Open Serial Monitor",
-      "type": "shell",
-      "command": "${command:serialMonitor.focus}",
-      "problemMatcher": []
+      "problemMatcher": ["$platformio"],
+      "presentation": { "reveal": "always", "panel": "shared" }
     },
     {
       "label": "Flash+Test",
@@ -187,14 +39,7 @@
       "command": "& 'C:\\Users\\gerha\\.platformio\\penv\\Scripts\\python.exe' '${workspaceFolder}\\tools\\flash_and_test.py' --mode flash-test",
       "group": "test",
       "problemMatcher": [],
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": true,
-        "panel": "dedicated",
-        "showReuseMessage": false,
-        "clear": true
-      }
+      "presentation": { "echo": true, "reveal": "always", "focus": true, "panel": "dedicated", "showReuseMessage": false, "clear": true }
     },
     {
       "label": "Reset+Test",
@@ -202,14 +47,7 @@
       "command": "& 'C:\\Users\\gerha\\.platformio\\penv\\Scripts\\python.exe' '${workspaceFolder}\\tools\\flash_and_test.py' --mode reset-test",
       "group": "test",
       "problemMatcher": [],
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": true,
-        "panel": "dedicated",
-        "showReuseMessage": false,
-        "clear": true
-      }
+      "presentation": { "echo": true, "reveal": "always", "focus": true, "panel": "dedicated", "showReuseMessage": false, "clear": true }
     }
   ]
 }
