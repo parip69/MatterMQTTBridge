@@ -39,6 +39,8 @@ doc/Projekt-Links-und-Zugangsdaten.md
 !/.github/copilot-instructions-de.md
 !/Handbuch/
 !/Handbuch/**
+!/.vscode/
+!/.vscode/tasks.json
 
 # 3) Innerhalb freigegebener Bereiche gezielt wieder ignorieren
 # Build-/Cache-/Werkzeug-Ordner
@@ -49,8 +51,9 @@ esp-idf/
 tools/
 rxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/
 
-# VS Code Konfiguration (lokal)
-.vscode/
+# VS Code: alles außer tasks.json ignorieren
+.vscode/*
+!.vscode/tasks.json
 .local-history/
 
 # Backup & Archive (auch falls versehentlich in freigegebenen Ordnern)
