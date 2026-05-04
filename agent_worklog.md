@@ -1,3 +1,18 @@
+## 4. Mai 2026 - RX-Log in beide Richtungen aktiviert
+
+**Aufgabe:** Eingehende MQTT-Nachrichten genauso sichtbar machen wie ausgehende
+
+**Durchgeführte Aktionen:**
+- `src/main.cpp`: MQTT-Subscribe beim Connect auf Root-Wildcard umgestellt: `<root>/#`
+- Subscribe ist jetzt **immer aktiv**, auch wenn `USE_OUTPUT_TEST_PINS = 0`
+- Zusätzliche Diagnose-Logs für Subscribe-Erfolg/Fehler ergänzt
+- Build ausgeführt: `B Bridge` erfolgreich
+
+**Ergebnis:**
+- RX-Nachrichten von externen ESPs/Broker erscheinen jetzt zuverlässig im Live-Log
+
+---
+
 ## 4. Mai 2026 - U ALL lokal erfolgreich
 
 **Aufgabe:** Kompletten lokalen Stand auf Bridge-ESP flashen

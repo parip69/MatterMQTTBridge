@@ -2,7 +2,7 @@
 //******************************************************
 //         Main of MatterMQTTBridge.
 // nur hier die start wert der version Aendern.OK=======
-// @version: 1.0.8 <br> Builddatum 19:54:47 04-05.2026
+// @version: 1.0.9 <br> Builddatum 19:58:13 04-05.2026
 //****************************************************
 
 #include <Arduino.h>
@@ -39,7 +39,7 @@
 #define TEST_OUTPUT_PIN_5 33
 
 // ======================= GLOBALS =======================
-const char* firmwareVersion = "1.0.8 <br> Builddatum 19:54:47 04-05.2026";
+const char* firmwareVersion = "1.0.9 <br> Builddatum 19:58:13 04-05.2026";
 AsyncWebServer webServer(80);
 SettingsManager settingsManager;
 
@@ -478,12 +478,14 @@ void setup() {
         mqttClient.onConnect([](bool sessionPresent) {
             mqttManager.onMqttConnect(sessionPresent);
             addLogMessage("MQTT verbunden");
-#if USE_OUTPUT_TEST_PINS
             String root = normalizeMqttRootTopic(settingsManager.getAppSettings().mqttRootTopic);
-            for (int i = 1; i <= 5; i++) {
-                mqttClient.subscribe((root + "/OutputPinStatus" + String(i)).c_str(), 0);
+            String wildcardTopic = root + "/#";
+            uint16_t subId = mqttClient.subscribe(wildcardTopic.c_str(), 0);
+            if (subId != 0) {
+                addLogMessage("MQTT Subscribe aktiv: " + wildcardTopic);
+            } else {
+                addLogMessage("MQTT Subscribe fehlgeschlagen: " + wildcardTopic);
             }
-#endif
         });
         mqttClient.onDisconnect([](AsyncMqttClientDisconnectReason reason) {
             mqttManager.onMqttDisconnect(reason);
