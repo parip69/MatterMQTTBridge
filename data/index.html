@@ -147,16 +147,22 @@
         }
 
         function triggerPin(pin) {
+            appendLogLine('Trigger ' + pin + ' angefordert');
             fetch('/api/bridge/trigger?pin=' + pin)
                 .then(res => res.json())
                 .then(data => {
                     if (data.ok) {
+                        appendLogLine('TX  ' + data.topic + '  ->  ' + data.payload);
                         alert("Trigger " + pin + " gesendet\nTopic: " + data.topic + "\nPayload: " + data.payload);
                     } else {
+                        appendLogLine('Trigger ' + pin + ' fehlgeschlagen: ' + (data.error || 'unbekannt'));
                         alert("Fehler: " + data.error);
                     }
                 })
-                .catch(err => alert("Trigger fehlgeschlagen: " + err));
+                .catch(err => {
+                    appendLogLine('Trigger ' + pin + ' Fehler: ' + err);
+                    alert("Trigger fehlgeschlagen: " + err);
+                });
         }
 
         function triggerCustomPin() {

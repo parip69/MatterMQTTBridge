@@ -1,3 +1,19 @@
+## 4. Mai 2026 - Trigger-Buttons im Live-Log sichtbar gemacht
+
+**Aufgabe:** Klicks auf Trigger-Buttons sollen direkt im Diagnose-/Live-Log erscheinen
+
+**Durchgeführte Aktionen:**
+- `data/index.html`: Funktion `triggerPin(pin)` erweitert
+- Vor dem Request wird jetzt ein Logeintrag erzeugt: `Trigger X angefordert`
+- Bei Erfolg wird zusätzlich `TX <topic> -> <payload>` ins Live-Log geschrieben
+- Bei API-Fehler bzw. Netzwerkfehler wird jeweils ein Fehler-Logeintrag geschrieben
+- Build ausgeführt: `B Bridge` erfolgreich
+
+**Geänderte Dateien:**
+- `data/index.html` (Versionsnummer unverändert)
+
+---
+
 ## 4. Mai 2026 - MQTT Monitor hinzugefügt
 
 **Aufgabe:** MQTT Monitor-Fenster im Web-Interface – zeigt TX/RX/SYS-Nachrichten live an
