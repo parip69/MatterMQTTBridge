@@ -1,0 +1,1449 @@
+<!-- Beschreibung: 🎉🎉2.0.0 erste wo alles get mit dem Templade dowenload🎉🎉 -->
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>%HOSTNAME%</title>
+  <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+  <!-- P3-18: Bootstrap CSS lokal einbinden für vollständige Offline-Funktionalität (konsistent mit index.html) -->
+  <link rel="stylesheet" href="/bootstrap.min.css">
+
+  <style>
+    .text-muted {
+      color: #181818 !important;
+      font-size: 14px;
+    }
+
+    body {
+      background-color: #383737;
+    }
+
+    /* Fingerprint-Bereiche ausblenden wenn Scanner deaktiviert */
+    .fp-section-hidden {
+      display: none !important;
+    }
+
+
+    .collapsable,
+    .collapsed-content {
+      display: none;
+    }
+
+    .collapsable.visible,
+    .collapsed-content.visible {
+      display: block;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    #logMessages.log-expanded {
+      height: auto;
+      max-height: none;
+      overflow-y: visible;
+    }
+
+    .navbar-nav li {
+      color: white !important;
+    }
+
+    .alert-custom {
+      background-color: #dfdddd;
+      border: 1px solid #fad6d6;
+      color: #544f4f;
+      border-radius: 10px;
+    }
+
+    .form-horizontal {
+      margin-left: 15px;
+      margin-right: 15px;
+    }
+
+    .container {
+      margin-bottom: 10px;
+    }
+
+    .settings-container {
+      background-color: #8d8d8d;
+      padding: 0 15px;
+      border-radius: 10px;
+      box-shadow: 0px 0px 8px 2px #5fe7f9;
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+      border: 1px solid #ffc6c683;
+      /* Dünner Rand hinzugefügt */
+    }
+
+    fieldset {
+      border: none;
+    }
+
+    legend {
+      border-bottom: 1px solid #fde6e6;
+    }
+
+    .legend-cursor {
+      cursor: pointer;
+    }
+
+    .SunriseSunset.ausSun,
+    .SunriseSunrise.ausSun {
+      color: #f70505;
+    }
+
+    .SunriseSunset.exactSun,
+    .SunriseSunrise.exactSun {
+      color: #216502;
+    }
+
+    .SunriseSunset.offsetSunMinus,
+    .SunriseSunrise.offsetSunMinus {
+      color: #1e74f3;
+    }
+
+    .SunriseSunset.offsetSunPlus,
+    .SunriseSunrise.offsetSunPlus {
+      color: #f3e11e;
+    }
+
+    /* CSS für die WLAN-Qualitätsanzeige */
+    #wifi-icon { margin-left: 5px; font-size: 18px; }
+    #wifi-quality { position: relative; display: inline-block; margin-right: 8px; transform: translateX(-4px); }
+    #wifi-quality::after { content: attr(data-rssi); position: absolute; left: 100%; bottom: 0; font-size: 9px; font-weight: 700; line-height: 1; color: inherit; text-shadow: 0 1px 2px rgba(0,0,0,.95); pointer-events: none; white-space: nowrap; }
+
+    .wifi-quality-high {
+      color: green;
+    }
+
+    .wifi-quality-medium {
+      color: yellow;
+    }
+
+    .wifi-quality-low {
+      color: orange;
+    }
+
+    .wifi-quality-poor {
+      color: red;
+    }
+
+    .wifi-convert-small {
+      font-size: 0.75em;
+      opacity: 0.75;
+      margin-left: 6px;
+      white-space: nowrap;
+    }
+
+    /* MQTT Status Farben analog index.html */
+    #mqtt-status.mqtt-online {
+      color: #5cb85c;
+    }
+
+    #mqtt-status.mqtt-offline {
+      color: #d9534f;
+    }
+
+    #mqtt-status.mqtt-disabled {
+      color: #777;
+    }
+
+    #mqtt-status.mqtt-unknown {
+      color: #f0ad4e;
+    }
+
+    .navbar-brand {
+      vertical-align: middle;
+    }
+
+    #mqtt-status {
+      font-size: 10px;
+      margin-left: 0px;
+      vertical-align: middle;
+    }
+
+    #mqtt-broker-clients {
+      font-size: 8px;
+      margin-left: 0px;
+      vertical-align: middle;
+      color: #aef65c;
+    }
+
+    #chiptemp-status {
+      font-size: 10px;
+      margin-left: 0px;
+      vertical-align: middle;
+    }
+
+    #chiptemp-status .cpu-label,
+    #chiptemp-status .unit-label {
+      color: #5f9bdc;
+    }
+
+    #chiptemp-value {
+      color: #f6785c;
+    }
+
+    .header-info-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .sun-info {
+      display: flex;
+      gap: 10px;
+    }
+
+    .sun-info div {
+      color: black;
+    }
+
+    #current-date-time {
+      text-align: right;
+    }
+
+    #logMessages {
+      height: 110px;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding-top: 6px;
+      padding-bottom: 6px;
+      cursor: pointer;
+      position: relative;
+    }
+
+    #clearLogBtn {
+      position: absolute;
+      top: 5px;
+      right: 10px;
+      cursor: pointer;
+      font-size: 20px;
+      z-index: 2;
+    }
+
+    #manualTimezone {
+      display: none;
+    }
+
+    #manualTimezone.visible {
+      display: block;
+    }
+
+    select.hidden {
+      display: none;
+    }
+
+    .time-control-group {
+      display: flex;
+      justify-content: flex-start;
+      margin-bottom: 10px;
+    }
+
+    .time-input-container {
+      display: flex;
+      align-items: center;
+      margin-right: 10px;
+    }
+
+    .time-input-container label {
+      margin-right: 5px;
+    }
+
+    .time-input-field {
+      width: 6em;
+    }
+
+    #error-message {
+      color: red;
+      margin-top: 5px;
+      text-align: center;
+    }
+
+    .form-text-block {
+      display: block;
+      margin-top: 10px;
+    }
+
+    .no-padding {
+      padding: 0;
+    }
+
+    .legend-toggle-icon {
+      font-size: 24px;
+    }
+
+    .legend-list {
+      list-style-type: disc;
+      padding-left: 15px;
+      margin: 15px;
+    }
+
+    #mqtt-status-notification {
+      display: none;
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 5px;
+      background-color: #d9edf7;
+      color: #31708f;
+      border: 1px solid #bce8f1;
+    }
+
+    .footer-container {
+      margin-top: 20px;
+    }
+
+    .footer-nav {
+      margin-top: 15px;
+    }
+
+    .footer-list {
+      list-style-type: disc;
+      padding-left: 0px;
+      margin: 0;
+    }
+  </style>
+
+</head>
+
+<body>
+
+  <nav class="navbar navbar-inverse" aria-label="Hauptnavigation">
+    <div class="container-fluid">
+      <div class="navbar-header">
+        <a class="navbar-brand" href="/">
+          <span id="hostname">%HOSTNAME%</span>
+          <span id="wifi-icon">🛜</span>
+          <span id="wifi-quality" data-rssi="--">%WIFIQUALITY%</span><span>&#37;</span>
+          <br>
+          <span id="mqtt-status-wrapper" style="display:none;">
+          <span id="mqtt-status">%MQTT_MODE%</span>
+          <span id="mqtt-broker-clients"></span>
+          </span>
+          <span id="chiptemp-status">
+            <span class="cpu-label">CPU</span>
+            <span id="chiptemp-value">--</span>
+            <span class="unit-label">°C</span>
+          </span>
+          <br>
+        </a>
+      </div>
+      <ul class="nav navbar-nav">
+        <li><a href="/">Fingerabdrücke</a></li>
+        <li class="active"><a href="#">Einstellungen</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main class="container" aria-label="Hauptinhalt">
+    <div class="settings-container">
+      <div class="header-info-bar">
+        <div class="sun-info">
+          <div>Sunrise: <span class="SunriseSunset %SUNRISE_HTML_TIME%">%SUNR%</span></div>
+          <div>Sunset: <span class="SunriseSunset %SUNSET_HTML_TIME%">%SUNS%</span></div>
+          <div>%PINSTA%</div>
+        </div>
+        <div id="current-date-time"></div>
+      </div>
+
+      <div class="alert alert-custom" id="logMessages" aria-live="polite" onclick="toggleLogMessagesBox(event)">
+        <span id="clearLogBtn" onclick="clearLogMessages(event)">&#128465;</span>
+        <div id="logMessagesContent">%LOGMESSAGES%</div>
+      </div>
+
+      <form class="form-horizontal" id="mqtt-section" style="display:none;" action="/settings" method="GET"
+        onsubmit="return closeEventSourceBeforeSubmit(this);">
+        <fieldset>
+          <legend class="legend-cursor" onclick="sectionToggleCollapse('settings')">Mqtt Server Setup</legend>
+          <div id="settings-content" class="collapsed-content">
+
+            <div class="form-group" id="mqtt-broker-row" style="display:none;">
+              <label class="col-md-4 control-label" for="mqtt_isBroker">Lokalen MQTT-Brocker aktivieren</label>
+              <div class="col-md-4">
+                <input id="mqtt_isBroker" name="mqtt_isBroker" type="checkbox" class="form-check-input"
+                  %isbroker_checked% disabled onclick="handleMqttModeChange(this)">
+              </div>
+            </div>
+
+            <div class="form-group" id="mqtt-client-row" style="display:none;">
+              <label class="col-md-4 control-label" for="mqtt_isClient">Alls MQTT-Client verbinden</label>
+              <div class="col-md-4">
+                <input id="mqtt_isClient" name="mqtt_isClient" type="checkbox" class="form-check-input"
+                  %isclient_checked% disabled onclick="handleMqttModeChange(this)">
+              </div>
+            </div>
+
+            <div id="mqtt-settings-fields">
+
+              <div class="form-group">
+                <label class="col-md-4 control-label" for="mqtt_port">MQTT Port</label>
+                <div class="col-md-4">
+                  <input id="mqtt_port" name="mqtt_port" type="number" min="1" max="65535" class="form-control input-md" placeholder="1883"
+                    value="%MQTT_PORT%">
+                  <small class="text-muted">Port für den lokalen Broker oder den externen Client.</small>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="col-md-4 control-label" for="mqtt_keepAlive">MQTT Keep-Alive</label>
+                <div class="col-md-4">
+                  <input id="mqtt_keepAlive" name="mqtt_keepAlive" type="number" class="form-control input-md"
+                    placeholder="20" value="%MQTT_KEEPALIVE%">
+                  <small class="text-muted">Keep-Alive-Intervall in Sekunden. Standard ist 20.</small>
+                </div>
+              </div>
+
+
+
+              <div class="form-group">
+                <label class="col-md-4 control-label" for="mqtt_server">MQTT-Server</label>
+                <div class="col-md-4">
+                  <input id="mqtt_server" name="mqtt_server" type="text" placeholder="Address of your MQTT Server"
+                    class="form-control input-md" value="%MQTT_SERVER%">
+                  <small class="text-muted">Gültige Eingabeformate:<br>
+                    • IP-Adresse (z.B. 192.168.1.100)<br>
+                    • Hostname (z.B. SmartBroker)<br>
+                    • mDNS-Name (z.B. SmartBroker.local)<br>
+                    • Domainname (z.B. broker.example.com)<br>
+                    • Optional: ,mdns für mDNS-Suche<br>
+                    Feld leer = MQTT deaktiviert</small>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-md-4 control-label" for="mqtt_username">MQTT Username</label>
+                <div class="col-md-4">
+                  <input id="mqtt_username" name="mqtt_username" type="text"
+                    placeholder="Username for connecting to your MQTT Server" class="form-control input-md"
+                    value="%MQTT_USERNAME%">
+                  <small class="text-muted">Leer lassen, wenn dein Server keine Authentifizierung erfordert.</small>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-md-4 control-label" for="mqtt_password">MQTT Password</label>
+                <div class="col-md-4">
+                  <input id="mqtt_password" name="mqtt_password" type="text"
+                    placeholder="Password for connecting to your MQTT Server" class="form-control input-md"
+                    value="%MQTT_PASSWORD%">
+                  <small class="text-muted">Leer lassen, wenn dein Server keine Authentifizierung benötigt.</small>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-md-4 control-label" for="mqtt_rootTopic">MQTT Root Topic</label>
+                <div class="col-md-4">
+                  <input id="mqtt_rootTopic" name="mqtt_rootTopic" type="text"
+                    placeholder="Root topic where this device publishes its messages" class="form-control input-md"
+                    value="%MQTT_ROOTTOPIC%">
+                  <small class="text-muted">Published Topics (=write)<br> - "%MQTT_ROOTTOPIC%/ring"<br> -
+                    "%MQTT_ROOTTOPIC%/matchId"<br> - "%MQTT_ROOTTOPIC%/matchName"<br> -
+                    "%MQTT_ROOTTOPIC%/matchConfidence"<br> - "%MQTT_ROOTTOPIC%/lastLogMessage"<br> Subscribed Topics
+                    (=read)<br> - "%MQTT_ROOTTOPIC%/ignorTouchRing" </small>
+                </div>
+              </div>
+
+            </div>
+            <div class="form-group">
+              <label class="col-md-4 control-label" for="btnSaveSettingsMqtt"></label>
+              <div class="col-md-4">
+                <button id="btnSaveSettingsMqtt" name="btnSaveSettings" value="mqtt" class="btn btn-success"
+                  type="submit"
+                  onclick="return confirm('Möchten Sie die Einstellungen speichern und neu starten?')">Save and
+                  Restart</button>
+              </div>
+            </div>
+          </div>
+        </fieldset>
+
+      </form>
+
+      <form class="form-horizontal" action="/settings" method="GET"
+        onsubmit="return closeEventSourceBeforeSubmit(this);">
+        <fieldset>
+          <legend class="legend-cursor" onclick="sectionToggleCollapse('ntp-setup')">NTP Server Setup</legend>
+          <div id="ntp-setup-content" class="collapsed-content">
+            <div class="form-group">
+              <label class="col-md-4 control-label" for="ntpServer">NTP Server</label>
+              <div class="col-md-4">
+                <input id="ntpServer" name="ntpServer" type="text" placeholder="URL to NTP server"
+                  class="form-control input-md" value="%NTP_SERVER%">
+                <small class="text-muted">
+                  Gib hier NTP-Server ein (z.B. "pool.ntp.org" oder "time.google.com").
+                  Mehrere Server können durch Komma getrennt werden.
+                  Lokale Server sind ebenfalls möglich (z.B. "192.168.111.1, europe.pool.ntp.org, pool.ntp.org,
+                  time.google.com").
+                  <br><br>
+                  Die Zeitinformation wird für Zeitstempel im Log-Panel verwendet.
+                  Wenn kein Server erreichbar ist oder keine Zeitquelle angegeben wird,
+                  bleibt die Systemzeit ungenau bzw. auf null gesetzt.
+                </small>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="col-md-4 control-label" for="timezone">Zeitzone</label>
+              <div class="col-md-4">
+                <select id="timezone" name="timezone" class="form-control">
+                  <option value="" disabled hidden selected>%NTP_OFFSET%</option>
+                  <option value="manual">Manuelle Eingabe</option>
+                  <option value="GMT-12:00 | GMT-12">GMT-12:00</option>
+                  <option value="GMT-11:00 | GMT-11">GMT-11:00</option>
+                  <option value="GMT-10:00 | GMT-10">GMT-10:00</option>
+                  <option value="Anchorage (-9) | AKST9AKDT,M3.2.0/2,M11.1.0/2">Anchorage (-9)</option>
+                  <option value="Los Angeles (-8) | PST8PDT,M3.2.0/2,M11.1.0/2">Los Angeles (-8)</option>
+                  <option value="Denver (-7) | MST7MDT,M3.2.0/2,M11.1.0/2">Denver (-7)</option>
+                  <option value="Chicago (-6) | CST6CDT,M3.2.0/2,M11.1.0/2">Chicago (-6)</option>
+                  <option value="New York (-5) | EST5EDT,M3.2.0/2,M11.1.0/2">New York (-5)</option>
+                  <option value="San Juan (-4) | AST4ADT,M3.2.0/2,M11.1.0/2">San Juan (-4)</option>
+                  <option value="St. John's (-3:30) | NST3:30NDT,M3.2.0/0:01,M11.1.0/0:01">St. John's (-3:30)</option>
+                  <option value="Buenos Aires (-3) | ART3">Buenos Aires (-3)</option>
+                  <option value="London (0) | GMT0BST,M3.5.0/1,M10.5.0/2">London (0)</option>
+                  <option value="Lissabon (0) | WET0WEST,M3.5.0/1,M10.5.0/2">Lissabon (0)</option>
+                  <option value="Berlin (+1) | CET-1CEST,M3.5.0/2,M10.5.0/3">Berlin (+1)</option>
+                  <option value="Warschau (+1) | CET-1CEST,M3.5.0/2,M10.5.0/3">Warschau (+1)</option>
+                  <option value="Bukarest (+2) | EET-2EEST,M3.5.0/3,M10.5.0/4">Bukarest (+2)</option>
+                  <option value="Moskau (+3) | FET-3">Moskau (+3)</option>
+                  <option value="Teheran (+3:30) | IRST-3:30">Teheran (+3:30)</option>
+                  <option value="Dubai (+4) | GST-4">Dubai (+4)</option>
+                  <option value="Kabul (+4:30) | AFT-4:30">Kabul (+4:30)</option>
+                  <option value="Karachi (+5) | PKT-5">Karachi (+5)</option>
+                  <option value="Mumbai (+5:30) | IST-5:30">Mumbai (+5:30)</option>
+                  <option value="Dhaka (+6) | BST-6">Dhaka (+6)</option>
+                  <option value="Yangon (+6:30) | MST-6:30">Yangon (+6:30)</option>
+                  <option value="Bangkok (+7) | ICT-7">Bangkok (+7)</option>
+                  <option value="Peking (+8) | CST-8">Peking (+8)</option>
+                  <option value="Tokyo (+9) | JST-9">Tokyo (+9)</option>
+                  <option value="Adelaide (+9:30) | ACST-9:30ACDT,M10.1.0/2,M4.1.0/3">Adelaide (+9:30)</option>
+                  <option value="Sydney (+10) | AET-10AEDT,M10.1.0/2,M4.1.0/3">Sydney (+10)</option>
+                  <option value="Honiara (+11) | SBT-11">Honiara (+11)</option>
+                  <option value="Auckland (+12) | NZST-12NZDT,M9.5.0/2,M4.1.0/3">Auckland (+12)</option>
+                  <option value="Enderbury (+13) | PHOT-13">Enderbury (+13)</option>
+                  <option value="Kiritimati (+14) | LINT-14">Kiritimati (+14)</option>
+                </select>
+
+                <!-- Eingabefeld für die manuelle Eingabe, standardmäßig versteckt -->
+                <input type="text" id="manualTimezone" placeholder="Eigenen Wert eingeben">
+                <small class="text-muted">Zeitzone: %NTP_OFFSET_NAMEN%: %NTP_OFFSET_TIME%</small><br>
+
+                <ul class="text-muted">
+                  <li><strong>Wähle eine Zeitzone aus dem Dropdown-Menü.</strong></li>
+                  <li><strong>In der manuellen Auswahl kann man ganz individuell eine Zeitzone eingeben.</strong></li>
+                  <li><strong>Zum Beispiel "Wunschbezeichnung | Zeitzone", z.B. "Berlin | GMT-1" oder einfach
+                      nur das Zeitformat "GMT-1".</strong></li>
+                  <li><strong>Das sind Zeitformate (Zeitzone), die man eingeben kann: "GMT-1", "UTC-1",
+                      "Etc/GMT-1". Und das ist ein Format für Berlin mit automatischer Zeitumstellung:
+                      "CET-1CEST,M3.5.0,M10.5.0/3".</strong></li>
+                  <li><strong><a href="https://github.com/nayarsystems/posix_tz_db/blob/master/zones.json">Hier
+                        alle Zeitzonen</a></strong></li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="col-md-4 control-label" for="latitude">Latitude</label>
+              <div class="col-md-4">
+                <input id="latitude" name="latitude" type="text" placeholder="Latitude 48.77444"
+                  class="form-control input-md" value="%KOOR_LATITUDE%">
+                <small class="text-muted">Trage hier den Breitengrad ein, im Format 48.77444. Wenn dieses Feld leer
+                  bleibt, wird die sonnenbasierte Beleuchtung der Türklingel deaktiviert.
+                </small>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="col-md-4 control-label" for="longitude">Longitude</label>
+              <div class="col-md-4">
+                <input id="longitude" name="longitude" type="text" placeholder="Longitude 11.619619"
+                  class="form-control input-md" value="%KOOR_LONGITUDE%">
+                <small class="text-muted">Trage hier den Längengrad ein, im Format 11.619619. Wenn dieses Feld leer
+                  bleibt, wird die sonnenbasierte Beleuchtung der Türklingel deaktiviert.
+                </small>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="col-md-4 control-label">Zeitsteuerung</label>
+              <div class="col-md-4">
+                <div class="time-control-group">
+                  <!-- Sunrise input field -->
+                  <div class="time-input-container">
+                    <label class="control-label" for="sunriseOffset">Sunrise:</label>
+                    <input id="sunriseOffset" name="sunriseOffset" type="text" placeholder="Aus" maxlength="5"
+                      class="form-control input-md time-input-field" value="%SUNRISEOFFSET%"
+                      onblur="validateInput(this.id)">
+                  </div>
+
+                  <!-- Sunset input field -->
+                  <div class="time-input-container">
+                    <label class="control-label" for="sunsetOffset">Sunset:</label>
+                    <input id="sunsetOffset" name="sunsetOffset" type="text" placeholder="Aus" maxlength="5"
+                      class="form-control input-md time-input-field" value="%SUNSETOFFSET%"
+                      onblur="validateInput(this.id)">
+                  </div>
+                </div>
+
+                <!-- Error message area -->
+                <div id="error-message"></div>
+
+                <div class="text-muted form-text-block">
+                  Wenn kein Offset angegeben wird, bleibt die Klingelbeleuchtung aus, und auf der Anzeige steht "Aus".
+                  Bei einem Offset von 0 schaltet sich das Licht genau bei Sonnenaufgang und -untergang ein.
+                  <br><br>
+                  Du kannst den Zeitpunkt des Sonnenaufgangs und -untergangs beeinflussen, indem du eine positive oder
+                  negative Zahl eingibst. Die maximale Anpassung beträgt dabei &gt;99 Minuten.
+                  <br><br>
+                  Alternativ kannst du eine feste Uhrzeit im Format "HH:MM" eingeben, zu der die Beleuchtung
+                  eingeschaltet wird.
+                </div>
+
+                <br>
+
+                <div class="col-md-4 no-padding">
+                  <button id="btnSaveSettingsNtp" name="btnSaveSettings" value="ntp" class="btn btn-success"
+                    type="submit"
+                    onclick="return confirm('Möchten Sie die Einstellungen speichern und neu starten?')">Save and
+                    Restart</button>
+                </div>
+              </div>
+            </div>
+            <br>
+          </div>
+        </fieldset>
+
+      </form>
+
+      <form class="form-horizontal" action="/settings" method="GET"
+        onsubmit="return closeEventSourceBeforeSubmit(this);">
+        <fieldset>
+          <legend class="legend-cursor" onclick="sectionToggleCollapse('wifi-stability-setup')">WiFi Stability Setup
+          </legend>
+          <div id="wifi-stability-setup-content" class="collapsed-content">
+            <div class="form-group">
+              <label class="col-md-4 control-label" for="wifiRssiDisconnectThreshold">Signalgrenze fuer WLAN-Rettung (dBm)</label>
+              <div class="col-md-4">
+                <input id="wifiRssiDisconnectThreshold" name="wifiRssiDisconnectThreshold" type="number"
+                  placeholder="-80" class="form-control input-md" value="%WIFI_RSSI_D%" min="-95" max="-50" step="1"
+                  title="RSSI-Grenze, ab der eine weiche WLAN-Rettung startet. Gueltig: -95 bis -50 dBm. Empfehlung/Standard: -80. Leer lassen = aktueller Wert bleibt.">
+                <span class="wifi-convert-small" id="rssiDisconnectThresholdPercent"></span>
+                <small class="text-muted">Bei sehr schwachem Signal startet eine weiche WLAN-Rettung. Die gespeicherten
+                  WLAN-Zugangsdaten bleiben unveraendert. Verwendet wird der zuletzt gemerkte beste AP derselben SSID oder ein einmalig
+                  frisch gesuchter AP. Die Mindestverbesserung fuer normales Roaming spielt dabei keine Rolle.</small>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="col-md-4 control-label" for="wifiRoamMinRssi">Signalgrenze fuer AP-Suche (dBm)</label>
+              <div class="col-md-4">
+                <input id="wifiRoamMinRssi" name="wifiRoamMinRssi" type="number" min="-90" max="-50" step="1"
+                  placeholder="-69" class="form-control input-md" value="%WIFI_ROAM_MIN_RSSI%"
+                  title="RSSI-Grenze, ab der nach einem besseren AP gesucht wird. Gueltig: -90 bis -50 dBm. Empfehlung/Standard: -69.">
+                <span class="wifi-convert-small" id="wifiRoamMinRssiPercent"></span>
+                <small class="text-muted">Bei schwachem Signal wird hoechstens einmal pro Minute nach dem besten AP derselben
+                  SSID gesucht. Der beste Fund wird gespeichert. Ein Wechsel passiert nur, wenn der neue AP mindestens um die eingestellte
+                  Signalverbesserung besser ist. Bei ausreichend gutem Signal wird nicht gescannt.</small>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="col-md-4 control-label" for="wifiRoamImproveDb">Signalverbesserung fuer AP-Wechsel (dB)</label>
+              <div class="col-md-4">
+                <input id="wifiRoamImproveDb" name="wifiRoamImproveDb" type="number" min="3" max="30" step="1"
+                  placeholder="10" class="form-control input-md" value="%WIFI_ROAM_IMPROVE_DB%"
+                  title="Noetige Signalverbesserung fuer normalen AP-Wechsel. Gueltig: 3 bis 30 dB. Empfehlung/Standard: 10 dB.">
+                <small class="text-muted">Legt fest, wie viel besser ein anderer AP sein muss, damit beim normalen Roaming
+                  gewechselt wird. Dieser Wert ist eine dB-Differenz und kein RSSI-Wert in dBm.</small>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="col-md-4 control-label" for="btnSaveSettingsWifiStability"></label>
+              <div class="col-md-4">
+                <button id="btnSaveSettingsWifiStability" name="btnSaveSettings" value="wifi" class="btn btn-success"
+                  type="submit"
+                  onclick="return confirm('Möchten Sie die Einstellungen speichern und neu starten?')">Save and
+                  Restart</button>
+              </div>
+            </div>
+          </div>
+        </fieldset>
+
+      </form>
+
+      <form class="form-horizontal" action="/settings" method="GET"
+        onsubmit="return closeEventSourceBeforeSubmit(this);">
+        <fieldset>
+          <legend class="legend-cursor" onclick="sectionToggleCollapse('password-setup')">Password Setup</legend>
+          <div id="password-setup-content" class="collapsed-content">
+            <div class="form-group">
+              <label class="col-md-4 control-label" for="passwordSetup">Password Setup</label>
+              <div class="col-md-4">
+                <input id="passwordSetup" name="passwordSetup" type="text" placeholder="%PASSWORD_SETUP%"
+                  class="form-control input-md" value>
+                <small class="text-muted">******** Die Sterne stehen für ihr eigenes Password.</small>
+                <!-- Hier wird das Passwort für die Weboberfläche festgelegt -->
+                <ul>
+                  <li>
+                    <b>Passwort für die Weboberfläche festlegen:</b>
+                    <ul>
+                      <li>Hier kannst du das Passwort festlegen.</li>
+                      <li>Ersetze "admin" durch ein eigenes, sicheres Passwort.</li>
+                      <li>Das Passwort sollte ausreichend komplex sein, um die Sicherheit zu gewährleisten.</li>
+                    </ul>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="col-md-4 control-label" for="enablePassword">PASSWORD AKTIVIEREN</label>
+              <div class="col-md-4">
+                <!-- Wichtig: unchecked Checkboxen senden kein Feld. Daher senden wir IMMER einen Default 'off'
+                     und überschreiben mit 'on', wenn die Checkbox gesetzt ist. -->
+                <input type="hidden" name="enablePassword" value="off">
+                <input id="enablePassword" name="enablePassword" type="checkbox" class="form-check-input" value="on"
+                  %password_enabled_checked%>
+                <label class="form-check-label" for="enablePassword">Password aktivieren</label>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="col-md-4 control-label" for="btnSaveSettingsPassword"></label>
+              <div class="col-md-4">
+                <button id="btnSaveSettingsPassword" name="btnSaveSettings" value="password" class="btn btn-success"
+                  type="submit"
+                  onclick="return confirm('Möchten Sie die Einstellungen speichern und neu starten?')">Save and
+                  Restart</button>
+              </div>
+            </div>
+          </div>
+        </fieldset>
+      </form>
+
+      <div id="module-placeholder"></div>
+
+      <form class="form-horizontal" action="/settingsScanner" method="GET"
+        onsubmit="return closeEventSourceBeforeSubmit(this);">
+        <fieldset>
+          <legend class="legend-cursor" onclick="sectionToggleCollapse('scanner-setup')">Fingerprint Setup
+          </legend>
+          <div id="scanner-setup-content" class="collapsed-content">
+            <div class="form-group">
+              <label class="col-md-4 control-label" for="fingerprintScannerEnabled">Fingerabdruckscanner
+                aktivieren</label>
+              <div class="col-md-4">
+                <input id="fingerprintScannerEnabled" name="fingerprintScannerEnabled" type="checkbox"
+                  class="form-check-input" value="on" %fp_scanner_chk% onchange="confirmFingerprintScannerChange(this)">
+                <label class="form-check-label" for="fingerprintScannerEnabled">Scanner Deaktivieren /
+                  Aktivieren</label>
+                <br><small class="text-muted">
+                  Ein Neustart ist erforderlich.
+                </small>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="col-md-4 control-label" for="btnSaveSettingsScanner"></label>
+              <div class="col-md-4">
+                <button id="btnSaveSettingsScanner" name="btnSaveSettingsScanner" class="btn btn-success" type="submit"
+                  onclick="return confirm('Möchten Sie die Einstellungen speichern und neu starten?')">Save and
+                  Restart</button>
+                <div class="%FP_SECTION_CLASS%">
+                  <br><br>
+                  <button id="btnDoPairing" name="btnDoPairing" class="btn btn-warning" type="submit"
+                    formaction="pairing">Pairing a new sensor</button>
+                  <br><br>
+                  <button id="btnDeleteAllFingerprints" name="btnDeleteAllFingerprints" class="btn btn-danger"
+                    type="submit" formaction="deleteAllFingerprints"
+                    onclick="return confirm('Wollen Sie wirklich alle Fingerabdrücke löschen?')">Delete
+                    all Fingerprints</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </fieldset>
+      </form>
+
+      <form class="form-horizontal" onsubmit="return closeEventSourceBeforeSubmit(this);">
+        <fieldset>
+          <legend class="legend-cursor" onclick="sectionToggleCollapse('advanced-actions')">Advanced Actions</legend>
+          <div id="advanced-actions-content" class="collapsed-content">
+            <div class="form-group">
+              <label class="col-md-4 control-label" for="btnFirmwareUpdate"></label>
+              <div class="col-md-4">
+                <button id="btnFirmwareUpdate" name="btnFirmwareUpdate" class="btn btn-info" type="button"
+                  onclick="fetch('/otaPrepare').then(()=>window.location='/update')">Firmware-Update</button>
+                <br><br>
+                <button id="btnSoftReset" name="btnSoftReset" class="btn btn-warning" type="submit"
+                  formaction="softReset"
+                  onclick="return confirm('SOFT Reset: Löscht nur App-Einstellungen. WLAN und Fingerprints bleiben. Fortfahren?')">Soft
+                  Reset</button>
+                <br><br>
+                <button id="btnFactoryReset" name="btnFactoryReset" class="btn btn-danger" type="submit"
+                  formaction="factoryReset"
+                  onclick="return confirm('HARD Reset: Löscht ALLE Fingerabdrücke und die komplette NVS (inkl. WLAN). Danach muss neu konfiguriert werden. Fortfahren?')">Factory-Reset</button>
+                <br><br>
+                <button id="btnWificonfig" name="btnWificonfig" class="btn btn-success" type="submit"
+                  formaction="wificonfigFirst"
+                  onclick="return confirm('Wollen sie wirklich einen Wificonfig machen?')">ESP-WiFi-Config</button>
+                <br><br>
+                <button id="btnRestart" name="btnRestart" class="btn btn-success" type="button"
+                  onclick="handleFactoryRestart()">ESP-Restart</button>
+                <br><br>
+              </div>
+            </div>
+          </div>
+        </fieldset>
+      </form>
+
+      <a href="javascript:legendIdToggleCollapse('Legend1')"><span class="legend-toggle-icon">📖</span></a>
+      <div id="Legend1" class="collapsable">
+        <strong>Legendenbereich:</strong>
+        <ul class="legend-list">
+          <li>
+            <strong>Sonnenaufgangs- und -untergangszeiten:</strong> Zeigt die aktuellen Sonnenaufgangs- und
+            -untergangszeiten sowie das aktuelle Datum und die Uhrzeit an.
+          </li>
+          <li>
+            <strong>Protokollnachrichten:</strong> Präsentiert Protokollnachrichten im Alert-Bereich.
+          </li>
+          <li>
+            <strong>MQTT-Server-Setup:</strong> Ein Formular zur Konfiguration des MQTT-Servers mit Feldern
+            für Benutzername, Passwort und Root-Topic.<br>
+            <span class="text-muted">Gültige Eingabeformate für die Serveradresse:<br>
+              IP-Adresse (z.B. 192.168.1.100), Hostname (z.B. SmartBroker), mDNS-Name (z.B. SmartBroker.local),
+              Domainname (z.B. broker.example.com), optional ,mdns für mDNS-Suche.<br>
+              Feld leer = MQTT deaktiviert.</span>
+          </li>
+          <li>
+            <strong>NTP-Server-Setup:</strong> Bietet ein Formular zur Konfiguration des NTP-Servers und des
+            NTP-Offsets.
+          </li>
+          <li>
+            <strong>Sonnengesteuerte Beleuchtung:</strong> Eingabefelder für Latitude, Longitude und Offset zur
+            Steuerung der Sonnenlicht-basierten Beleuchtung.
+          </li>
+          <li>
+            <strong>Fortgeschrittene Aktionen:</strong> Schaltflächen für Firmware-Update, Pairing, Löschen von
+            Fingerabdrücken und Factory-Reset.
+          </li>
+          <li>
+            <strong>Legendenelemente:</strong> Bereiche, die ein- und ausgeklappt werden können, um weitere
+            Informationen anzuzeigen.
+          </li>
+          <li>
+            <strong>Footer:</strong> Ein Informations- und Versionsbereich am Ende der Seite.
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="container">
+      <!-- MQTT-Status-Benachrichtigungsleiste -->
+      <div id="mqtt-status-notification">
+        <strong>MQTT-Status:</strong> <span id="mqtt-status-message">Keine Nachricht</span>
+      </div>
+    </div>
+  </main>
+  <div class="container">
+    <footer class="settings-container footer-container" aria-label="Fußzeileninformationen">
+      <div class="alert alert-custom footer-nav">
+        <div class="container-fluid">
+          <ul class="footer-list">
+            <li>Fingerscanner, Ver.Nr. %VERSIONINFO%</li>
+            <li>Zeitzone: %NTP_OFFSET_NAMEN%: %NTP_OFFSET_TIME%</li>
+            <li>Systemzeit: %UHRZEIT_DATUM%</li>
+          </ul>
+        </div>
+      </div>
+    </footer>
+  </div>
+  <script>
+    // DOM-Elemente als Cache speichern - logMessagesElement mit höchster Priorität
+    let logMessagesElement, logMessagesContentElement, wifiQualityElement, currentDateTimeElement;
+    let eventSource = null;
+    let logBoxExpanded = false;
+    let settingsModulesLoaded = false;
+    let settingsModulesLoading = false;
+
+    function clearLogMessages(event) {
+      // Verhindert, dass das toggleLogMessagesBox-Event ausgelöst wird
+      event.stopPropagation();
+      if (logMessagesContentElement) {
+        logMessagesContentElement.textContent = ''; // P3-09: textContent statt innerHTML
+      }
+    }
+
+    function toggleLogMessagesBox(event) {
+      if (event && event.target.id === 'clearLogBtn') {
+        return;
+      }
+      if (!logMessagesElement) logMessagesElement = document.getElementById('logMessages');
+      logMessagesElement.classList.toggle('log-expanded');
+      logBoxExpanded = !logBoxExpanded;
+      if (!logBoxExpanded) {
+        setTimeout(function () {
+          logMessagesElement.scrollTop = logMessagesElement.scrollHeight;
+        }, 10);
+      }
+    }
+
+    // Funktionen für UI-Interaktionen optimiert
+    function legendIdToggleCollapse(id) {
+      if (id === 'alle') {
+        document.querySelectorAll('.collapsable').forEach(bereich => {
+          bereich.classList.toggle('visible');
+        });
+      } else {
+        const element = document.getElementById(id);
+        if (element) element.classList.toggle('visible');
+      }
+    }
+
+    function sectionToggleCollapse(legendId) {
+      const element = document.getElementById(`${legendId}-content`);
+      if (element) element.classList.toggle('visible');
+    }
+
+    // Optimierte Zeit-Aktualisierung mit weniger DOM-Operationen
+    function updateCurrentDateTime() {
+      if (!currentDateTimeElement) return;
+
+      const now = new Date();
+      const timeString = now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      const dateString = now.toLocaleDateString('de-DE');
+      currentDateTimeElement.textContent = `${timeString} - ${dateString}`;
+    }
+
+    function dbmToPercent(dbm) {
+      if (dbm === null || String(dbm).trim() === "") return "";
+      const value = Number(dbm);
+      if (!Number.isFinite(value)) return "";
+      let percent = Math.round(((value + 100) * 100) / 70);
+      if (percent < 0) percent = 0;
+      if (percent > 100) percent = 100;
+      return percent;
+    }
+
+    function updateWifiDbmHints() {
+      const fields = [
+        { input: "wifiRssiDisconnectThreshold", hint: "rssiDisconnectThresholdPercent" },
+        { input: "wifiRoamMinRssi", hint: "wifiRoamMinRssiPercent" }
+      ];
+
+      fields.forEach(function (f) {
+        const input = document.getElementById(f.input);
+        const hint = document.getElementById(f.hint);
+        if (!input || !hint) return;
+
+        const percent = dbmToPercent(input.value);
+        hint.textContent = percent === "" ? "" : "\u2248 " + percent + " %";
+      });
+    }
+
+    // Funktion zur Aktualisierung der WLAN-Qualitätsanzeige (NEU)
+    function updateWifiQualityDisplay(qualityValue) {
+      let quality = parseInt(qualityValue, 10), rssi = null;
+      if (qualityValue && qualityValue[0] === '{') {
+        try { const data = JSON.parse(qualityValue); quality = parseInt(data.quality, 10); rssi = parseInt(data.rssi, 10); } catch (e) {}
+      }
+      if (wifiQualityElement && !isNaN(quality)) {
+        wifiQualityElement.textContent = quality;
+        wifiQualityElement.className = quality >= 75 ? 'wifi-quality-high' : quality >= 50 ? 'wifi-quality-medium' : quality >= 25 ? 'wifi-quality-low' : 'wifi-quality-poor';
+      }
+      if (wifiQualityElement) wifiQualityElement.dataset.rssi = rssi !== null && !isNaN(rssi) && rssi > -127 ? String(rssi) : "--";
+    }
+
+    // Sunrise/Sunset-Eingaben prüfen
+    function validateInput(inputId) {
+      const inputElement = document.getElementById(inputId);
+      const errorMessageElement = document.getElementById("error-message");
+      const saveButton = document.getElementById("btnSaveSettingsNtp");
+
+      if (!inputElement || !errorMessageElement || !saveButton) return;
+
+      const isValidTimeInput = (input) => input === "" || /^([01]\d|2[0-3]):([0-5]\d)$/.test(input);
+      const isValidNumberInput = (input) => !input.includes(":") && (input === "" || /^-?\d{1,2}$/.test(input) || /^-?\d$/.test(input));
+
+      const inputValue = inputElement.value;
+      const inputIsValid = isValidTimeInput(inputValue) || isValidNumberInput(inputValue);
+
+      if (inputIsValid) {
+        inputElement.classList.remove("invalid-input");
+        errorMessageElement.textContent = "";
+      } else {
+        inputElement.classList.add("invalid-input");
+        errorMessageElement.textContent = "Ungültiges Format. Bitte überprüfen Sie Ihre Eingabe.";
+        saveButton.setAttribute("disabled", "disabled");
+      }
+
+      const sunsetInput = document.getElementById("sunsetOffset");
+      const sunriseInput = document.getElementById("sunriseOffset");
+
+      if (!sunsetInput || !sunriseInput) return;
+
+      const sunsetInputIsValid = isValidTimeInput(sunsetInput.value) || isValidNumberInput(sunsetInput.value);
+      const sunriseInputIsValid = isValidTimeInput(sunriseInput.value) || isValidNumberInput(sunriseInput.value);
+
+      if (sunsetInputIsValid && sunriseInputIsValid) {
+        saveButton.removeAttribute("disabled");
+      } else {
+        saveButton.setAttribute("disabled", "disabled");
+      }
+    }
+
+    // --- Generischer Settings-Modul-Loader ---
+    // Laedt die Zusatzmodule erst, wenn die Settings-Seite geoeffnet ist.
+    function loadSettingsModules() {
+      if (settingsModulesLoaded || settingsModulesLoading) {
+        return;
+      }
+
+      const placeholder = document.getElementById('module-placeholder');
+      if (!placeholder) {
+        return;
+      }
+
+      settingsModulesLoading = true;
+      placeholder.innerHTML = "<div class='settings-placeholder'>Module werden geladen...</div>";
+
+      fetch('/ui-settings-modules', { cache: 'no-store' })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('HTTP ' + response.status);
+          }
+          return response.text();
+        })
+        .then(html => {
+          placeholder.innerHTML = html;
+          settingsModulesLoaded = true;
+          settingsModulesLoading = false;
+          console.log("[UI] Settings-Module geladen.");
+        })
+        .catch(err => {
+          settingsModulesLoading = false;
+          placeholder.innerHTML = "<div class='settings-placeholder error'>Module konnten nicht geladen werden.</div>";
+          console.error("[UI] Fehler beim Laden der Settings-Module:", err);
+        });
+    }
+
+    // SSE-Listener
+    function initializeEventListeners() {
+      if (!window.EventSource) {
+        console.log("EventSource not supported for your browser");
+        return;
+      }
+      if (eventSource) {
+        return;
+      }
+
+      eventSource = new EventSource('/events');
+
+      // Basis-Events
+      eventSource.addEventListener('open', () => console.log("Events Connected"), false);
+      eventSource.addEventListener('error', (e) => {
+        if (e.target.readyState != EventSource.OPEN) {
+          console.log("Events Disconnected");
+        }
+      }, false);
+
+      // SSE-Listener für Log-Nachrichten (optimiert und performant)
+      // 1. Gesamte Log-Historie beim Verbinden laden
+      eventSource.addEventListener('log_history', function (e) {
+        if (logMessagesContentElement) {
+          logMessagesContentElement.innerHTML = e.data;
+          if (logMessagesElement) {
+            logMessagesElement.scrollTop = logMessagesElement.scrollHeight;
+          }
+          console.log("Log-Historie geladen.");
+        }
+      }, false);
+
+      // 2. Neue Log-Nachrichten effizient hinzufügen
+      eventSource.addEventListener('new_log_message', function (e) {
+        if (logMessagesContentElement) {
+          // Erstelle einen Textknoten für die Nachricht und ein <br>-Element
+          const textNode = document.createTextNode(e.data);
+          const brElement = document.createElement('br');
+
+          // Hänge sie an den Log-Inhaltscontainer an
+          logMessagesContentElement.appendChild(textNode);
+          logMessagesContentElement.appendChild(brElement);
+
+          if (logMessagesElement) {
+            logMessagesElement.scrollTop = logMessagesElement.scrollHeight; // Automatisches Scrollen
+          }
+          console.log("Neue Log-Nachricht: " + e.data);
+        }
+      }, false);
+
+      // WLAN-Qualität EventListener - niedrigere Priorität
+      eventSource.addEventListener('wifi_quality', function (e) {
+        updateWifiQualityDisplay(e.data); // Aufruf der neuen Funktion
+      }, false);
+
+      // MQTT-Status EventListener – nur Farbklassen setzen, Modus-Text bleibt
+      eventSource.addEventListener('mqtt_status', function (e) {
+        const badge = document.getElementById('mqtt-status');
+        if (badge) {
+          const val = e.data.trim().toLowerCase();
+          badge.className = '';
+          badge.id = 'mqtt-status';
+          if (val === 'online') badge.classList.add('mqtt-online');
+          else if (val === 'offline') badge.classList.add('mqtt-offline');
+          else if (val === 'disabled') badge.classList.add('mqtt-disabled');
+          else badge.classList.add('mqtt-unknown');
+        }
+      }, false);
+
+      // MQTT Broker Client-Anzahl EventListener (nur im Broker-Modus)
+      eventSource.addEventListener('mqtt_broker_clients', function (e) {
+        const clientsElement = document.getElementById('mqtt-broker-clients');
+        if (clientsElement) {
+          const count = parseInt(e.data, 10);
+          if (!isNaN(count) && count > 0) {
+            clientsElement.textContent = count;
+            clientsElement.classList.remove('hidden');
+          } else {
+            clientsElement.textContent = '';
+            clientsElement.classList.add('hidden');
+          }
+        }
+      }, false);
+
+      // MQTT Broker Verfügbarkeit (compile-time Flag) – Broker-Checkbox ausblenden wenn nicht kompiliert
+      eventSource.addEventListener('mqtt_broker_available', function (e) {
+        const brokerRow = document.getElementById('mqtt-broker-row');
+        const brokerCheckbox = document.getElementById('mqtt_isBroker');
+        const brokerClients = document.getElementById('mqtt-broker-clients');
+
+        if (e.data === '1') {
+          if (brokerRow) brokerRow.style.display = '';
+          if (brokerCheckbox) brokerCheckbox.disabled = false;
+          if (brokerClients) brokerClients.style.display = '';
+        } else {
+          if (brokerRow) brokerRow.style.display = 'none';
+          if (brokerCheckbox) {
+            brokerCheckbox.checked = false;
+            brokerCheckbox.disabled = true;
+          }
+          if (brokerClients) brokerClients.style.display = 'none';
+        }
+
+        updateMqttFieldsVisibility();
+        updateMqttNavbarVisibility();
+      }, false);
+
+      // MQTT Client Verfügbarkeit (compile-time Flag) – Client-Checkbox ausblenden wenn nicht kompiliert
+      eventSource.addEventListener('mqtt_client_available', function (e) {
+        const clientRow = document.getElementById('mqtt-client-row');
+        const clientCheckbox = document.getElementById('mqtt_isClient');
+
+        if (e.data === '1') {
+          if (clientRow) clientRow.style.display = '';
+          if (clientCheckbox) clientCheckbox.disabled = false;
+        } else {
+          if (clientRow) clientRow.style.display = 'none';
+          if (clientCheckbox) {
+            clientCheckbox.checked = false;
+            clientCheckbox.disabled = true;
+          }
+        }
+
+        updateMqttFieldsVisibility();
+        updateMqttNavbarVisibility();
+      }, false);
+
+      // Chip-Temperatur per SSE anzeigen
+      eventSource.addEventListener('chip_temperature', function (e) {
+        var chipTempValue = document.getElementById('chiptemp-value');
+        if (chipTempValue) chipTempValue.textContent = e.data;
+      }, false);
+    }
+
+    function cleanupLiveConnection() {
+      try {
+        if (heartbeatInterval) {
+          clearInterval(heartbeatInterval);
+          heartbeatInterval = null;
+        }
+      } catch (e) {}
+
+      try {
+        if (eventSource) {
+          eventSource.close();
+          eventSource = null;
+        }
+      } catch (e) {}
+    }
+
+    window.addEventListener('beforeunload', cleanupLiveConnection);
+    window.addEventListener('pagehide', cleanupLiveConnection);
+    window.addEventListener('pageshow', function (e) {
+      if (e.persisted) {
+        cleanupLiveConnection();
+        initializeEventListeners();
+        if (typeof startHeartbeat === 'function') {
+          startHeartbeat();
+        }
+      }
+    });
+
+    // EventSource vor Formular-Submit schließen
+    function closeEventSourceBeforeSubmit(form) {
+      console.log("Closing EventSource connection before form submission");
+      cleanupLiveConnection();
+
+      // Das Formular direkt absenden ohne setTimeout
+      console.log("Submitting form to: " + form.action);
+
+      // Wenn der Button einen formaction-Wert hat, setze ihn als action für das Formular
+      const activeButton = document.activeElement;
+      if (activeButton && activeButton.getAttribute('formaction')) {
+        form.action = activeButton.getAttribute('formaction');
+        console.log("Form action set to: " + form.action);
+      }
+
+      // WICHTIG:
+      // btnSaveSettings darf NICHT global als Hidden-Feld hinzugefügt werden.
+      // Sonst läuft jedes "Enter"/Submit (oder auch Form-Submit ohne Save-Button)
+      // durch den Save-Pfad im Backend und zerstört das Verhalten der Checkboxen.
+      // Der Parameter soll ausschließlich über den geklickten Save-Button kommen.
+
+      // Formular normal absenden
+      return true;
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+      // Log-Messages-Element zuerst initialisieren
+      logMessagesElement = document.getElementById('logMessages');
+      logMessagesContentElement = document.getElementById('logMessagesContent');
+      // Logbereich initial nach ganz unten scrollen, falls Inhalt vorhanden
+      if (logMessagesElement) {
+        logMessagesElement.scrollTop = logMessagesElement.scrollHeight;
+      }
+
+      // Dann die restlichen DOM-Element-Caches initialisieren
+      wifiQualityElement = document.getElementById('wifi-quality');
+      currentDateTimeElement = document.getElementById('current-date-time');
+      // Initial alle Bereiche verstecken, indem die 'visible'-Klasse entfernt wird
+      document.querySelectorAll('.collapsable, .collapsed-content').forEach(bereich => {
+        bereich.classList.remove('visible');
+      });
+
+      // Seitentitel setzen
+      const hostname = document.getElementById('hostname');
+      if (hostname) document.title = hostname.textContent;
+
+      // EventSource initialisieren
+      initializeEventListeners();
+
+      // Settings-Module nur bei Bedarf laden (nur auf dieser Seite)
+      loadSettingsModules();
+
+      // Initiale Farbsetzung für WLAN-Qualitätswert
+      if (wifiQualityElement) {
+        updateWifiQualityDisplay(wifiQualityElement.textContent);
+      }
+
+      updateWifiDbmHints();
+      ["wifiRssiDisconnectThreshold", "wifiRoamMinRssi"].forEach(function (id) {
+        const el = document.getElementById(id);
+        if (el) {
+          el.addEventListener("input", updateWifiDbmHints);
+          el.addEventListener("change", updateWifiDbmHints);
+        }
+      });
+
+      // Uhrzeit aktualisieren
+      updateCurrentDateTime();
+      setInterval(updateCurrentDateTime, 1000);
+
+      // Zeitzone-Eingabe konfigurieren
+      const timezoneSelect = document.getElementById('timezone');
+      const manualInput = document.getElementById('manualTimezone');
+
+      if (timezoneSelect && manualInput) {
+        const placeholderOption = timezoneSelect.options[0];
+        if (placeholderOption) {
+          const placeholderText = placeholderOption.innerText.replace(/"/g, '');
+
+          const foundOption = Array.from(timezoneSelect.options).find(option => option.value === placeholderText);
+          if (foundOption) {
+            placeholderOption.innerText = foundOption.innerText;
+          }
+        }
+
+        timezoneSelect.addEventListener('change', function () {
+          if (timezoneSelect.value === "manual") {
+            manualInput.classList.add('visible');
+            timezoneSelect.classList.add('hidden');
+            manualInput.focus();
+          }
+        });
+
+        manualInput.addEventListener('blur', function () {
+          if (manualInput.value.trim() !== "") {
+            timezoneSelect.options[2].value = manualInput.value;
+            timezoneSelect.options[2].text = manualInput.value;
+            timezoneSelect.value = manualInput.value;
+          } else {
+            timezoneSelect.value = "";
+          }
+          manualInput.classList.remove('visible');
+          timezoneSelect.classList.remove('hidden');
+        });
+
+        // Mobile Device Handling für manuelle Eingabe
+        if (/Mobi/.test(navigator.userAgent)) {
+          manualInput.addEventListener('focus', function () {
+            manualInput.classList.add('visible');
+            timezoneSelect.classList.add('hidden');
+          });
+        }
+
+        // Enter-Taste Handling
+        manualInput.addEventListener('keydown', function (event) {
+          if (event.key === 'Enter') {
+            event.preventDefault();
+            manualInput.blur();
+          }
+        });
+      }
+
+      updateMqttFieldsVisibility();
+      updateMqttNavbarVisibility();
+
+      var forms = document.querySelectorAll('form[action="/settings"]');
+      forms.forEach(function (f) {
+        f.addEventListener('submit', function () { __clearBeforeSubmit(); }, { capture: true, once: true });
+      });
+
+      var restartBtn = document.getElementById('btnRestart');
+      if (restartBtn) {
+        restartBtn.addEventListener('click', function () { __clearBeforeSubmit(); });
+      }
+    });
+
+    function handleFactoryRestart() {
+      if (confirm('Wollen sie wirklich einen Restart durchführen?')) {
+        fetch('/reboot')
+          .then(response => {
+            console.log('Reboot command sent.');
+          })
+          .catch(error => {
+            console.error('Error sending reboot command:', error);
+          });
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 2000);
+      }
+    }
+
+    // Navbar MQTT-Badge ausblenden wenn KEIN Modul kompiliert
+    function updateMqttNavbarVisibility() {
+      const brokerCheckbox = document.getElementById('mqtt_isBroker');
+      const clientCheckbox = document.getElementById('mqtt_isClient');
+      const wrapper = document.getElementById('mqtt-status-wrapper');
+      const brokerAvailable = brokerCheckbox && !brokerCheckbox.disabled;
+      const clientAvailable = clientCheckbox && !clientCheckbox.disabled;
+      if (wrapper) wrapper.style.display = (brokerAvailable || clientAvailable) ? '' : 'none';
+    }
+
+    // Globale Funktion: MQTT-Felder und ganzen Block ein-/ausblenden
+    function updateMqttFieldsVisibility() {
+      const brokerCheckbox = document.getElementById('mqtt_isBroker');
+      const clientCheckbox = document.getElementById('mqtt_isClient');
+      const fields = document.getElementById('mqtt-settings-fields');
+      const mqttSection = document.getElementById('mqtt-section');
+
+      // Prüfe ob die Checkboxen überhaupt verfügbar (= kompiliert) sind
+      const brokerAvailable = brokerCheckbox && !brokerCheckbox.disabled;
+      const clientAvailable = clientCheckbox && !clientCheckbox.disabled;
+
+      // Wenn KEIN Modul kompiliert ist → ganzen MQTT-Block ausblenden
+      if (!brokerAvailable && !clientAvailable) {
+        if (mqttSection) mqttSection.style.display = 'none';
+        return;
+      }
+
+      // Mindestens ein Modul kompiliert → Block sichtbar
+      if (mqttSection) mqttSection.style.display = '';
+
+      // Eingabefelder nur sichtbar wenn eine verfügbare Checkbox aktiviert ist
+      if (fields) {
+        const brokerActive = brokerAvailable && brokerCheckbox.checked;
+        const clientActive = clientAvailable && clientCheckbox.checked;
+        fields.style.display = (brokerActive || clientActive) ? '' : 'none';
+      }
+    }
+
+    function handleMqttModeChange(checkbox) {
+      const brokerCheckbox = document.getElementById('mqtt_isBroker');
+      const clientCheckbox = document.getElementById('mqtt_isClient');
+
+      if (checkbox.id === 'mqtt_isBroker' && checkbox.checked) {
+        clientCheckbox.checked = false;
+      } else if (checkbox.id === 'mqtt_isClient' && checkbox.checked) {
+        brokerCheckbox.checked = false;
+      }
+
+      updateMqttFieldsVisibility();
+    }
+
+    // Bestätigungsdialog für Fingerabdruckscanner-Checkbox
+    function confirmFingerprintScannerChange(checkbox) {
+      const checked = checkbox.checked;
+      const msg = checked
+        ? 'Sind Sie sicher, dass Sie den Fingerabdruckscanner AKTIVIEREN möchten?'
+        : 'Sind Sie sicher, dass Sie den Fingerabdruckscanner DEAKTIVIEREN möchten?';
+      if (!confirm(msg)) {
+        // Änderung rückgängig machen
+        checkbox.checked = !checked;
+      }
+    }
+
+  </script>
+  <script>
+    function __clearBeforeSubmit() { try { localStorage.clear(); } catch (e) { } try { sessionStorage.clear(); } catch (e) { } }
+
+    // NEU: SSE-Heartbeat-Mechanismus mit Debug-Ausgaben
+    let heartbeatInterval = null;
+    let heartbeatCounter = 0;
+
+    function startHeartbeat() {
+      // Stellt sicher, dass nicht mehrere Intervalle parallel laufen
+      if (heartbeatInterval) {
+        return;
+      }
+
+      heartbeatInterval = setInterval(() => {
+        heartbeatCounter++;
+        const timestamp = new Date().toLocaleTimeString('de-DE');
+
+        fetch('/ui-alive')
+          .then(response => {
+            if (response.ok) {
+              console.log(`✅ [${timestamp}] Heartbeat #${heartbeatCounter} gesendet & BESTÄTIGT (Status: ${response.status})`);
+            } else {
+              console.warn(`⚠️ [${timestamp}] Heartbeat #${heartbeatCounter} - ungültige Antwort (Status: ${response.status})`);
+            }
+            return response;
+          })
+          .catch(err => {
+            console.error(`❌ [${timestamp}] Heartbeat #${heartbeatCounter} FEHLER: ${err.message} - ESP32 erreichbar?`);
+          });
+      }, 15000); // Sendet alle 15 Sekunden ein Lebenszeichen (optimiert für ESP32)
+
+      console.log("🟢 SSE-Heartbeat GESTARTET - alle 15 Sekunden wird ein Signal an den ESP32 gesendet");
+    }
+
+    // Starte den Heartbeat, sobald das DOM geladen ist
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log("📱 Browser-Seite vollständig geladen - starte Heartbeat...");
+      startHeartbeat();
+    });
+  </script>
+</body>
+
+</html>
