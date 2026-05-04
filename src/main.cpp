@@ -2,7 +2,7 @@
 //******************************************************
 //         Main of Fingerscanner Parip69.
 // nur hier die start wert der version Aendern.OK=======
-// @version: 2.2.796 <br> Builddatum 15:26:41 04-05.2026
+// @version: 2.2.797 <br> Builddatum 15:29:23 04-05.2026
 //****************************************************
 
 #include <Arduino.h>
@@ -26,7 +26,7 @@
 #endif
 
 // ======================= GLOBALS =======================
-const char* firmwareVersion = "2.2.796 <br> Builddatum 15:26:41 04-05.2026";
+const char* firmwareVersion = "2.2.797 <br> Builddatum 15:29:23 04-05.2026";
 AsyncWebServer webServer(80);
 SettingsManager settingsManager;
 
