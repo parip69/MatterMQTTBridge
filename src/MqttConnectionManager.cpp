@@ -465,9 +465,10 @@ void MqttConnectionManager::_parseServerString(const String &serverConfig, int f
     }
 }
 
-void MqttConnectionManager::publishMqttMessage(const String &topic, const String &payload, bool retain, int qos)
+bool MqttConnectionManager::publishMqttMessage(const String &topic, const String &payload, bool retain, int qos)
 {
-    mqttClient.publish(topic.c_str(), qos, retain, payload.c_str());
+    uint16_t packetId = mqttClient.publish(topic.c_str(), qos, retain, payload.c_str());
+    return packetId != 0;
 }
 
 #endif // USE_MQTT_CLIENT

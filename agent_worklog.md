@@ -45,3 +45,26 @@
 - `platformio.ini`, `README.md`, `TODO_BRIDGE.md`
 - `doc/CODEX_MATTER_MQTT_BRIDGE_ABBAU_REPORT.md` (aktualisiert)
 - `agent_worklog.md` (dieses Protokoll)
+
+## 4. Mai 2026 - Schritt 4: Bridge-Basis Finalisierung (Settings & MQTT)
+
+**Aufgabe:** Restliche Basisfehler beheben. Noch KEIN Matter einbauen.
+
+**Durchgeführte Aktionen:**
+- `POST /save_settings` in `src/main.cpp` eingebaut und an `SettingsManager` angebunden (inklusive Neustart).
+- `GET /api/settings` in `src/main.cpp` eingebaut, um aktuelle Settings als JSON auszuliefern.
+- `data/settings.html` mit Fetch-Logik ausgestattet, um Settings dynamisch zu laden.
+- `publishMqttMessage` von `void` auf `bool` umgebaut (in `main.cpp`, `MqttConnectionManager.cpp`, `MqttConnectionManager.h`, `Bridge.cpp`, `Bridge.h`).
+- AsyncMqttClient Connect/Disconnect-Callbacks an `mqttManager` angebunden.
+- Zentrale Version `firmwareVersion` in `src/main.cpp` angelegt und in der Status-API verwendet.
+- Legacy Konfliktmarker-Datei `doc/legacy_fingerprint_modules/main_legacy.cpp` in `main_legacy_conflicted_reference.txt` umbenannt.
+
+**Geänderte Dateien:**
+- `src/main.cpp` (keine Versionsnummern verändert)
+- `src/MqttConnectionManager.cpp`, `src/MqttConnectionManager.h`
+- `src/Bridge.cpp`, `src/Bridge.h`
+- `data/settings.html`
+- `doc/legacy_fingerprint_modules/main_legacy_conflicted_reference.txt` (umbenannt)
+- `agent_worklog.md` (dieses Protokoll)
+
+**Ergebnis:** PASS – Alle gewünschten Endpunkte und MQTT-Rückgaben wurden erfolgreich implementiert. Die PIO Build-Verifikation wird nun via Projektinhaber Task ausgelöst.

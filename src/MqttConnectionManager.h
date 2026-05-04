@@ -33,7 +33,7 @@ public:
     void onMqttDisconnect(int) {}
     void onWifiConnect() {}
     String getLastConnectionVia() const { return String(); }
-    void publishMqttMessage(const String &, const String &, bool, int) {}
+    bool publishMqttMessage(const String &, const String &, bool, int) { return false; }
 };
 
 #else // USE_MQTT_CLIENT == 1
@@ -77,7 +77,7 @@ public:
     String getLastConnectionVia() const { return lastConnectionVia; }
 
     // MQTT-Publish-Hilfsfunktion
-    void publishMqttMessage(const String &topic, const String &payload, bool retain, int qos);
+    bool publishMqttMessage(const String &topic, const String &payload, bool retain, int qos);
 
 private:
     // Referenzen

@@ -26,6 +26,7 @@
 #endif
 
 // ======================= GLOBALS =======================
+const char* firmwareVersion = "2.2.795";
 AsyncWebServer webServer(80);
 SettingsManager settingsManager;
 
@@ -79,12 +80,11 @@ String makeTopic(const String &tail) {
 }
 
 // Für Bridge.cpp
-void publishMqttMessage(const String &topic, const String &message, bool retain, int qos) {
+bool publishMqttMessage(const String &topic, const String &message, bool retain, int qos) {
 #if USE_MQTT_CLIENT
     AppSettings s = settingsManager.getAppSettings();
     if (s.mqtt_isClient) {
-        mqttManager.publishMqttMessage(topic, message, retain, qos);
-        return;
+        return mqttManager.publishMqttMessage(topic, message, retain, qos);
     }
 #endif
 
@@ -92,10 +92,11 @@ void publishMqttMessage(const String &topic, const String &message, bool retain,
     AppSettings s2 = settingsManager.getAppSettings();
     if (s2.mqtt_isBroker) {
         mqttBroker.publish(topic.c_str(), message.c_str(), retain, qos);
-        return;
+        return true;
     }
 #endif
     LOG_PRINTF("publishMqttMessage drop (neither client nor broker active): %s -> %s\n", topic.c_str(), message.c_str());
+    return false;
 }
 
 // ======================= SETUP ROUTING =======================
@@ -111,7 +112,7 @@ void setupRouting() {
         doc["root"] = settingsManager.getAppSettings().mqttRootTopic;
         doc["ip"] = WiFi.localIP().toString();
         doc["rssi"] = WiFi.RSSI();
-        doc["version"] = "2.2.790";
+        doc["version"] = firmwareVersion;
 
         bool mqttConnected = false;
         #if USE_MQTT_CLIENT
@@ -122,6 +123,67 @@ void setupRouting() {
         #endif
         doc["mqtt"] = mqttConnected ? "connected" : "disconnected";
 
+        String resp;
+        serializeJson(doc, resp);
+        request->send(200, "application/json", resp);
+    });
+
+    // Settings speichern
+    webServer.on("/save_settings", HTTP_POST, [](AsyncWebServerRequest *request) {
+        WifiSettings ws = settingsManager.getWifiSettings();
+        if (request->hasParam("ssid", true)) ws.ssid = request->getParam("ssid", true)->value();
+        if (request->hasParam("password", true) && request->getParam("password", true)->value().length() > 0) {
+            ws.password = request->getParam("password", true)->value();
+        }
+        if (request->hasParam("hostname", true)) ws.hostname = request->getParam("hostname", true)->value();
+        if (request->hasParam("passwordAdmin", true) && request->getParam("passwordAdmin", true)->value().length() > 0) {
+            ws.passwordAdmin = request->getParam("passwordAdmin", true)->value();
+        }
+        settingsManager.saveWifiSettings(ws);
+
+        AppSettings as = settingsManager.getAppSettings();
+        if (request->hasParam("mqtt_mode", true)) {
+            String mode = request->getParam("mqtt_mode", true)->value();
+            if (mode == "off") {
+                as.mqtt_isBroker = false;
+                as.mqtt_isClient = false;
+            } else if (mode == "broker") {
+                as.mqtt_isBroker = true;
+                as.mqtt_isClient = false;
+            } else if (mode == "client") {
+                as.mqtt_isBroker = false;
+                as.mqtt_isClient = true;
+            }
+        }
+        if (request->hasParam("mqttServer", true)) as.mqttServer = request->getParam("mqttServer", true)->value();
+        if (request->hasParam("mqtt_port", true)) as.mqtt_port = request->getParam("mqtt_port", true)->value();
+        if (request->hasParam("mqttUsername", true)) as.mqttUsername = request->getParam("mqttUsername", true)->value();
+        if (request->hasParam("mqttPassword", true) && request->getParam("mqttPassword", true)->value().length() > 0) {
+            as.mqttPassword = request->getParam("mqttPassword", true)->value();
+        }
+        if (request->hasParam("mqttRootTopic", true)) as.mqttRootTopic = request->getParam("mqttRootTopic", true)->value();
+        
+        settingsManager.saveAppSettings(as);
+
+        request->send(200, "text/plain", "Einstellungen gespeichert. Neustart...");
+        delay(1000);
+        ESP.restart();
+    });
+
+    // Settings laden
+    webServer.on("/api/settings", HTTP_GET, [](AsyncWebServerRequest *request) {
+        JsonDocument doc;
+        WifiSettings ws = settingsManager.getWifiSettings();
+        AppSettings as = settingsManager.getAppSettings();
+        
+        doc["ssid"] = ws.ssid;
+        doc["hostname"] = ws.hostname;
+        doc["mqtt_mode"] = getModeString();
+        doc["mqttServer"] = as.mqttServer;
+        doc["mqtt_port"] = as.mqtt_port;
+        doc["mqttUsername"] = as.mqttUsername;
+        doc["mqttRootTopic"] = as.mqttRootTopic;
+        
         String resp;
         serializeJson(doc, resp);
         request->send(200, "application/json", resp);
@@ -226,6 +288,12 @@ void setup() {
 #if USE_MQTT_CLIENT
     if (as.mqtt_isClient) {
         LOG_PRINTLN("Starte MQTT Client Manager...");
+        mqttClient.onConnect([](bool sessionPresent) {
+            mqttManager.onMqttConnect(sessionPresent);
+        });
+        mqttClient.onDisconnect([](AsyncMqttClientDisconnectReason reason) {
+            mqttManager.onMqttDisconnect(reason);
+        });
         mqttManager.begin();
     }
 #endif

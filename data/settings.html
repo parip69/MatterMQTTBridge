@@ -59,9 +59,20 @@
     </form>
 
     <script>
-        // Normalerweise wuerden hier die Settings per /api/settings/get geladen werden
-        // Da die Legacy-Routen entfernt wurden und dies nur ein Platzhalter ist, 
-        // reicht das UI aus um den geforderten Zustand abzubilden.
+        document.addEventListener("DOMContentLoaded", () => {
+            fetch('/api/settings')
+                .then(response => response.json())
+                .then(data => {
+                    if(data.ssid) document.getElementById('ssid').value = data.ssid;
+                    if(data.hostname) document.getElementById('hostname').value = data.hostname;
+                    if(data.mqtt_mode) document.getElementById('mqtt_mode').value = data.mqtt_mode;
+                    if(data.mqttServer) document.getElementById('mqttServer').value = data.mqttServer;
+                    if(data.mqtt_port) document.getElementById('mqtt_port').value = data.mqtt_port;
+                    if(data.mqttUsername) document.getElementById('mqttUsername').value = data.mqttUsername;
+                    if(data.mqttRootTopic) document.getElementById('mqttRootTopic').value = data.mqttRootTopic;
+                })
+                .catch(err => console.error('Error loading settings:', err));
+        });
     </script>
 </body>
 </html>
