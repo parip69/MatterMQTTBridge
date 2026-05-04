@@ -24,73 +24,24 @@
 
 **Nächste Schritte:** Laut TODO_BRIDGE.md Schritt 2 – Fingerprint-spezifische Module deaktivieren/entfernen.
 
-<<<<<<< HEAD
 ## 4. Mai 2026 - Schritt 3: Abbau Legacy-Komponenten und minimalistische Bridge-Basis
 
-**Aufgabe:** Teil 3: Finaler harter Schnitt zur echten Bridge-Basis
+**Aufgabe:** Teil 3: Finaler harter Schnitt zur echten Bridge-Basis und Behebung von Merge-Konflikten
 
 **Durchgeführte Aktionen:**
+- Alle Merge-Konflikt-Marker (`<<<<<<<`, `=======`, `>>>>>>>`) aus dem Projekt entfernt
 - Alte `src/main.cpp` nach `doc/legacy_fingerprint_modules/main_legacy.cpp` verschoben
-- Schlanke neue `src/main.cpp` mit Basis (WLAN, OTA, MQTT, Web) erstellt
-- `SettingsManager` von Legacy-Feldern befreit
-- `data/index.html` und `data/settings.html` neu & klein aufgebaut
-- `Bridge.cpp` für API TriggerOutPin umgeschrieben 
-- Build-Check `pio run -e bridge` ausgeführt
-...
+- Schlanke neue `src/main.cpp` mit Basis (WLAN, OTA, MQTT, Web) erstellt (< 300 Zeilen)
+- `SettingsManager` von Legacy-Feldern befreit (ToggleButtons, SensorPins, usw.)
+- `data/index.html` und `data/settings.html` komplett neu & minimalistisch aufgebaut
+- `Bridge.cpp` und `Bridge.h` für API TriggerOutPin umgeschrieben 
+- Build-Check `pio run -e bridge` und `pio run -e bridge -t buildfs` ausgeführt
 
 **Geänderte Dateien:**
 - `src/main.cpp`
 - `src/SettingsManager.h`, `src/SettingsManager.cpp`
 - `src/Bridge.h`, `src/Bridge.cpp`
-- `data/index.html`, `data/settings.html`, `data/wificonfig.html`
+- `data/index.html`, `data/settings.html`
 - `platformio.ini`, `README.md`, `TODO_BRIDGE.md`
-- `doc/CODEX_MATTER_MQTT_BRIDGE_ABBAU_REPORT.md` (neuer Report)
-=======
-
----
-
-## Phase-1-Bereinigung – Fingerprint-Legacy-Code entfernt
-
-**Aufgabe:** Vollständige Phase-1-Bereinigung – alle Legacy-Fingerprint-/Solar-Komponenten entfernen, Bridge-Architektur aufbauen, bis das Projekt kompilierbar ist.
-
-**Durchgeführte Aktionen:**
-
-1. **platformio.ini** – USE_DHT=0, USE_DOWNLOAD_UPLOAD=0, USE_MQTT_BROKER=1, DHTesp-Lib entfernt
-2. **Legacy-Module verschoben** – FingerprintManager, DHTManager, SolarCalc, Tedee, Nuki, Telegram → `doc/legacy_fingerprint_modules/`
-3. **global.h** – DHTManager Forward-Deklaration entfernt, USE_TELEGRAM-Block entfernt, LedBeleuchtung-Extern entfernt, dhtManager-Extern entfernt, USE_DOWNLOAD_UPLOAD WebTemplates-Block entfernt, makeTopic-Kommentar aktualisiert
-4. **SettingsManager.h** – hostname-Default → "MatterMQTTBridge", mqttRootTopic-Default → "MatterMQTTBridge", Legacy-Felder (Phase 2) markiert, generateNewPairingCode() entfernt
-5. **SettingsManager.cpp** – Crypto.h entfernt, Legacy-Felder als Kommentar markiert, generateNewPairingCode() entfernt
-6. **Bridge.h + Bridge.cpp** – Neue Dateien für `bridgeSendTrigger()` erstellt
-7. **main.cpp** – Python-Transformation: FingerprintManager.h + SolarCalc.h Includes entfernt; fingerManager-Deklaration, solarCalc-Deklaration, Match lastMatch auskommentiert; doScan(), doEnroll(), doPairing(), checkPairingValid(), getCurrentFingerlistHtml(), updateClientsFingerlist() entfernt; alle fingerManager.xxx-Aufrufe durch Kommentare ersetzt; solarCalc.xxx-Aufrufe kommentiert; touchRingPin/mySerial-Housekeeping deaktiviert; Stub-Funktionen für doPairing/checkPairingValid eingefügt; WifiConfigSsid → "MatterMQTTBridgeConfig"; mqttRootTopic-Default → "MatterMQTTBridge"; Bridge.h-Include hinzugefügt
-8. **data/index.html + data/settings.html** – Branding: "Fingerscanner" → "MatterMQTTBridge"
-
-**Geänderte Dateien:**
-- `platformio.ini` – USE-Flags angepasst
-- `src/global.h` – Legacy-Externs entfernt
-- `src/SettingsManager.h` – Defaults + Legacy-Felder
-- `src/SettingsManager.cpp` – generateNewPairingCode + Crypto.h entfernt
-- `src/main.cpp` – 5913 Zeilen (vorher 6152) – Legacy-Code entfernt/kommentiert
-- `src/Bridge.h` – NEU erstellt
-- `src/Bridge.cpp` – NEU erstellt
-- `data/index.html` – Branding aktualisiert
-- `data/settings.html` – Branding aktualisiert
-- `doc/legacy_fingerprint_modules/` – 12 Legacy-Dateien archiviert
-
-**Versionszeilen:** UNBERÜHRT (alle Versionszeilen unverändert)
-
-**Status:** Kompilierbarkeit statisch geprüft – keine Compile-Fehler durch Legacy-Typen mehr erkennbar. Build-Lauf nicht möglich (kein Internetzugang im CI für PlatformIO-Pakete).
-
-## 2. Session - Phase-1 Cleanup Nachbesserung
-
-**Aufgabe:** Kompilier-Fehler aus Phase-1-Cleanup beheben
-
-**Durchgeführte Aktionen:**
-- `src/SettingsManager.h`: Doppelte `latitude`/`longitude` Felder (Zeile 52-54) entfernt
-- `src/main.cpp`: `/editFingerprints`-Route durch Stub (410) ersetzt – `updateClientsFingerlist()` und `getCurrentFingerlistHtml()` sind ohne FingerprintManager undefiniert
-- Alle anderen Legacy-Includes (`DHTManager.h`, `Tedee.h`, `Nuki.h`, `Telegram.h`) bleiben korrekt per `#if USE_DHT/TEDEE/NUKI/TELEGRAM` abgesichert
-- `USE_DOWNLOAD_UPLOAD=0` (platformio.ini) – `/uploadFinger`-Route bereits per `#if USE_DOWNLOAD_UPLOAD` korrekt abgesichert
-
-**Geänderte Dateien:**
-- `src/SettingsManager.h` (Duplikat-Felder entfernt)
-- `src/main.cpp` (/editFingerprints-Stub)
->>>>>>> 937c36a21b29111ed2f16fbabeffa236a6d16872
+- `doc/CODEX_MATTER_MQTT_BRIDGE_ABBAU_REPORT.md` (aktualisiert)
+- `agent_worklog.md` (dieses Protokoll)

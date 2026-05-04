@@ -1,69 +1,67 @@
-<!-- Beschreibung: 🎉🎉2.0.0 erste wo alles get mit dem Templade dowenload🎉🎉 -->
+<!-- Beschreibung: 2.0.0 erste wo alles get mit dem Templade dowenload -->
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MatterMQTTBridge Settings</title>
-  <style>
-    body { background-color: #383737; color: white; font-family: sans-serif; padding: 20px; }
-    .card { background-color: #8d8d8d; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
-    label { display: inline-block; width: 120px; margin-bottom: 5px; }
-    input, select { margin-bottom: 10px; padding: 5px; width: 200px; }
-    button { padding: 10px 15px; cursor: pointer; border-radius: 5px; border: none; background-color: #5CB85C; color: white; }
-    a { color: #5fe7f9; text-decoration: none; margin-right: 15px; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MatterMQTTBridge Settings</title>
+    <style>
+        body { background-color: #383737; color: white; font-family: sans-serif; padding: 20px; text-align: center; }
+        .card { background-color: #8d8d8d; padding: 20px; border-radius: 8px; max-width: 400px; margin: 0 auto 20px auto; text-align: left; }
+        label { display: block; margin-top: 10px; font-weight: bold; }
+        input, select { width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box; }
+        button { background-color: #4CAF50; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; width: 100%; margin-top: 20px; font-size: 16px; }
+        button:hover { background-color: #45a049; }
+        a { color: #81D4FA; text-decoration: none; font-weight: bold; }
+        a:hover { text-decoration: underline; }
+    </style>
 </head>
 <body>
-  <h1>Settings</h1>
-  <form id="settingsForm" action="/settings" method="GET">
-    
-    <div class="card">
-      <h3>WLAN</h3>
-      <label>SSID:</label> <input type="text" name="ssid" value="" placeholder="Deine SSID"><br>
-      <label>Passwort:</label> <input type="password" name="password" value="" placeholder="Dein WLAN Passwort"><br>
-      <label>Hostname:</label> <input type="text" name="hostname" value="MatterMQTTBridge"><br>
-    </div>
+    <h1>MatterMQTTBridge Settings</h1>
+    <a href="/">⬅️ Zurück zur Startseite</a>
 
-    <div class="card">
-      <h3>MQTT</h3>
-      <label>Modus:</label>
-      <select name="mqttMode">
-        <option value="off">Aus</option>
-        <option value="broker">Broker</option>
-        <option value="client">Client</option>
-      </select><br>
-      <input type="hidden" name="mqtt_isBroker" id="mqttBrokerHidden" value="false">
-      <input type="hidden" name="mqtt_isClient" id="mqttClientHidden" value="false">
-      
-      <label>Broker Host:</label> <input type="text" name="mqttServer" value=""><br>
-      <label>Port:</label> <input type="number" name="mqtt_port" value="1883"><br>
-      <label>Benutzer:</label> <input type="text" name="mqttUsername" value=""><br>
-      <label>Passwort:</label> <input type="password" name="mqttPassword" value=""><br>
-      <label>Root Topic:</label> <input type="text" name="mqttRootTopic" value="fingerprint"><br>
-    </div>
+    <form action="/save_settings" method="POST" class="card">
+        <h3>WLAN Einstellungen</h3>
+        <label>SSID:</label>
+        <input type="text" name="ssid" id="ssid">
+        <label>Passwort:</label>
+        <input type="password" name="password" id="password">
+        <label>Hostname:</label>
+        <input type="text" name="hostname" id="hostname" value="MatterMQTTBridge">
+        <label>Admin Passwort:</label>
+        <input type="password" name="passwordAdmin" id="passwordAdmin">
 
-    <div class="card">
-      <h3>Web</h3>
-      <label>Admin Passwort:</label> <input type="password" name="passwordAdmin" value=""><br>
-    </div>
+        <hr>
+        <h3>MQTT Einstellungen</h3>
+        <label>MQTT Modus:</label>
+        <select name="mqtt_mode" id="mqtt_mode">
+            <option value="off">Deaktiviert</option>
+            <option value="broker">Lokaler Broker (ESP)</option>
+            <option value="client">Client (verbindet zu externem Broker)</option>
+        </select>
 
-    <button type="button" onclick="saveSettings()">Speichern</button>
-    <a href="/">Zurück</a>
-    <a href="/update">OTA Update</a>
-  </form>
+        <label>MQTT Host / IP:</label>
+        <input type="text" name="mqttServer" id="mqttServer">
+        
+        <label>MQTT Port:</label>
+        <input type="text" name="mqtt_port" id="mqtt_port" value="1883">
+        
+        <label>MQTT Benutzer:</label>
+        <input type="text" name="mqttUsername" id="mqttUsername">
+        
+        <label>MQTT Passwort:</label>
+        <input type="password" name="mqttPassword" id="mqttPassword">
+        
+        <label>Root Topic:</label>
+        <input type="text" name="mqttRootTopic" id="mqttRootTopic" value="fingerprint">
 
-  <script>
-    function saveSettings() {
-      const mode = document.querySelector('select[name="mqttMode"]').value;
-      if (mode === 'broker') {
-        document.getElementById('mqttBrokerHidden').value = 'on';
-      } else if (mode === 'client') {
-        document.getElementById('mqttClientHidden').value = 'on';
-      }
-      alert('Speichern-Logik noch einzubinden - Formular absenden...');
-      document.getElementById('settingsForm').submit();
-    }
-  </script>
+        <button type="submit">Speichern & Neustart</button>
+    </form>
+
+    <script>
+        // Normalerweise wuerden hier die Settings per /api/settings/get geladen werden
+        // Da die Legacy-Routen entfernt wurden und dies nur ein Platzhalter ist, 
+        // reicht das UI aus um den geforderten Zustand abzubilden.
+    </script>
 </body>
 </html>

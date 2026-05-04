@@ -1,37 +1,30 @@
-﻿// Beschreibung: 🎉2.0.0 erste wo alles get mit dem Templade dowenload🎉
+// Beschreibung: 🎉2.0.0 erste wo alles get mit dem Templade dowenload🎉
 //******************************************************
 //         Main of Fingerscanner Parip69.
 // nur hier die start wert der version Aendern.OK=======
 // @version: 2.2.790 <br> Builddatum 06:09:05 04-05.2026
 //****************************************************
-#ifndef USE_MQTT_BROKER
-#define USE_MQTT_BROKER 1
-#endif
-#ifndef USE_MQTT_CLIENT
-#define USE_MQTT_CLIENT 1
-#endif
-#define USE_MQTT_ANY (USE_MQTT_BROKER || USE_MQTT_CLIENT)
 
 #include <Arduino.h>
 #include <WiFi.h>
-#include <WiFiClientSecure.h>
-
-#include <DNSServer.h>
-#include <time.h>
-#include <ESPAsyncWebServer.h>
 #include <LittleFS.h>
+#include <ESPAsyncWebServer.h>
+#include <ElegantOTA.h>
+#include "SettingsManager.h"
+#include "Bridge.h"
+#include "global.h"
+
 #if USE_MQTT_CLIENT
 #include <AsyncMqttClient.h>
 #endif
-#include "esp_timer.h" // NEU für präzise Pin-Steuerung
-#include "freertos/semphr.h"
-#include "nvs_flash.h"
-#include "esp_err.h"
-// ElegantOTA nach ESPAsyncWebServer einbinden
-#include <ElegantOTA.h>
+
 #if USE_MQTT_BROKER
 #include "ESPAsyncMQTTBroker.h"
 #endif
+<<<<<<< HEAD
+
+AsyncWebServer webServer(80);
+=======
 #include "SettingsManager.h"
 #if USE_MQTT_CLIENT
 #include "MqttConnectionManager.h"
@@ -97,7 +90,7 @@
 
 #include <ESPmDNS.h>
 //////////////////////////////////////////////////////////////////////
-const char* firmwareVersion = "2.2.790 <br> Builddatum 06:09:05 04-05.2026"; // Firmware Versio
+const char* firmwareVersion = "2.2.789 <br> Builddatum 20:52:45 03-05.2026"; // Firmware Versio
 // ===== UPLOAD-KONTEXT für multipart-Verarbeitung =====
 // Hilfs-Struktur, um Daten vom Upload- zum Request-Handler zu transportieren
 #if USE_DOWNLOAD_UPLOAD
@@ -566,8 +559,12 @@ const char *WifiConfigPassword = "12345678";		// password used for WiFi when in 
 IPAddress WifiConfigIp(192, 168, 4, 1);				// IP of access point in wifi config mode-
 
 // FingerprintManager fingerManager; // Legacy entfernt
+>>>>>>> 937c36a21b29111ed2f16fbabeffa236a6d16872
 SettingsManager settingsManager;
+String mqttRootTopic = "fingerprint";
 
+<<<<<<< HEAD
+=======
 // Pin belegung.
 const int OutputPin1 = 23; // Output (1) Haupteingang -Pin
 const int OutputPin2 = 19; // Output (2) GarageTor -Pin
@@ -862,11 +859,17 @@ bool hasActiveWebClients()
 }
 
 // NEU: MQTT-Instanzen
+>>>>>>> 937c36a21b29111ed2f16fbabeffa236a6d16872
 #if USE_MQTT_CLIENT
 AsyncMqttClient mqttClient;
-MqttConnectionManager mqttManager(mqttClient, settingsManager);
+bool mqttClientConnected = false;
 #endif
 
+<<<<<<< HEAD
+#if USE_MQTT_BROKER
+ESPAsyncMQTTBroker* mqttBroker = nullptr;
+bool mqttBrokerRunning = false;
+=======
 // Forward (ohne Default-Args): updateMqttStatus ruft explizit alle Parameter auf
 inline void sendSSEEvent(const char *data, const char *event, unsigned long id, uint32_t retry);
 
@@ -1626,175 +1629,30 @@ void notifyClients(String message, const char *sourceTag)
 	{
 		sendTelegramMessage(message);
 	}
+>>>>>>> 937c36a21b29111ed2f16fbabeffa236a6d16872
 #endif
 
-	// ══════════════════════════════════════════════════════════════
-	// NUR WENN UI AKTIV: SSE-Events mit Deduplication senden
-	// ══════════════════════════════════════════════════════════════
-	if (!isUiActive())
-	{
-		return; // Kein Client aktiv -> keine SSE-Events senden
-	}
-
-	// ══════════════════════════════════════════════════════════════
-	// Ab hier: UI ist aktiv → SSE-Deduplication
-	// ══════════════════════════════════════════════════════════════
-
-	static String lastSentMsg = "";
-	static unsigned long lastSentTs = 0;
-	static int suppressedCount = 0;
-	const unsigned long DEDUP_WINDOW_MS = 2000; // 2 Sekunden
-
-	unsigned long now = millis();
-	// Prüfe ob Nachricht identisch ist UND innerhalb des Deduplication-Fensters
-
-	if (logMutex)
-		xSemaphoreTake(logMutex, portMAX_DELAY);
-	bool isDuplicate = (message == lastSentMsg && (now - lastSentTs) < DEDUP_WINDOW_MS);
-	if (isDuplicate)
-	{
-		suppressedCount++;
-		if (logMutex)
-			xSemaphoreGive(logMutex);
-		LOG_PRINTF("[SSE-DEDUP] Duplikat unterdrückt\n");
-		return;
-	}
-
-	int currentSuppressed = suppressedCount;
-	suppressedCount = 0;
-	lastSentMsg = message;
-	lastSentTs = now;
-	if (logMutex)
-		xSemaphoreGive(logMutex);
-
-	if (currentSuppressed > 0)
-	{
-		String summary = "[" + getTimestampString() + "]: (↻ " + String(currentSuppressed) + " doppelte Meldungen unterdrückt)";
-		sendSSEEvent(summary.c_str(), "new_log_message", millis(), 1000);
-		addLogMessage(summary);
-	}
-	sendSSEEvent(messageWithTimestamp.c_str(), "new_log_message", millis(), 1000);
+String getMqttModeString() {
+    AppSettings app = settingsManager.getAppSettings();
+    if (app.mqtt_isBroker) return "broker";
+    if (app.mqtt_isClient) return "client";
+    return "off";
 }
 
-#if USE_MQTT_ANY
-struct RecentMqttPublish
-{
-	String topic;
-	String payload;
-	unsigned long timestamp = 0;
-};
-
-static constexpr size_t RECENT_MQTT_PUBLISH_COUNT = 8;
-static RecentMqttPublish recentMqttPublishes[RECENT_MQTT_PUBLISH_COUNT];
-static size_t recentMqttPublishWriteIndex = 0;
-static const unsigned long MQTT_SELF_ECHO_WINDOW_MS = 500;
-
-static void rememberLocalMqttPublish(const String &topic, const String &payload)
-{
-	RecentMqttPublish &entry = recentMqttPublishes[recentMqttPublishWriteIndex];
-	entry.topic = topic;
-	entry.payload = payload;
-	entry.timestamp = millis();
-
-	recentMqttPublishWriteIndex = (recentMqttPublishWriteIndex + 1) % RECENT_MQTT_PUBLISH_COUNT;
-}
-
-static bool isRecentLocalMqttPublish(const String &topic, const String &payload)
-{
-	unsigned long now = millis();
-
-	for (size_t i = 0; i < RECENT_MQTT_PUBLISH_COUNT; ++i)
-	{
-		const RecentMqttPublish &entry = recentMqttPublishes[i];
-		if (entry.timestamp == 0)
-		{
-			continue;
-		}
-
-		if ((long)(now - entry.timestamp) > (long)MQTT_SELF_ECHO_WINDOW_MS)
-		{
-			continue;
-		}
-
-		if (entry.topic == topic && (entry.payload == payload || entry.payload.endsWith(";" + payload)))
-		{
-			return true;
-		}
-	}
-
-	return false;
-}
-#endif // USE_MQTT_ANY
-
-// Performance: Funktion für einheitliche MQTT-Veröffentlichung optimiert
-void publishMqttMessage(const String &topic, const String &message, bool retain, int qos)
-{
-#if !USE_MQTT_BROKER && !USE_MQTT_CLIENT
-	(void)topic;
-	(void)message;
-	(void)retain;
-	(void)qos;
-	return;
+String getMqttStatusString() {
+    AppSettings app = settingsManager.getAppSettings();
+    if (app.mqtt_isBroker) {
+#if USE_MQTT_BROKER
+        return mqttBrokerRunning ? "connected" : "offline";
 #else
-	// Guard gegen Race-Conditions: Async-Web-Callbacks vs Loop (MQTT/WiFi nahe Calls)
-	bool netLocked = false;
-
-	bool brokerActive = false;
-#if USE_MQTT_BROKER
-	brokerActive = (mqttBroker != nullptr);
+        return "offline";
 #endif
-
-	// Broker ist lokal: keinen Mutex dafür
-	if (!brokerActive && networkMutex)
-	{
-		for (int attempt = 0; attempt < 3; attempt++)
-		{
-			netLocked = (xSemaphoreTake(networkMutex, pdMS_TO_TICKS(80)) == pdTRUE);
-			if (netLocked)
-				break;
-			vTaskDelay(pdMS_TO_TICKS(15)); // kurzer Retry, kein Aufblähen
-		}
-		if (!netLocked)
-		{
-			LOG_PRINTLN("[NET-MUTEX] publishMqttMessage übersprungen (Mutex busy)");
-			return;
-		}
-	}
-
-	// Performance: notifyTopic einmal bauen (vermeidet temporäre String-Allokation)
-	String notifyTopic;
-	notifyTopic.reserve(mqttRootTopic.length() + 7);
-	notifyTopic = mqttRootTopic;
-	notifyTopic += "/notify";
-
-#if USE_MQTT_BROKER
-	if (brokerActive)
-	{
-		// Für /notify: direkt lokal anzeigen, nicht publishen
-		if (topic == notifyTopic)
-		{
-			handleMqttMessage(topic, message, "BROKER");
-			rememberLocalMqttPublish(topic, message);
-		}
-		else
-		{
-			// Broker publish mit excludeClientId
-			String excludeId = String(mqttClientId);
-
-			bool ok = mqttBroker->publish(topic.c_str(), message.c_str(), retain, (uint8_t)qos, excludeId);
-			if (!ok)
-			{
-				LOG_PRINTLN("Broker-Publish fehlgeschlagen.");
-			}
-			else
-			{
-				rememberLocalMqttPublish(topic, message);
-			}
-		}
-	}
-	else
-#endif
+    }
+    if (app.mqtt_isClient) {
 #if USE_MQTT_CLIENT
+<<<<<<< HEAD
+        return mqttClientConnected ? "connected" : "offline";
+=======
 		if (mqttClient.connected())
 	{
 		uint16_t packetId = mqttClient.publish(topic.c_str(), qos, retain, message.c_str());
@@ -2437,9 +2295,26 @@ void startWebserver()
 							 // MQTT-Status initial senden
 #if USE_MQTT_ANY
 							 client->send(mqttStatusString.c_str(), "mqtt_status", millis());
+>>>>>>> 937c36a21b29111ed2f16fbabeffa236a6d16872
 #else
-							 client->send("disabled", "mqtt_status", millis());
+        return "offline";
 #endif
+<<<<<<< HEAD
+    }
+    return "aus";
+}
+
+void initLittleFS() {
+    if (!LittleFS.begin(false)) {
+        Serial.println("LittleFS Mount Failed");
+        return;
+    }
+}
+
+void initWifi() {
+    WifiSettings wifi = settingsManager.getWifiSettings();
+    if (wifi.ssid.length() == 0) return;
+=======
 							 // MQTT-Broker Verfügbarkeit senden (compile-time Flag)
 #if USE_MQTT_BROKER
 							 client->send("1", "mqtt_broker_available", millis());
@@ -3475,24 +3350,150 @@ void startWebserver()
 	/// end Webserver initialisieren saveDataBank ///////////////////////////////
 	webServer.on("/toggle0", HTTP_POST, [](AsyncWebServerRequest *request)
 				 {
+>>>>>>> 937c36a21b29111ed2f16fbabeffa236a6d16872
     
-    AppSettings settings = settingsManager.getAppSettings();
+    WiFi.mode(WIFI_STA);
+    WiFi.setHostname(wifi.hostname.c_str());
+    WiFi.begin(wifi.ssid.c_str(), wifi.password.c_str());
+    
+<<<<<<< HEAD
+    int retries = 0;
+    while (WiFi.status() != WL_CONNECTED && retries < 20) {
+        delay(500);
+        Serial.print(".");
+        retries++;
+    }
+    Serial.println("");
+    if (WiFi.status() == WL_CONNECTED) {
+        Serial.println("WiFi connected");
+        Serial.println("IP address: ");
+        Serial.println(WiFi.localIP());
+    }
+}
 
-    bool ignorTouchRing = settings.ignorTouchRing; // Aktuellen Wert aus den App-Einstellungen abrufen
-    bool newStatusIgnoreTouchRing = !ignorTouchRing; // Invertieren
-	LOG_PRINTLN(String(ignorTouchRing) + "Save settings button 0" + String(newStatusIgnoreTouchRing));
-    
+void publishMqttMessage(const String &topic, const String &message, bool retain = false, int qos = 0) {
+    AppSettings app = settingsManager.getAppSettings();
+    if (app.mqtt_isBroker) {
+#if USE_MQTT_BROKER
+        if (mqttBrokerRunning && mqttBroker) {
+            mqttBroker->publish(topic.c_str(), message.c_str(), qos, retain);
+        }
+#endif
+    } else if (app.mqtt_isClient) {
+#if USE_MQTT_CLIENT
+        if (mqttClientConnected) {
+            mqttClient.publish(topic.c_str(), qos, retain, message.c_str());
+        }
+#endif
+    }
+}
+
+void initMqtt() {
+    AppSettings app = settingsManager.getAppSettings();
+    if (app.mqtt_isBroker) {
+#if USE_MQTT_BROKER
+        mqttBroker = new ESPAsyncMQTTBroker();
+        mqttBrokerRunning = mqttBroker->begin(app.mqtt_port.toInt());
+#endif
+    } else if (app.mqtt_isClient) {
+#if USE_MQTT_CLIENT
+        mqttClient.setServer(app.mqttServer.c_str(), app.mqtt_port.toInt());
+        if (app.mqttUsername.length() > 0) {
+            mqttClient.setCredentials(app.mqttUsername.c_str(), app.mqttPassword.c_str());
+        }
+        mqttClient.onConnect([](bool sessionPresent) { mqttClientConnected = true; });
+        mqttClient.onDisconnect([](AsyncMqttClientDisconnectReason reason) { mqttClientConnected = false; });
+        mqttClient.connect();
+#endif
+    }
+}
+
+void registerBridgeApi() {
+    webServer.on("/api/bridge/status", HTTP_GET, [](AsyncWebServerRequest *request){
+        String json = "{";
+        json += "\"ok\": true,";
+        json += "\"mode\": \"" + getMqttModeString() + "\",";
+        json += "\"mqtt\": \"" + getMqttStatusString() + "\",";
+        json += "\"root\": \"" + mqttRootTopic + "\",";
+        json += "\"ip\": \"" + WiFi.localIP().toString() + "\",";
+        json += "\"rssi\": " + String(WiFi.RSSI()) + ",";
+        json += "\"version\": \"MatterMQTTBridge\"";
+        json += "}";
+        request->send(200, "application/json", json);
+    });
+
+    webServer.on("/api/bridge/trigger", HTTP_GET, [](AsyncWebServerRequest *request){
+        if (!request->hasParam("pin")) {
+            request->send(400, "application/json", "{\"ok\":false,\"error\":\"missing pin\"}");
+            return;
+        }
+        int pin = request->getParam("pin")->value().toInt();
+        if (pin < 1 || pin > 99) {
+            request->send(400, "application/json", "{\"ok\":false,\"error\":\"invalid pin\"}");
+            return;
+        }
+        if (getMqttStatusString() != "connected") {
+            request->send(400, "application/json", "{\"ok\":false,\"error\":\"mqtt unavailable\"}");
+            return;
+        }
+        bool ok = bridgeSendTrigger(pin);
+        if (!ok) {
+            request->send(400, "application/json", "{\"ok\":false,\"error\":\"invalid pin\"}");
+            return;
+        }
+        String json = "{";
+        json += "\"ok\": true,";
+        json += "\"trigger\": " + String(pin) + ",";
+        json += "\"topic\": \"" + bridgeTriggerTopic() + "\",";
+        json += "\"payload\": \"" + bridgeTriggerPayload(pin) + "\"";
+        json += "}";
+        request->send(200, "application/json", json);
+    });
+}
+
+void registerWebRoutes() {
+    webServer.serveStatic("/", LittleFS, "/").setDefaultFile("index.html");
+}
+
+void initWeb() {
+    registerBridgeApi();
+    registerWebRoutes();
+=======
     // P3-10: Redundante if-Bedingung entfernt (newStatus = !current ist immer != current)
     settings.ignorTouchRing = newStatusIgnoreTouchRing;
     LOG_PRINTLN(newStatusIgnoreTouchRing);
     digitalWrite(2, newStatusIgnoreTouchRing);
     settingsManager.saveAppSettings(settings);
     // /* fingerManager Legacy */;
+>>>>>>> 937c36a21b29111ed2f16fbabeffa236a6d16872
     
-    // MQTT-Nachricht senden (Status, Retain=true, QoS=0)
-    String mqttTopic = mqttRootTopic + "/ignorTouchRing";
-    publishMqttMessage(mqttTopic, newStatusIgnoreTouchRing ? "on" : "off", true, 0);
+#ifdef ELEGANTOTA_USE_ASYNC_WEBSERVER
+    ElegantOTA.begin(&webServer);
+#endif
+    webServer.begin();
+}
+
+void setup() {
+    Serial.begin(115200);
+    delay(1000);
+    initLittleFS();
+    settingsManager.loadWifiSettings();
+    settingsManager.loadAppSettings();
+    mqttRootTopic = settingsManager.getAppSettings().mqttRootTopic;
+    if(mqttRootTopic.isEmpty()) mqttRootTopic = "fingerprint";
     
+<<<<<<< HEAD
+    initWifi();
+    initMqtt();
+    initWeb();
+}
+
+void loop() {
+#ifdef ELEGANTOTA_USE_ASYNC_WEBSERVER
+    ElegantOTA.loop();
+#endif
+}
+=======
     // Log-Nachricht
     notifyClients(String("ignorTouchRing auf ") + (newStatusIgnoreTouchRing ? "aktiviert" : "deaktiviert"), "[WEB]");
 	sendSSEEvent(newStatusIgnoreTouchRing ? "1" : "0", "Button0", static_cast<unsigned long>(millis()), 1000);
@@ -5864,3 +5865,4 @@ void pin5_timer_callback(void *arg)
 	digitalWrite(OutputPin5, LOW);
 	pin5_timer_expired = true;
 }
+>>>>>>> 937c36a21b29111ed2f16fbabeffa236a6d16872
