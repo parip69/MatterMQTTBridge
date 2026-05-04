@@ -2,13 +2,14 @@
 //******************************************************
 //         Main of MatterMQTTBridge.
 // nur hier die start wert der version Aendern.OK=======
-// @version: 2.2.802 <br> Builddatum 18:08:22 04-05.2026
+// @version: 2.2.803 <br> Builddatum 18:32:31 04-05.2026
 //****************************************************
 
 #include <Arduino.h>
 #include <WiFi.h>
 #include <LittleFS.h>
 #include <ESPAsyncWebServer.h>
+#include <ESPmDNS.h>
 #include <ElegantOTA.h>
 #include <ArduinoJson.h>
 
@@ -26,7 +27,7 @@
 #endif
 
 // ======================= GLOBALS =======================
-const char* firmwareVersion = "2.2.802 <br> Builddatum 18:08:22 04-05.2026";
+const char* firmwareVersion = "2.2.803 <br> Builddatum 18:32:31 04-05.2026";
 AsyncWebServer webServer(80);
 SettingsManager settingsManager;
 
@@ -125,6 +126,11 @@ void setupRouting() {
         doc["ip"] = WiFi.localIP().toString();
         doc["rssi"] = WiFi.RSSI();
         doc["version"] = firmwareVersion;
+
+        String hn = settingsManager.getWifiSettings().hostname;
+        if (hn.isEmpty()) hn = "MatterMQTTBridge";
+        doc["hostname"] = hn;
+        doc["mdns"] = hn + ".local";
 
         doc["mqtt"] = "disabled";
         #if USE_MQTT_CLIENT
@@ -305,6 +311,17 @@ void setup() {
         Serial.println();
         if (WiFi.status() == WL_CONNECTED) {
             LOG_PRINTF("WLAN verbunden! IP: %s\n", WiFi.localIP().toString().c_str());
+
+            // mDNS starten – Gerät ist dann unter <hostname>.local erreichbar
+            String mdnsName = ws.hostname;
+            mdnsName.trim();
+            if (mdnsName.isEmpty()) mdnsName = "MatterMQTTBridge";
+            if (MDNS.begin(mdnsName.c_str())) {
+                MDNS.addService("http", "tcp", 80);
+                LOG_PRINTF("mDNS gestartet: http://%s.local\n", mdnsName.c_str());
+            } else {
+                LOG_PRINTLN("mDNS Start fehlgeschlagen.");
+            }
         } else {
             LOG_PRINTLN("WLAN Verbindung fehlgeschlagen.");
         }
