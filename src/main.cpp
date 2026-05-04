@@ -2,7 +2,7 @@
 //******************************************************
 //         Main of MatterMQTTBridge.
 // nur hier die start wert der version Aendern.OK=======
-// @version: 1.0.4 <br> Builddatum 19:32:35 04-05.2026
+// @version: 1.0.5 <br> Builddatum 19:41:23 04-05.2026
 //****************************************************
 
 #include <Arduino.h>
@@ -30,8 +30,16 @@
 #include "ESPAsyncMQTTBroker.h"
 #endif
 
+// ======================= TEST-AUSGABE-PINS (optional) =======================
+#define USE_OUTPUT_TEST_PINS 0   // auf 1 setzen um TestPins zu aktivieren
+#define TEST_OUTPUT_PIN_1 25
+#define TEST_OUTPUT_PIN_2 26
+#define TEST_OUTPUT_PIN_3 27
+#define TEST_OUTPUT_PIN_4 32
+#define TEST_OUTPUT_PIN_5 33
+
 // ======================= GLOBALS =======================
-const char* firmwareVersion = "1.0.4 <br> Builddatum 19:32:35 04-05.2026";
+const char* firmwareVersion = "1.0.5 <br> Builddatum 19:41:23 04-05.2026";
 AsyncWebServer webServer(80);
 SettingsManager settingsManager;
 
@@ -43,6 +51,12 @@ bool isApConfigMode = false;
 
 static bool restartPending = false;
 static uint32_t restartAtMs = 0;
+
+// ======================= LOG PUFFER =======================
+#define LOG_BUFFER_SIZE 50
+static String s_logBuf[LOG_BUFFER_SIZE];
+static int    s_logHead  = 0;
+static int    s_logCount = 0;
 
 AsyncEventSource events("/events");
 
@@ -112,15 +126,13 @@ String makeTopic(const String &tail) {
     return root + "/" + tail;
 }
 
-// ======================= MQTT MONITOR =======================
-void mqttLogEvent(const String &dir, const String &topic, const String &payload) {
-    JsonDocument doc;
-    doc["dir"] = dir;
-    doc["topic"] = topic;
-    doc["payload"] = payload.substring(0, 200);
-    String msg;
-    serializeJson(doc, msg);
-    events.send(msg.c_str(), "mqtt_log", millis());
+// ======================= DIAGNOSE-LOG =======================
+void addLogMessage(const String& message) {
+    LOG_PRINTLN(message);
+    s_logBuf[s_logHead] = message;
+    s_logHead = (s_logHead + 1) % LOG_BUFFER_SIZE;
+    if (s_logCount < LOG_BUFFER_SIZE) s_logCount++;
+    events.send(message.c_str(), "log", millis());
 }
 
 // Für Bridge.cpp
@@ -129,7 +141,8 @@ bool publishMqttMessage(const String &topic, const String &message, bool retain,
     AppSettings s = settingsManager.getAppSettings();
     if (s.mqtt_isClient) {
         bool ok = mqttManager.publishMqttMessage(topic, message, retain, qos);
-        if (ok) mqttLogEvent("TX", topic, message);
+        if (ok) addLogMessage("TX  " + topic + "  ->  " + message.substring(0, 80));
+        else    addLogMessage("MQTT Publish fehlgeschlagen: " + topic);
         return ok;
     }
 #endif
@@ -138,7 +151,7 @@ bool publishMqttMessage(const String &topic, const String &message, bool retain,
     AppSettings s2 = settingsManager.getAppSettings();
     if (s2.mqtt_isBroker) {
         mqttBroker.publish(topic.c_str(), message.c_str(), retain, qos);
-        mqttLogEvent("TX", topic, message);
+        addLogMessage("TX  " + topic + "  ->  " + message.substring(0, 80));
         return true;
     }
 #endif
@@ -288,6 +301,18 @@ void setupRouting() {
         restartAtMs = millis() + 1000UL;
     });
 
+    webServer.on("/api/bridge/log", HTTP_GET, [](AsyncWebServerRequest *request) {
+        JsonDocument doc;
+        JsonArray arr = doc["log"].to<JsonArray>();
+        int start = (s_logCount < LOG_BUFFER_SIZE) ? 0 : s_logHead;
+        for (int i = 0; i < s_logCount; i++) {
+            arr.add(s_logBuf[(start + i) % LOG_BUFFER_SIZE]);
+        }
+        String resp;
+        serializeJson(doc, resp);
+        request->send(200, "application/json", resp);
+    });
+
     // Statische Dateien explizit registrieren, damit /api/... nie in den Dateihandler fällt.
     webServer.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
         request->send(LittleFS, "/index.html", "text/html");
@@ -318,6 +343,9 @@ void setup() {
 
     if (!LittleFS.begin(false)) {
         LOG_PRINTLN("LittleFS Mount Failed");
+        addLogMessage("LittleFS Fehler!");
+    } else {
+        addLogMessage("LittleFS bereit");
     }
 
     settingsManager.loadWifiSettings();
@@ -333,6 +361,7 @@ void setup() {
         WiFi.mode(WIFI_AP);
         WiFi.softAP("MatterBridge-Setup", "12345678");
         digitalWrite(LED_BUILTIN, HIGH);
+        addLogMessage("AP Setup gestartet: MatterBridge-Setup");
     } else {
         LOG_PRINTF("Verbinde mit WLAN: %s\n", ws.ssid.c_str());
         WiFi.mode(WIFI_STA);
@@ -346,22 +375,43 @@ void setup() {
         Serial.println();
         if (WiFi.status() == WL_CONNECTED) {
             LOG_PRINTF("WLAN verbunden! IP: %s\n", WiFi.localIP().toString().c_str());
+            addLogMessage("WLAN verbunden: " + WiFi.localIP().toString());
 
             // mDNS starten – Gerät ist dann unter <hostname>.local erreichbar
             String mdnsName = normalizeBridgeHostname(ws.hostname);
             if (MDNS.begin(mdnsName.c_str())) {
                 MDNS.addService("http", "tcp", 80);
                 LOG_PRINTF("mDNS gestartet: http://%s.local\n", mdnsName.c_str());
+                addLogMessage("mDNS gestartet: " + mdnsName + ".local");
             } else {
                 LOG_PRINTLN("mDNS Start fehlgeschlagen.");
             }
         } else {
             LOG_PRINTLN("WLAN Verbindung fehlgeschlagen.");
+            addLogMessage("WLAN Verbindung fehlgeschlagen");
         }
     }
 
     setupRouting();
+    ElegantOTA.onStart([]() {
+        addLogMessage("OTA gestartet");
+    });
+    ElegantOTA.onEnd([](bool success) {
+        addLogMessage(success ? "OTA beendet" : "OTA Fehler");
+    });
     webServer.begin();
+    addLogMessage("Webserver gestartet");
+
+#if USE_OUTPUT_TEST_PINS
+    {
+        const int testPins[] = {TEST_OUTPUT_PIN_1, TEST_OUTPUT_PIN_2, TEST_OUTPUT_PIN_3, TEST_OUTPUT_PIN_4, TEST_OUTPUT_PIN_5};
+        for (int i = 0; i < 5; i++) {
+            pinMode(testPins[i], OUTPUT);
+            digitalWrite(testPins[i], LOW);
+        }
+        addLogMessage("Test-Ausgabepins initialisiert");
+    }
+#endif
 
     AppSettings as = settingsManager.getAppSettings();
 
@@ -369,22 +419,44 @@ void setup() {
     if (as.mqtt_isBroker) {
         LOG_PRINTLN("Starte MQTT Broker...");
         mqttBroker.begin();
+        addLogMessage("MQTT Broker gestartet");
     }
 #endif
 
 #if USE_MQTT_CLIENT
     if (as.mqtt_isClient) {
         LOG_PRINTLN("Starte MQTT Client Manager...");
+        addLogMessage("MQTT Client startet...");
         mqttClient.onConnect([](bool sessionPresent) {
             mqttManager.onMqttConnect(sessionPresent);
-            mqttLogEvent("SYS", "status", "connected");
+            addLogMessage("MQTT verbunden");
+#if USE_OUTPUT_TEST_PINS
+            String root = normalizeMqttRootTopic(settingsManager.getAppSettings().mqttRootTopic);
+            for (int i = 1; i <= 5; i++) {
+                mqttClient.subscribe((root + "/OutputPinStatus" + String(i)).c_str(), 0);
+            }
+#endif
         });
         mqttClient.onDisconnect([](AsyncMqttClientDisconnectReason reason) {
             mqttManager.onMqttDisconnect(reason);
-            mqttLogEvent("SYS", "status", "disconnected");
+            addLogMessage("MQTT Verbindung verloren");
         });
         mqttClient.onMessage([](char* topic, char* payload, AsyncMqttClientMessageProperties, size_t len, size_t, size_t) {
-            mqttLogEvent("RX", String(topic), String(payload, len));
+            String topicStr(topic);
+            String payloadStr(payload, len);
+            addLogMessage("RX  " + topicStr + "  ->  " + payloadStr.substring(0, 80));
+#if USE_OUTPUT_TEST_PINS
+            static const int testPins[] = {TEST_OUTPUT_PIN_1, TEST_OUTPUT_PIN_2, TEST_OUTPUT_PIN_3, TEST_OUTPUT_PIN_4, TEST_OUTPUT_PIN_5};
+            String root = normalizeMqttRootTopic(settingsManager.getAppSettings().mqttRootTopic);
+            for (int i = 1; i <= 5; i++) {
+                if (topicStr == root + "/OutputPinStatus" + String(i)) {
+                    bool hi = (payloadStr == "true" || payloadStr == "1" || payloadStr.equalsIgnoreCase("on"));
+                    digitalWrite(testPins[i - 1], hi ? HIGH : LOW);
+                    addLogMessage("TestPin" + String(i) + (hi ? " -> HIGH" : " -> LOW"));
+                    break;
+                }
+            }
+#endif
         });
         mqttManager.begin();
     }

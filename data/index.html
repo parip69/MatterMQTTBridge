@@ -19,10 +19,7 @@
         input, select { width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box; }
         hr { border: 1px solid #777; margin: 15px 0; }
         .trigger-container { text-align: center; }
-        .mqtt-log { background:#1e1e1e; border-radius:4px; padding:8px; height:220px; overflow-y:auto; font-family:monospace; font-size:12px; text-align:left; border:1px solid #555; }
-        .mqtt-log .tx  { color:#4CAF50; }
-        .mqtt-log .rx  { color:#81D4FA; }
-        .mqtt-log .sys { color:#FFD700; }
+        .diag-log { background:#3a3a3a; border:2px solid #8b0000; border-radius:4px; padding:8px; height:220px; overflow-y:auto; font-family:monospace; font-size:12px; text-align:left; color:#e0e0e0; }
         .btn-sm { width:auto; padding:5px 12px; font-size:13px; }
     </style>
 </head>
@@ -62,8 +59,14 @@
 
     <div class="card">
         <h3>MQTT Monitor</h3>
-        <div id="mqttLog" class="mqtt-log"></div>
-        <button class="btn-sm" onclick="clearMqttLog()" style="margin-top:8px;">Log leeren</button>
+        <h3>Diagnose / Live-Log</h3>
+        <div id="diagLog" class="diag-log"></div>
+        <div style="margin-top:8px; display:flex; flex-wrap:wrap; gap:4px;">
+            <button class="btn-sm" onclick="clearDiagLog()">Log leeren</button>
+            <button class="btn-sm" onclick="triggerSilent(1)">Test Aktion 1</button>
+            <button class="btn-sm" onclick="triggerSilent(2)">Test Aktion 2</button>
+            <button class="btn-sm" onclick="triggerSilent(3)">Test Aktion 3</button>
+        </div>
     </div>
 
     <div class="card">
@@ -201,30 +204,54 @@
         }
 
         // ===== MQTT Monitor =====
-        function clearMqttLog() {
-            document.getElementById('mqttLog').innerHTML = '';
+        // ===== Diagnose-Log =====
+        function clearDiagLog() {
+            document.getElementById('diagLog').innerHTML = '';
         }
 
-        (function initMqttMonitor() {
-            const log = document.getElementById('mqttLog');
+        function appendLogLine(text) {
+            const log = document.getElementById('diagLog');
+            const row = document.createElement('div');
+            const now = new Date();
+            const ts = now.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
+            const dt = now.toLocaleDateString('de-DE');
+            row.textContent = '[' + ts + ' - ' + dt + ']: ' + text;
+            if      (text.startsWith('TX'))                                   row.style.color = '#4CAF50';
+            else if (text.startsWith('RX'))                                   row.style.color = '#81D4FA';
+            else if (text.startsWith('WLAN') || text.startsWith('mDNS'))      row.style.color = '#FFD700';
+            else if (text.startsWith('OTA'))                                  row.style.color = '#FF9800';
+            else if (text.startsWith('MQTT') || text.startsWith('TestPin'))   row.style.color = '#CE93D8';
+            log.appendChild(row);
+            log.scrollTop = log.scrollHeight;
+            while (log.children.length > 50) log.removeChild(log.firstChild);
+        }
+
+        function triggerSilent(pin) {
+            fetch('/api/bridge/trigger?pin=' + pin)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.ok) appendLogLine('TX  ' + data.topic + '  ->  ' + data.payload);
+                    else appendLogLine('Trigger ' + pin + ' fehlgeschlagen: ' + (data.error || 'unbekannt'));
+                })
+                .catch(err => appendLogLine('Trigger ' + pin + ' Fehler: ' + err));
+        }
+
+        function loadLogHistory() {
+            fetch('/api/bridge/log')
+                .then(res => res.json())
+                .then(data => { if (data.log) data.log.forEach(line => appendLogLine(line)); })
+                .catch(() => {});
+        }
+
+        (function initDiagLog() {
             const src = new EventSource('/events');
-            src.addEventListener('mqtt_log', function(e) {
-                try {
-                    const d = JSON.parse(e.data);
-                    const row = document.createElement('div');
-                    const ts = new Date().toLocaleTimeString('de-DE');
-                    row.className = d.dir === 'TX' ? 'tx' : (d.dir === 'RX' ? 'rx' : 'sys');
-                    row.textContent = '[' + ts + '] ' + d.dir + '  ' + d.topic + '  →  ' + d.payload;
-                    log.appendChild(row);
-                    log.scrollTop = log.scrollHeight;
-                    while (log.children.length > 150) log.removeChild(log.firstChild);
-                } catch(ex) {}
-            });
+            src.addEventListener('log', function(e) { appendLogLine(e.data); });
         })();
 
         window.onload = () => {
             loadStatus();
             loadSettings();
+            loadLogHistory();
             setInterval(loadStatus, 5000);
         };
     </script>
