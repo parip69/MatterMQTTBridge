@@ -1,4 +1,4 @@
-﻿{
+{
   "version": "2.0.0",
   "tasks": [
     {
@@ -32,22 +32,6 @@
       "group": "build",
       "problemMatcher": ["$platformio"],
       "presentation": { "reveal": "always", "panel": "shared" }
-    },
-    {
-      "label": "Flash+Test",
-      "type": "shell",
-      "command": "& 'C:\\Users\\gerha\\.platformio\\penv\\Scripts\\python.exe' '${workspaceFolder}\\tools\\flash_and_test.py' --mode flash-test",
-      "group": "test",
-      "problemMatcher": [],
-      "presentation": { "echo": true, "reveal": "always", "focus": true, "panel": "dedicated", "showReuseMessage": false, "clear": true }
-    },
-    {
-      "label": "Reset+Test",
-      "type": "shell",
-      "command": "& 'C:\\Users\\gerha\\.platformio\\penv\\Scripts\\python.exe' '${workspaceFolder}\\tools\\flash_and_test.py' --mode reset-test",
-      "group": "test",
-      "problemMatcher": [],
-      "presentation": { "echo": true, "reveal": "always", "focus": true, "panel": "dedicated", "showReuseMessage": false, "clear": true }
     }
   ]
 }

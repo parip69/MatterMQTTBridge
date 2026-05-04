@@ -2,7 +2,7 @@
 //******************************************************
 //         Main of MatterMQTTBridge.
 // nur hier die start wert der version Aendern.OK=======
-// @version: 2.2.803 <br> Builddatum 18:32:31 04-05.2026
+// @version: 1.0.1 <br> Builddatum 19:01:35 04-05.2026
 //****************************************************
 
 #include <Arduino.h>
@@ -12,6 +12,10 @@
 #include <ESPmDNS.h>
 #include <ElegantOTA.h>
 #include <ArduinoJson.h>
+
+#ifndef LED_BUILTIN
+#define LED_BUILTIN 2
+#endif
 
 #include "SettingsManager.h"
 #include "Bridge.h"
@@ -27,13 +31,15 @@
 #endif
 
 // ======================= GLOBALS =======================
-const char* firmwareVersion = "2.2.803 <br> Builddatum 18:32:31 04-05.2026";
+const char* firmwareVersion = "1.0.1 <br> Builddatum 19:01:35 04-05.2026";
 AsyncWebServer webServer(80);
 SettingsManager settingsManager;
 
 String mqttRootTopic = "fingerprint";
 SemaphoreHandle_t networkMutex = nullptr;
 volatile bool timeSet = false;
+int led1State = LOW;
+bool isApConfigMode = false;
 
 static bool restartPending = false;
 static uint32_t restartAtMs = 0;
@@ -282,6 +288,9 @@ void setup() {
 
     networkMutex = xSemaphoreCreateMutex();
 
+    pinMode(LED_BUILTIN, OUTPUT);
+    digitalWrite(LED_BUILTIN, LOW);
+
     if (!LittleFS.begin(false)) {
         LOG_PRINTLN("LittleFS Mount Failed");
     }
@@ -294,8 +303,10 @@ void setup() {
     WifiSettings ws = settingsManager.getWifiSettings();
     if (ws.ssid.isEmpty()) {
         LOG_PRINTLN("Kein WLAN konfiguriert! Starte als AP...");
+        isApConfigMode = true;
         WiFi.mode(WIFI_AP);
         WiFi.softAP("MatterBridge-Setup", "12345678");
+        digitalWrite(LED_BUILTIN, HIGH);
     } else {
         LOG_PRINTF("Verbinde mit WLAN: %s\n", ws.ssid.c_str());
         WiFi.mode(WIFI_STA);
@@ -363,7 +374,20 @@ void loop() {
     }
 #endif
 
+    // Effizienter, unregelmäßiger LED-Herzschlag für sichtbare Loop-Aktivität.
+    if (!isApConfigMode)
+    {
+        static unsigned long nextBlinkTime = 0;
+        if (millis() >= nextBlinkTime)
+        {
+            led1State = !led1State;
+            digitalWrite(LED_BUILTIN, led1State);
+            nextBlinkTime = millis() + random(200, 1500);
+        }
+    }
+
     if (restartPending && millis() >= restartAtMs) {
+        digitalWrite(LED_BUILTIN, LOW);
         ESP.restart();
     }
 

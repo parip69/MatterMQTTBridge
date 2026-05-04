@@ -68,3 +68,40 @@
 - `agent_worklog.md` (dieses Protokoll)
 
 **Ergebnis:** PASS – Alle gewünschten Endpunkte und MQTT-Rückgaben wurden erfolgreich implementiert. Die PIO Build-Verifikation wird nun via Projektinhaber Task ausgelöst.
+
+## 4. Mai 2026 - LED-Herzschlag (Bridge-Lebenszeichen)
+
+**Aufgabe:** Unregelmäßigen internen LED-Herzschlag von Fingerprint in MatterMQTTBridge übernehmen.
+
+**Durchgeführte Aktionen:**
+- Fallback für `LED_BUILTIN` auf GPIO2 ergänzt (`#ifndef LED_BUILTIN ... #define LED_BUILTIN 2`).
+- Globale LED-Zustände ergänzt: `int led1State = LOW;` und `bool isApConfigMode = false;`.
+- In `setup()` LED-Pin initialisiert (`pinMode`, `digitalWrite LOW`).
+- Im AP-Konfigurationsmodus (`kein WLAN`) LED auf dauerhaft HIGH gesetzt.
+- In `loop()` unregelmäßigen Herzschlag eingefügt (zufällig 200-1500 ms, ohne blockierendes `delay`).
+- Vor geplantem Neustart LED sauber auf LOW gesetzt.
+- Build-Verifikation ausgeführt: `pio run -e bridge` erfolgreich.
+
+**Geänderte Dateien:**
+- `src/main.cpp` (Versionszeile nicht manuell verändert)
+- `agent_worklog.md` (dieses Protokoll)
+
+**Ergebnis:** PASS – Unregelmäßiger LED-Herzschlag aktiv, AP-Dauerlicht optional aktiv, Build erfolgreich.
+
+## 4. Mai 2026 - VS-Code Shortcuts Flash+Test und Reset+Test entfernt
+
+**Aufgabe:** Die zwei Shortcuts `Flash+Test` und `Reset+Test` samt aktiver VS-Code-Anbindung entfernen.
+
+**Durchgeführte Aktionen:**
+- Task-Definition `Flash+Test` aus `.vscode/tasks.json` entfernt.
+- Task-Definition `Reset+Test` aus `.vscode/tasks.json` entfernt.
+- Statusleisten-Button `Flash+Test` aus `.vscode/settings.json` entfernt.
+- Statusleisten-Button `Reset+Test` aus `.vscode/settings.json` entfernt.
+- Nachkontrolle in `.vscode/**`: keine verbleibenden Treffer auf `Flash+Test`, `Reset+Test`, `flash_and_test.py`.
+
+**Geänderte Dateien:**
+- `.vscode/tasks.json`
+- `.vscode/settings.json`
+- `agent_worklog.md` (dieses Protokoll)
+
+**Ergebnis:** PASS – Beide Shortcuts sind aus VS Code entfernt und nicht mehr verdrahtet.
