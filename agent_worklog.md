@@ -1,3 +1,20 @@
+## 4. Mai 2026 - Eingehende MQTT-Nachrichten sichtbar gemacht
+
+**Aufgabe:** RX von anderen ESPs muss im Live-Log erscheinen (nicht nur TX)
+
+**Durchgeführte Aktionen:**
+- `src/main.cpp`: Zentrale Funktion `handleIncomingMqttMessage(...)` ergänzt
+- `src/main.cpp`: RX-Logging im **Client-Modus** auf die neue Funktion umgestellt
+- `src/main.cpp`: RX-Logging im **Broker-Modus** über `mqttBroker.onMessage(...)` ergänzt
+- `data/index.html`: lokale TX-Zeilen bei Trigger-Antwort entfernt, damit keine Doppel-Logs entstehen
+- Build ausgeführt: `B Bridge` erfolgreich
+
+**Ergebnis:**
+- Eingehende MQTT-Nachrichten von anderen Geräten erscheinen jetzt im Live-Log (Client und Broker)
+- TX-Anzeige ist bereinigt (kein doppeltes TX pro Klick)
+
+---
+
 ## 4. Mai 2026 - RX-Log in beide Richtungen aktiviert
 
 **Aufgabe:** Eingehende MQTT-Nachrichten genauso sichtbar machen wie ausgehende

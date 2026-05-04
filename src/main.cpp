@@ -2,7 +2,7 @@
 //******************************************************
 //         Main of MatterMQTTBridge.
 // nur hier die start wert der version Aendern.OK=======
-// @version: 1.0.9 <br> Builddatum 19:58:13 04-05.2026
+// @version: 1.0.10 <br> Builddatum 20:03:30 04-05.2026
 //****************************************************
 
 #include <Arduino.h>
@@ -39,7 +39,7 @@
 #define TEST_OUTPUT_PIN_5 33
 
 // ======================= GLOBALS =======================
-const char* firmwareVersion = "1.0.9 <br> Builddatum 19:58:13 04-05.2026";
+const char* firmwareVersion = "1.0.10 <br> Builddatum 20:03:30 04-05.2026";
 AsyncWebServer webServer(80);
 SettingsManager settingsManager;
 
@@ -133,6 +133,29 @@ void addLogMessage(const String& message) {
     s_logHead = (s_logHead + 1) % LOG_BUFFER_SIZE;
     if (s_logCount < LOG_BUFFER_SIZE) s_logCount++;
     events.send(message.c_str(), "log", millis());
+}
+
+void handleIncomingMqttMessage(const String &topicStr, const String &payloadStr, const String &rxSource) {
+    String line = "RX";
+    if (!rxSource.isEmpty()) {
+        line += "[" + rxSource + "]";
+    }
+    line += "  " + topicStr + "  ->  " + payloadStr.substring(0, 80);
+    addLogMessage(line);
+
+#if USE_OUTPUT_TEST_PINS
+    String root = normalizeMqttRootTopic(settingsManager.getAppSettings().mqttRootTopic);
+    for (int i = 1; i <= 5; i++) {
+        if (topicStr == root + "/OutputPinStatus" + String(i)) {
+            String p = payloadStr;
+            p.trim();
+            p.toLowerCase();
+            bool hi = (p == "true" || p == "1" || p == "on" || p.endsWith(";true"));
+            setOptionalTestOutputPin((uint8_t)i, hi);
+            break;
+        }
+    }
+#endif
 }
 
 String outputPinStatusTopic(uint8_t pin) {
@@ -466,6 +489,9 @@ void setup() {
 #if USE_MQTT_BROKER
     if (as.mqtt_isBroker) {
         LOG_PRINTLN("Starte MQTT Broker...");
+        mqttBroker.onMessage([](const String& clientId, const String& topic, const String& message) {
+            handleIncomingMqttMessage(topic, message, String("broker:") + clientId);
+        });
         mqttBroker.begin();
         addLogMessage("MQTT Broker gestartet");
     }
@@ -494,20 +520,7 @@ void setup() {
         mqttClient.onMessage([](char* topic, char* payload, AsyncMqttClientMessageProperties, size_t len, size_t, size_t) {
             String topicStr(topic);
             String payloadStr(payload, len);
-            addLogMessage("RX  " + topicStr + "  ->  " + payloadStr.substring(0, 80));
-#if USE_OUTPUT_TEST_PINS
-            String root = normalizeMqttRootTopic(settingsManager.getAppSettings().mqttRootTopic);
-            for (int i = 1; i <= 5; i++) {
-                if (topicStr == root + "/OutputPinStatus" + String(i)) {
-                    String p = payloadStr;
-                    p.trim();
-                    p.toLowerCase();
-                    bool hi = (p == "true" || p == "1" || p == "on" || p.endsWith(";true"));
-                    setOptionalTestOutputPin((uint8_t)i, hi);
-                    break;
-                }
-            }
-#endif
+            handleIncomingMqttMessage(topicStr, payloadStr, "client");
         });
         mqttManager.begin();
     }

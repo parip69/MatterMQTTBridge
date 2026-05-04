@@ -152,10 +152,6 @@
                 .then(res => res.json())
                 .then(data => {
                     if (data.ok) {
-                        appendLogLine('TX  ' + data.topic + '  ->  ' + data.payload);
-                        if (data.outputTopic) {
-                            appendLogLine('TX  ' + data.outputTopic + '  ->  ' + (data.outputPayload || 'true'));
-                        }
                         alert("Trigger " + pin + " gesendet\nTopic: " + data.topic + "\nPayload: " + data.payload);
                     } else {
                         appendLogLine('Trigger ' + pin + ' fehlgeschlagen: ' + (data.error || 'unbekannt'));
@@ -236,10 +232,11 @@
         }
 
         function triggerSilent(pin) {
+            appendLogLine('Test Aktion ' + pin + ' angefordert');
             fetch('/api/bridge/trigger?pin=' + pin)
                 .then(res => res.json())
                 .then(data => {
-                    if (data.ok) appendLogLine('TX  ' + data.topic + '  ->  ' + data.payload);
+                    if (data.ok) appendLogLine('Test Aktion ' + pin + ' gesendet');
                     else appendLogLine('Trigger ' + pin + ' fehlgeschlagen: ' + (data.error || 'unbekannt'));
                 })
                 .catch(err => appendLogLine('Trigger ' + pin + ' Fehler: ' + err));
