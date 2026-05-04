@@ -2,7 +2,7 @@
 //******************************************************
 //         Main of Fingerscanner Parip69.
 // nur hier die start wert der version Aendern.OK=======
-// @version: 2.2.794 <br> Builddatum 06:35:19 04-05.2026
+// @version: 2.2.795 <br> Builddatum 06:38:22 04-05.2026
 //****************************************************
 
 #include <Arduino.h>
