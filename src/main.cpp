@@ -1,8 +1,8 @@
 // Beschreibung: 2.0.0 erste wo alles get mit dem Templade dowenload
 //******************************************************
-//         Main of Fingerscanner Parip69.
+//         Main of MatterMQTTBridge.
 // nur hier die start wert der version Aendern.OK=======
-// @version: 2.2.797 <br> Builddatum 15:29:23 04-05.2026
+// @version: 2.2.798 <br> Builddatum 16:14:26 04-05.2026
 //****************************************************
 
 #include <Arduino.h>
@@ -26,12 +26,12 @@
 #endif
 
 // ======================= GLOBALS =======================
-const char* firmwareVersion = "2.2.797 <br> Builddatum 15:29:23 04-05.2026";
+const char* firmwareVersion = "2.2.798 <br> Builddatum 16:14:26 04-05.2026";
 AsyncWebServer webServer(80);
 SettingsManager settingsManager;
 
 String mqttRootTopic = "fingerprint";
-SemaphoreHandle_t networkMutex = xSemaphoreCreateMutex();
+SemaphoreHandle_t networkMutex = nullptr;
 volatile bool timeSet = false;
 
 static bool restartPending = false;
@@ -76,9 +76,20 @@ String getModeString() {
     return "off";
 }
 
+String normalizeMqttRootTopic(const String &rawTopic) {
+    String root = rawTopic;
+    root.trim();
+    if (root.isEmpty()) {
+        root = "fingerprint";
+    }
+    while (root.endsWith("/")) {
+        root.remove(root.length() - 1);
+    }
+    return root;
+}
+
 String makeTopic(const String &tail) {
-    String root = settingsManager.getAppSettings().mqttRootTopic;
-    if (root.endsWith("/")) root = root.substring(0, root.length() - 1);
+    String root = normalizeMqttRootTopic(settingsManager.getAppSettings().mqttRootTopic);
     return root + "/" + tail;
 }
 
@@ -104,27 +115,25 @@ bool publishMqttMessage(const String &topic, const String &message, bool retain,
 
 // ======================= SETUP ROUTING =======================
 void setupRouting() {
-    // Statische Dateien
-    webServer.serveStatic("/", LittleFS, "/").setDefaultFile("index.html");
-
     // API Status
     webServer.on("/api/bridge/status", HTTP_GET, [](AsyncWebServerRequest *request) {
+        AppSettings appSettings = settingsManager.getAppSettings();
         JsonDocument doc;
         doc["ok"] = true;
         doc["mode"] = getModeString();
-        doc["root"] = settingsManager.getAppSettings().mqttRootTopic;
+        doc["root"] = normalizeMqttRootTopic(appSettings.mqttRootTopic);
         doc["ip"] = WiFi.localIP().toString();
         doc["rssi"] = WiFi.RSSI();
         doc["version"] = firmwareVersion;
 
         doc["mqtt"] = "disabled";
         #if USE_MQTT_CLIENT
-        if(settingsManager.getAppSettings().mqtt_isClient) {
+        if (appSettings.mqtt_isClient) {
             doc["mqtt"] = mqttClient.connected() ? "connected" : "disconnected";
         }
         #endif
         #if USE_MQTT_BROKER
-        if(settingsManager.getAppSettings().mqtt_isBroker) {
+        if (appSettings.mqtt_isBroker) {
             doc["mqtt"] = "broker";
         }
         #endif
@@ -167,7 +176,7 @@ void setupRouting() {
         if (request->hasParam("mqttPassword", true) && request->getParam("mqttPassword", true)->value().length() > 0) {
             as.mqttPassword = request->getParam("mqttPassword", true)->value();
         }
-        if (request->hasParam("mqttRootTopic", true)) as.mqttRootTopic = request->getParam("mqttRootTopic", true)->value();
+        if (request->hasParam("mqttRootTopic", true)) as.mqttRootTopic = normalizeMqttRootTopic(request->getParam("mqttRootTopic", true)->value());
         
         settingsManager.saveAppSettings(as);
 
@@ -188,7 +197,7 @@ void setupRouting() {
         doc["mqttServer"] = as.mqttServer;
         doc["mqtt_port"] = as.mqtt_port;
         doc["mqttUsername"] = as.mqttUsername;
-        doc["mqttRootTopic"] = as.mqttRootTopic;
+        doc["mqttRootTopic"] = normalizeMqttRootTopic(as.mqttRootTopic);
         
         String resp;
         serializeJson(doc, resp);
@@ -242,6 +251,10 @@ void setupRouting() {
         restartAtMs = millis() + 1000UL;
     });
 
+    // Statische Dateien immer nach den API-Routen registrieren,
+    // damit /api/... nicht vom Dateihandler abgefangen wird.
+    webServer.serveStatic("/", LittleFS, "/").setDefaultFile("index.html");
+
     webServer.addHandler(&events);
     ElegantOTA.begin(&webServer);
 }
@@ -252,6 +265,8 @@ void setup() {
     delay(500);
     LOG_PRINTLN("\n=== MatterMQTTBridge ===");
 
+    networkMutex = xSemaphoreCreateMutex();
+
     if (!LittleFS.begin(false)) {
         LOG_PRINTLN("LittleFS Mount Failed");
     }
@@ -259,14 +274,7 @@ void setup() {
     settingsManager.loadWifiSettings();
     settingsManager.loadAppSettings();
     
-    mqttRootTopic = settingsManager.getAppSettings().mqttRootTopic;
-    mqttRootTopic.trim();
-    if (mqttRootTopic.isEmpty()) {
-        mqttRootTopic = "fingerprint";
-    }
-    while (mqttRootTopic.endsWith("/")) {
-        mqttRootTopic.remove(mqttRootTopic.length() - 1);
-    }
+    mqttRootTopic = normalizeMqttRootTopic(settingsManager.getAppSettings().mqttRootTopic);
 
     WifiSettings ws = settingsManager.getWifiSettings();
     if (ws.ssid.isEmpty()) {
