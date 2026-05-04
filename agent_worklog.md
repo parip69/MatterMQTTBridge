@@ -1,3 +1,35 @@
+## 4. Mai 2026 - Mobile-Optimierung Bridge-UI
+
+**Aufgabe:** Weboberfläche für Handy optimieren, ohne Funktionsänderung
+
+**Durchgeführte Aktionen:**
+- `data/index.html`: Mobile CSS erweitert (860px und 480px Breakpoints)
+- Touch-Targets verbessert (`min-height: 44px`, größere Nutzflächen)
+- Trigger-Grid auf sehr kleinen Displays auf 1 Spalte umgestellt
+- Diagnose-Buttons als mobile Stapelansicht (`.diag-actions`) umgesetzt
+- iOS/Android-Usability verbessert (`font-size: 16px` für Inputs/Select)
+- `U FS` erfolgreich auf COM4 übertragen
+
+**Ergebnis:**
+- Oberfläche ist auf dem Handy deutlich besser bedienbar und bleibt funktional unverändert
+
+---
+
+## 4. Mai 2026 - Modernes UI-Redesign Bridge-Weboberfläche
+
+**Aufgabe:** Optik der Bridge modernisieren, ohne Funktionalität zu verändern
+
+**Durchgeführte Aktionen:**
+- `data/index.html`: Komplettes CSS visuell modernisiert (neue Farben, Typografie, Kartenstil, responsive Grid)
+- `data/index.html`: Strukturklassen ergänzt (`dashboard`, `card-wide`) bei gleichbleibenden IDs/Funktionsaufrufen
+- `data/index.html`: Doppelüberschrift „MQTT Monitor" entfernt, Bereich bleibt „Diagnose / Live-Log"
+- Upload nur Dateisystem: `U FS` erfolgreich auf COM4
+
+**Ergebnis:**
+- UI deutlich moderner und aufgeräumter, alle API-/JS-Funktionen unverändert
+
+---
+
 ## 4. Mai 2026 - Eingehende MQTT-Nachrichten sichtbar gemacht
 
 **Aufgabe:** RX von anderen ESPs muss im Live-Log erscheinen (nicht nur TX)

@@ -6,21 +6,276 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MatterMQTTBridge</title>
     <style>
-        body { background-color: #383737; color: white; font-family: sans-serif; padding: 20px; text-align: center; }
-        .card { background-color: #8d8d8d; padding: 15px; border-radius: 8px; margin-bottom: 20px; max-width: 400px; margin-left: auto; margin-right: auto; text-align: left; }
-        .card h3 { text-align: center; margin-top: 0; }
-        button { background-color: #4CAF50; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; margin: 5px; font-size: 16px; width: 100%; box-sizing: border-box; }
-        button:hover { background-color: #45a049; }
-        button.trigger-btn { width: auto; }
-        .nav-links { margin-bottom: 20px; }
-        a { color: #81D4FA; text-decoration: none; font-weight: bold; margin: 0 10px; }
-        a:hover { text-decoration: underline; }
-        label { display: block; margin-top: 10px; font-weight: bold; }
-        input, select { width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box; }
-        hr { border: 1px solid #777; margin: 15px 0; }
-        .trigger-container { text-align: center; }
-        .diag-log { background:#3a3a3a; border:2px solid #8b0000; border-radius:4px; padding:8px; height:220px; overflow-y:auto; font-family:monospace; font-size:12px; text-align:left; color:#e0e0e0; }
-        .btn-sm { width:auto; padding:5px 12px; font-size:13px; }
+        @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+        :root {
+            --bg-1: #0b1722;
+            --bg-2: #132838;
+            --card: rgba(17, 32, 48, 0.88);
+            --card-border: #36506a;
+            --text: #edf4ff;
+            --text-muted: #a7bdd6;
+            --accent: #12b886;
+            --accent-2: #0ea371;
+            --link: #7ecbff;
+            --danger-border: #8f2f2f;
+            --danger-bg: #2b1a1a;
+            --input-bg: #0e1d2b;
+            --input-border: #425e78;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            padding: 20px;
+            color: var(--text);
+            font-family: 'Sora', sans-serif;
+            text-align: center;
+            overflow-x: hidden;
+            background:
+                radial-gradient(circle at 12% 10%, #244761 0, rgba(36, 71, 97, 0) 32%),
+                radial-gradient(circle at 87% 88%, #1a4f47 0, rgba(26, 79, 71, 0) 30%),
+                linear-gradient(145deg, var(--bg-1), var(--bg-2));
+        }
+
+        h1 {
+            margin: 6px 0 14px;
+            font-size: 2rem;
+            letter-spacing: 0.04em;
+            font-weight: 700;
+            text-shadow: 0 2px 18px rgba(0, 0, 0, 0.35);
+        }
+
+        .nav-links {
+            margin: 0 auto 18px;
+            display: inline-flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .nav-links a {
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 600;
+            border: 1px solid rgba(151, 184, 216, 0.4);
+            border-radius: 999px;
+            padding: 8px 14px;
+            background: rgba(132, 165, 195, 0.12);
+            transition: 0.2s ease;
+            backdrop-filter: blur(4px);
+        }
+
+        .nav-links a:hover {
+            transform: translateY(-1px);
+            border-color: rgba(151, 184, 216, 0.8);
+            background: rgba(132, 165, 195, 0.2);
+        }
+
+        .dashboard {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: grid;
+            gap: 14px;
+            grid-template-columns: repeat(2, minmax(280px, 1fr));
+            align-items: start;
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            padding: 16px;
+            text-align: left;
+            box-shadow: 0 12px 26px rgba(0, 0, 0, 0.25);
+            backdrop-filter: blur(6px);
+        }
+
+        .card h3 {
+            margin: 0 0 10px;
+            text-align: left;
+            font-size: 1.05rem;
+            letter-spacing: 0.02em;
+        }
+
+        .card p {
+            margin: 8px 0;
+            color: var(--text-muted);
+        }
+
+        .card p b {
+            color: var(--text);
+        }
+
+        .card a {
+            color: var(--link);
+            text-decoration: none;
+        }
+
+        .card a:hover {
+            text-decoration: underline;
+        }
+
+        .card-wide {
+            grid-column: 1 / -1;
+        }
+
+        button {
+            background: linear-gradient(180deg, var(--accent), var(--accent-2));
+            color: white;
+            padding: 10px 14px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 5px 0;
+            font-size: 0.96rem;
+            font-family: 'Sora', sans-serif;
+            font-weight: 600;
+            width: 100%;
+            min-height: 44px;
+            transition: 0.2s ease;
+        }
+
+        button:hover {
+            filter: brightness(1.06);
+            transform: translateY(-1px);
+        }
+
+        .trigger-container {
+            display: grid;
+            gap: 8px;
+            grid-template-columns: repeat(3, minmax(90px, 1fr));
+        }
+
+        button.trigger-btn {
+            width: 100%;
+            margin: 0;
+        }
+
+        .btn-sm {
+            width: auto;
+            padding: 7px 12px;
+            font-size: 0.85rem;
+            margin: 0;
+        }
+
+        .diag-actions {
+            margin-top: 8px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        label {
+            display: block;
+            margin-top: 10px;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            margin-top: 6px;
+            border-radius: 8px;
+            border: 1px solid var(--input-border);
+            background: var(--input-bg);
+            color: var(--text);
+            font-family: 'Sora', sans-serif;
+        }
+
+        hr {
+            border: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #577189, transparent);
+            margin: 16px 0;
+        }
+
+        .diag-log {
+            background: var(--danger-bg);
+            border: 2px solid var(--danger-border);
+            border-radius: 8px;
+            padding: 8px;
+            height: 240px;
+            overflow-y: auto;
+            text-align: left;
+            color: #f0efef;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            line-height: 1.35;
+        }
+
+        #saveMsg {
+            color: #71e3b0;
+            font-weight: 600;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        @media (max-width: 860px) {
+            body {
+                padding: 14px;
+            }
+
+            h1 {
+                font-size: 1.55rem;
+                margin: 4px 0 12px;
+            }
+
+            .nav-links {
+                width: 100%;
+                justify-content: stretch;
+            }
+
+            .nav-links a {
+                flex: 1 1 140px;
+                text-align: center;
+            }
+
+            .dashboard {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .card-wide {
+                grid-column: auto;
+            }
+
+            .card {
+                padding: 13px;
+                border-radius: 12px;
+            }
+
+            .trigger-container {
+                grid-template-columns: repeat(2, minmax(120px, 1fr));
+            }
+
+            .diag-log {
+                height: 190px;
+            }
+
+            input, select {
+                font-size: 16px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .trigger-container {
+                grid-template-columns: 1fr;
+            }
+
+            .diag-actions {
+                display: grid;
+                grid-template-columns: 1fr;
+            }
+
+            .btn-sm {
+                width: 100%;
+                font-size: 0.92rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -30,6 +285,8 @@
         <a href="/update">🔄 OTA Update</a>
         <a href="#" onclick="restartBridge()">🔄 Neustart</a>
     </div>
+
+    <div class="dashboard">
 
     <div class="card">
         <h3>System Status</h3>
@@ -57,11 +314,10 @@
         <button onclick="triggerCustomPin()">Trigger senden</button>
     </div>
 
-    <div class="card">
-        <h3>MQTT Monitor</h3>
+    <div class="card card-wide">
         <h3>Diagnose / Live-Log</h3>
         <div id="diagLog" class="diag-log"></div>
-        <div style="margin-top:8px; display:flex; flex-wrap:wrap; gap:4px;">
+        <div class="diag-actions">
             <button class="btn-sm" onclick="clearDiagLog()">Log leeren</button>
             <button class="btn-sm" onclick="triggerSilent(1)">Test Aktion 1</button>
             <button class="btn-sm" onclick="triggerSilent(2)">Test Aktion 2</button>
@@ -69,7 +325,7 @@
         </div>
     </div>
 
-    <div class="card">
+    <div class="card card-wide">
         <h3>Einstellungen</h3>
         <form id="settingsForm" onsubmit="saveSettings(event)">
             <h4>WLAN</h4>
@@ -106,7 +362,9 @@
 
             <button type="submit" id="saveBtn">Einstellungen speichern</button>
         </form>
-        <div id="saveMsg" style="color: #4CAF50; font-weight: bold; margin-top: 10px; text-align: center;"></div>
+        <div id="saveMsg"></div>
+    </div>
+
     </div>
 
     <script>
