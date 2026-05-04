@@ -2,7 +2,7 @@
 //******************************************************
 //         Main of MatterMQTTBridge.
 // nur hier die start wert der version Aendern.OK=======
-// @version: 1.0.3 <br> Builddatum 19:12:06 04-05.2026
+// @version: 1.0.4 <br> Builddatum 19:32:35 04-05.2026
 //****************************************************
 
 #include <Arduino.h>
@@ -31,7 +31,7 @@
 #endif
 
 // ======================= GLOBALS =======================
-const char* firmwareVersion = "1.0.3 <br> Builddatum 19:12:06 04-05.2026";
+const char* firmwareVersion = "1.0.4 <br> Builddatum 19:32:35 04-05.2026";
 AsyncWebServer webServer(80);
 SettingsManager settingsManager;
 
@@ -112,12 +112,25 @@ String makeTopic(const String &tail) {
     return root + "/" + tail;
 }
 
+// ======================= MQTT MONITOR =======================
+void mqttLogEvent(const String &dir, const String &topic, const String &payload) {
+    JsonDocument doc;
+    doc["dir"] = dir;
+    doc["topic"] = topic;
+    doc["payload"] = payload.substring(0, 200);
+    String msg;
+    serializeJson(doc, msg);
+    events.send(msg.c_str(), "mqtt_log", millis());
+}
+
 // Für Bridge.cpp
 bool publishMqttMessage(const String &topic, const String &message, bool retain, int qos) {
 #if USE_MQTT_CLIENT
     AppSettings s = settingsManager.getAppSettings();
     if (s.mqtt_isClient) {
-        return mqttManager.publishMqttMessage(topic, message, retain, qos);
+        bool ok = mqttManager.publishMqttMessage(topic, message, retain, qos);
+        if (ok) mqttLogEvent("TX", topic, message);
+        return ok;
     }
 #endif
 
@@ -125,6 +138,7 @@ bool publishMqttMessage(const String &topic, const String &message, bool retain,
     AppSettings s2 = settingsManager.getAppSettings();
     if (s2.mqtt_isBroker) {
         mqttBroker.publish(topic.c_str(), message.c_str(), retain, qos);
+        mqttLogEvent("TX", topic, message);
         return true;
     }
 #endif
@@ -363,9 +377,14 @@ void setup() {
         LOG_PRINTLN("Starte MQTT Client Manager...");
         mqttClient.onConnect([](bool sessionPresent) {
             mqttManager.onMqttConnect(sessionPresent);
+            mqttLogEvent("SYS", "status", "connected");
         });
         mqttClient.onDisconnect([](AsyncMqttClientDisconnectReason reason) {
             mqttManager.onMqttDisconnect(reason);
+            mqttLogEvent("SYS", "status", "disconnected");
+        });
+        mqttClient.onMessage([](char* topic, char* payload, AsyncMqttClientMessageProperties, size_t len, size_t, size_t) {
+            mqttLogEvent("RX", String(topic), String(payload, len));
         });
         mqttManager.begin();
     }

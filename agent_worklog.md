@@ -1,3 +1,24 @@
+## 4. Mai 2026 - MQTT Monitor hinzugefügt
+
+**Aufgabe:** MQTT Monitor-Fenster im Web-Interface – zeigt TX/RX/SYS-Nachrichten live an
+
+**Durchgeführte Aktionen:**
+- `src/main.cpp`: Funktion `mqttLogEvent(dir, topic, payload)` ergänzt – sendet SSE-Event vom Typ `mqtt_log`
+- `src/main.cpp`: `publishMqttMessage()` ruft nach erfolgreichem Publish `mqttLogEvent("TX", ...)` auf
+- `src/main.cpp`: `mqttClient.onMessage()`-Callback registriert → loggt eingehende Nachrichten als `RX`
+- `src/main.cpp`: onConnect/onDisconnect senden zusätzlich `mqttLogEvent("SYS", "status", "connected/disconnected")`
+- `data/index.html`: Neue Card „MQTT Monitor" mit scrollbarem Log-Bereich (Monospace, 220px)
+- `data/index.html`: CSS-Klassen `.tx` (grün), `.rx` (blau), `.sys` (gelb) für Farbcodierung
+- `data/index.html`: EventSource auf `/events`, lauscht auf `mqtt_log`-Events, max. 150 Einträge
+- `data/index.html`: „Log leeren"-Button
+- Build: SUCCESS (19.7 s)
+
+**Geänderte Dateien:**
+- `src/main.cpp` (Versionsnummer NICHT geändert)
+- `data/index.html` (Versionsnummer NICHT geändert)
+
+---
+
 ## 3. Mai 2026 - Initialisierung MatterMQTTBridge
 
 **Aufgabe:** Neues eigenständiges GitHub-Projekt aus Fingerprint-Kopie erstellen

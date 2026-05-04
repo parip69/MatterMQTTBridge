@@ -19,6 +19,11 @@
         input, select { width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box; }
         hr { border: 1px solid #777; margin: 15px 0; }
         .trigger-container { text-align: center; }
+        .mqtt-log { background:#1e1e1e; border-radius:4px; padding:8px; height:220px; overflow-y:auto; font-family:monospace; font-size:12px; text-align:left; border:1px solid #555; }
+        .mqtt-log .tx  { color:#4CAF50; }
+        .mqtt-log .rx  { color:#81D4FA; }
+        .mqtt-log .sys { color:#FFD700; }
+        .btn-sm { width:auto; padding:5px 12px; font-size:13px; }
     </style>
 </head>
 <body>
@@ -53,6 +58,12 @@
         <label>Triggernummer (1-99):</label>
         <input type="number" id="customTriggerPin" min="1" max="99" value="6">
         <button onclick="triggerCustomPin()">Trigger senden</button>
+    </div>
+
+    <div class="card">
+        <h3>MQTT Monitor</h3>
+        <div id="mqttLog" class="mqtt-log"></div>
+        <button class="btn-sm" onclick="clearMqttLog()" style="margin-top:8px;">Log leeren</button>
     </div>
 
     <div class="card">
@@ -188,6 +199,28 @@
                     .catch(err => alert("Fehler: " + err));
             }
         }
+
+        // ===== MQTT Monitor =====
+        function clearMqttLog() {
+            document.getElementById('mqttLog').innerHTML = '';
+        }
+
+        (function initMqttMonitor() {
+            const log = document.getElementById('mqttLog');
+            const src = new EventSource('/events');
+            src.addEventListener('mqtt_log', function(e) {
+                try {
+                    const d = JSON.parse(e.data);
+                    const row = document.createElement('div');
+                    const ts = new Date().toLocaleTimeString('de-DE');
+                    row.className = d.dir === 'TX' ? 'tx' : (d.dir === 'RX' ? 'rx' : 'sys');
+                    row.textContent = '[' + ts + '] ' + d.dir + '  ' + d.topic + '  →  ' + d.payload;
+                    log.appendChild(row);
+                    log.scrollTop = log.scrollHeight;
+                    while (log.children.length > 150) log.removeChild(log.firstChild);
+                } catch(ex) {}
+            });
+        })();
 
         window.onload = () => {
             loadStatus();
