@@ -2,7 +2,7 @@
 //******************************************************
 //         Main of MatterMQTTBridge.
 // nur hier die start wert der version Aendern.OK=======
-// @version: 1.0.6 <br> Builddatum 19:47:33 04-05.2026
+// @version: 1.0.8 <br> Builddatum 19:54:47 04-05.2026
 //****************************************************
 
 #include <Arduino.h>
@@ -39,7 +39,7 @@
 #define TEST_OUTPUT_PIN_5 33
 
 // ======================= GLOBALS =======================
-const char* firmwareVersion = "1.0.6 <br> Builddatum 19:47:33 04-05.2026";
+const char* firmwareVersion = "1.0.8 <br> Builddatum 19:54:47 04-05.2026";
 AsyncWebServer webServer(80);
 SettingsManager settingsManager;
 
@@ -133,6 +133,29 @@ void addLogMessage(const String& message) {
     s_logHead = (s_logHead + 1) % LOG_BUFFER_SIZE;
     if (s_logCount < LOG_BUFFER_SIZE) s_logCount++;
     events.send(message.c_str(), "log", millis());
+}
+
+String outputPinStatusTopic(uint8_t pin) {
+    return makeTopic("OutputPinStatus" + String(pin));
+}
+
+void setOptionalTestOutputPin(uint8_t pin, bool high) {
+#if USE_OUTPUT_TEST_PINS
+    static const int testPins[] = {
+        TEST_OUTPUT_PIN_1,
+        TEST_OUTPUT_PIN_2,
+        TEST_OUTPUT_PIN_3,
+        TEST_OUTPUT_PIN_4,
+        TEST_OUTPUT_PIN_5
+    };
+    if (pin >= 1 && pin <= 5) {
+        digitalWrite(testPins[pin - 1], high ? HIGH : LOW);
+        addLogMessage("TestPin" + String(pin) + (high ? " -> HIGH" : " -> LOW"));
+    }
+#else
+    (void)pin;
+    (void)high;
+#endif
 }
 
 // Für Bridge.cpp
@@ -277,7 +300,22 @@ void setupRouting() {
             return;
         }
 
-        bool sent = bridgeSendTrigger(pin);
+        addLogMessage("Aktion " + String(pin) + " angefordert");
+        bool sentTrigger = bridgeSendTrigger(pin);
+        bool sentOutputStatus = true;
+
+        String outputTopic = "";
+        String outputPayload = "";
+        if (pin >= 1 && pin <= 5) {
+            outputTopic = outputPinStatusTopic((uint8_t)pin);
+            outputPayload = "source:[WEB];true";
+            sentOutputStatus = publishMqttMessage(outputTopic, outputPayload, false, 0);
+            if (sentOutputStatus) {
+                setOptionalTestOutputPin((uint8_t)pin, true);
+            }
+        }
+
+        bool sent = sentTrigger && sentOutputStatus;
         
         JsonDocument doc;
         if (sent) {
@@ -285,9 +323,19 @@ void setupRouting() {
             doc["trigger"] = pin;
             doc["topic"] = bridgeTriggerTopic();
             doc["payload"] = bridgeTriggerPayload(pin);
+            if (pin >= 1 && pin <= 5) {
+                doc["outputTopic"] = outputTopic;
+                doc["outputPayload"] = outputPayload;
+            }
         } else {
             doc["ok"] = false;
-            doc["error"] = "mqtt unavailable";
+            if (!sentTrigger) {
+                doc["error"] = "trigger publish failed";
+            } else if (!sentOutputStatus) {
+                doc["error"] = "output status publish failed";
+            } else {
+                doc["error"] = "mqtt unavailable";
+            }
         }
 
         String resp;
@@ -446,13 +494,14 @@ void setup() {
             String payloadStr(payload, len);
             addLogMessage("RX  " + topicStr + "  ->  " + payloadStr.substring(0, 80));
 #if USE_OUTPUT_TEST_PINS
-            static const int testPins[] = {TEST_OUTPUT_PIN_1, TEST_OUTPUT_PIN_2, TEST_OUTPUT_PIN_3, TEST_OUTPUT_PIN_4, TEST_OUTPUT_PIN_5};
             String root = normalizeMqttRootTopic(settingsManager.getAppSettings().mqttRootTopic);
             for (int i = 1; i <= 5; i++) {
                 if (topicStr == root + "/OutputPinStatus" + String(i)) {
-                    bool hi = (payloadStr == "true" || payloadStr == "1" || payloadStr.equalsIgnoreCase("on"));
-                    digitalWrite(testPins[i - 1], hi ? HIGH : LOW);
-                    addLogMessage("TestPin" + String(i) + (hi ? " -> HIGH" : " -> LOW"));
+                    String p = payloadStr;
+                    p.trim();
+                    p.toLowerCase();
+                    bool hi = (p == "true" || p == "1" || p == "on" || p.endsWith(";true"));
+                    setOptionalTestOutputPin((uint8_t)i, hi);
                     break;
                 }
             }

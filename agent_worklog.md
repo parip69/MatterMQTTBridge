@@ -1,3 +1,32 @@
+## 4. Mai 2026 - U ALL lokal erfolgreich
+
+**Aufgabe:** Kompletten lokalen Stand auf Bridge-ESP flashen
+
+**Durchgeführte Aktionen:**
+- `U ALL` ausgeführt (BuildFS, UploadFS, Firmware-Upload)
+- Zielgerät bestätigt: COM4, MAC `88:57:21:b1:e4:10`
+- Firmware + LittleFS erfolgreich übertragen
+- Automatisches Projekt-/Firmware-Backup erstellt: `backup_2026.05.04-19.55.30_env_bridge_ver_1.0.8`
+
+**Ergebnis:**
+- Upload erfolgreich, Bridge läuft auf Version `1.0.8`
+
+---
+
+## 4. Mai 2026 - Fingerprint-kompatibles OutputPinStatus-Payload
+
+**Aufgabe:** Bridge an das bekannte Fingerprint-Format angleichen
+
+**Durchgeführte Aktionen:**
+- `src/main.cpp`: Für Trigger 1..5 wird `OutputPinStatusX` jetzt mit `source:[WEB];true` publiziert (Fingerprint-kompatibel)
+- `src/main.cpp`: RX-Auswertung erweitert, damit auch Payloads im Format `...;true` korrekt als HIGH erkannt werden
+- Lokaler Build ausgeführt: `B Bridge` erfolgreich
+
+**Geänderte Dateien:**
+- `src/main.cpp` (Versionsnummer unverändert)
+
+---
+
 ## 4. Mai 2026 - Trigger-Buttons im Live-Log sichtbar gemacht
 
 **Aufgabe:** Klicks auf Trigger-Buttons sollen direkt im Diagnose-/Live-Log erscheinen
