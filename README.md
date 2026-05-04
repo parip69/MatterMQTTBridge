@@ -12,6 +12,18 @@ Sie enthält nur:
 
 Der Fingerprint-ESP bleibt weiterhin die Hauptzentrale. Die Trigger werden über Topic `<mqttRootTopic>/TriggerOutPin` an diesen gemeldet.
 
+### Weboberfläche
+- Eine Hauptseite: `/`
+- Einstellungen sind in `index.html` integriert.
+- `settings.html` leitet nur noch auf `/` weiter.
+
+### API
+- `GET /api/bridge/status`
+- `GET /api/settings`
+- `POST /save_settings`
+- `GET /api/bridge/trigger?pin=X`
+- `GET /api/restart` (optional)
+
 ## Build
 ```bash
 pio run -e bridge
