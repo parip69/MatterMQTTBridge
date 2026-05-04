@@ -105,3 +105,21 @@
 - `agent_worklog.md` (dieses Protokoll)
 
 **Ergebnis:** PASS – Beide Shortcuts sind aus VS Code entfernt und nicht mehr verdrahtet.
+
+## 4. Mai 2026 - Hostname-Fix fuer Fritzbox/mDNS
+
+**Aufgabe:** Verhindern, dass die Bridge in der Fritzbox als `esp32-...` erscheint, wenn das Hostname-Setting leer ist.
+
+**Durchgeführte Aktionen:**
+- In `src/main.cpp` eine zentrale Hostname-Normalisierung ergänzt (`normalizeBridgeHostname`).
+- Fallback erzwungen: leerer Hostname wird immer `MatterMQTTBridge`.
+- Leerzeichen im Hostname für DNS/mDNS in `-` umgewandelt.
+- `WiFi.setHostname(...)` wird im STA-Modus immer mit normalisiertem Namen gesetzt.
+- `/api/bridge/status` und `/api/settings` liefern ebenfalls den normalisierten Hostname.
+- Build-Verifikation ausgeführt: `pio run -e bridge` erfolgreich.
+
+**Geänderte Dateien:**
+- `src/main.cpp` (Versionszeile nicht manuell verändert)
+- `agent_worklog.md` (dieses Protokoll)
+
+**Ergebnis:** PASS – Die Bridge verwendet stabil einen Hostnamen statt `esp32-Default`.

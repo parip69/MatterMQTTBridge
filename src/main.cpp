@@ -2,7 +2,7 @@
 //******************************************************
 //         Main of MatterMQTTBridge.
 // nur hier die start wert der version Aendern.OK=======
-// @version: 1.0.1 <br> Builddatum 19:01:35 04-05.2026
+// @version: 1.0.3 <br> Builddatum 19:12:06 04-05.2026
 //****************************************************
 
 #include <Arduino.h>
@@ -31,7 +31,7 @@
 #endif
 
 // ======================= GLOBALS =======================
-const char* firmwareVersion = "1.0.1 <br> Builddatum 19:01:35 04-05.2026";
+const char* firmwareVersion = "1.0.3 <br> Builddatum 19:12:06 04-05.2026";
 AsyncWebServer webServer(80);
 SettingsManager settingsManager;
 
@@ -95,6 +95,18 @@ String normalizeMqttRootTopic(const String &rawTopic) {
     return root;
 }
 
+String normalizeBridgeHostname(const String &rawHostname) {
+    String hn = rawHostname;
+    hn.trim();
+    if (hn.isEmpty()) {
+        hn = "MatterMQTTBridge";
+    }
+
+    // Leerzeichen für DNS/mDNS vermeiden.
+    hn.replace(" ", "-");
+    return hn;
+}
+
 String makeTopic(const String &tail) {
     String root = normalizeMqttRootTopic(settingsManager.getAppSettings().mqttRootTopic);
     return root + "/" + tail;
@@ -133,8 +145,7 @@ void setupRouting() {
         doc["rssi"] = WiFi.RSSI();
         doc["version"] = firmwareVersion;
 
-        String hn = settingsManager.getWifiSettings().hostname;
-        if (hn.isEmpty()) hn = "MatterMQTTBridge";
+        String hn = normalizeBridgeHostname(settingsManager.getWifiSettings().hostname);
         doc["hostname"] = hn;
         doc["mdns"] = hn + ".local";
 
@@ -162,7 +173,7 @@ void setupRouting() {
         if (request->hasParam("password", true) && request->getParam("password", true)->value().length() > 0) {
             ws.password = request->getParam("password", true)->value();
         }
-        if (request->hasParam("hostname", true)) ws.hostname = request->getParam("hostname", true)->value();
+        if (request->hasParam("hostname", true)) ws.hostname = normalizeBridgeHostname(request->getParam("hostname", true)->value());
         if (request->hasParam("passwordAdmin", true) && request->getParam("passwordAdmin", true)->value().length() > 0) {
             ws.passwordAdmin = request->getParam("passwordAdmin", true)->value();
         }
@@ -204,7 +215,7 @@ void setupRouting() {
         AppSettings as = settingsManager.getAppSettings();
         
         doc["ssid"] = ws.ssid;
-        doc["hostname"] = ws.hostname;
+        doc["hostname"] = normalizeBridgeHostname(ws.hostname);
         doc["mqtt_mode"] = getModeString();
         doc["mqttServer"] = as.mqttServer;
         doc["mqtt_port"] = as.mqtt_port;
@@ -301,6 +312,7 @@ void setup() {
     mqttRootTopic = normalizeMqttRootTopic(settingsManager.getAppSettings().mqttRootTopic);
 
     WifiSettings ws = settingsManager.getWifiSettings();
+    ws.hostname = normalizeBridgeHostname(ws.hostname);
     if (ws.ssid.isEmpty()) {
         LOG_PRINTLN("Kein WLAN konfiguriert! Starte als AP...");
         isApConfigMode = true;
@@ -310,9 +322,7 @@ void setup() {
     } else {
         LOG_PRINTF("Verbinde mit WLAN: %s\n", ws.ssid.c_str());
         WiFi.mode(WIFI_STA);
-        if(!ws.hostname.isEmpty()) {
-            WiFi.setHostname(ws.hostname.c_str());
-        }
+        WiFi.setHostname(ws.hostname.c_str());
         WiFi.begin(ws.ssid.c_str(), ws.password.c_str());
         uint32_t startAttempt = millis();
         while (WiFi.status() != WL_CONNECTED && millis() - startAttempt < 10000) {
@@ -324,9 +334,7 @@ void setup() {
             LOG_PRINTF("WLAN verbunden! IP: %s\n", WiFi.localIP().toString().c_str());
 
             // mDNS starten – Gerät ist dann unter <hostname>.local erreichbar
-            String mdnsName = ws.hostname;
-            mdnsName.trim();
-            if (mdnsName.isEmpty()) mdnsName = "MatterMQTTBridge";
+            String mdnsName = normalizeBridgeHostname(ws.hostname);
             if (MDNS.begin(mdnsName.c_str())) {
                 MDNS.addService("http", "tcp", 80);
                 LOG_PRINTF("mDNS gestartet: http://%s.local\n", mdnsName.c_str());
