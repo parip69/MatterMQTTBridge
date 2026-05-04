@@ -1,3 +1,19 @@
+## 4. Mai 2026 - Compact Mobile mit einklappbaren Karten
+
+**Aufgabe:** Kurze mobile Ansicht mit einklappbaren Sektionen umsetzen
+
+**Durchgeführte Aktionen:**
+- `data/index.html`: Karten als mobile Collapsible-Sektionen aufgebaut (`System Status`, `Bridge Trigger`, `Diagnose`, `Einstellungen`)
+- Standardzustand mobil: `System Status` und `Einstellungen` eingeklappt, Trigger/Diagnose offen
+- Desktop-Verhalten bleibt offen (Collapsible nur mobil aktiv)
+- Tastaturbedienung ergänzt (Enter/Space auf den Kartentiteln)
+- `U FS` erfolgreich auf COM4 übertragen
+
+**Ergebnis:**
+- Auf dem Handy deutlich kompakter, schnellerer Zugriff ohne lange Scrollstrecken
+
+---
+
 ## 4. Mai 2026 - Mobile-Optimierung Bridge-UI
 
 **Aufgabe:** Weboberfläche für Handy optimieren, ohne Funktionsänderung

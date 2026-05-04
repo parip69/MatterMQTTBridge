@@ -100,6 +100,30 @@
             letter-spacing: 0.02em;
         }
 
+        .card.collapsible h3 {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            user-select: none;
+            margin-bottom: 0;
+        }
+
+        .card.collapsible h3::after {
+            content: '▾';
+            font-size: 0.95rem;
+            opacity: 0.9;
+            transition: transform 0.2s ease;
+        }
+
+        .card.collapsible.collapsed h3::after {
+            transform: rotate(-90deg);
+        }
+
+        .card-body {
+            margin-top: 10px;
+        }
+
         .card p {
             margin: 8px 0;
             color: var(--text-muted);
@@ -248,6 +272,10 @@
                 border-radius: 12px;
             }
 
+            .card.collapsible.collapsed .card-body {
+                display: none;
+            }
+
             .trigger-container {
                 grid-template-columns: repeat(2, minmax(120px, 1fr));
             }
@@ -288,45 +316,52 @@
 
     <div class="dashboard">
 
-    <div class="card">
-        <h3>System Status</h3>
-        <p><b>WLAN IP:</b> <span id="val_ip">...</span></p>
-        <p><b>Hostname:</b> <span id="val_hostname">...</span> &nbsp;|&nbsp; <a id="val_mdns_link" href="#" target="_blank"><span id="val_mdns">...</span></a></p>
-        <p><b>RSSI:</b> <span id="val_rssi">...</span> dBm</p>
-        <p><b>MQTT Modus:</b> <span id="val_mode">...</span></p>
-        <p><b>MQTT Status:</b> <span id="val_mqtt">...</span></p>
-        <p><b>Root Topic:</b> <span id="val_root">...</span></p>
-        <p><b>Firmware Version:</b> <span id="val_version">...</span></p>
-    </div>
-
-    <div class="card">
-        <h3>Bridge Trigger</h3>
-        <div class="trigger-container">
-            <button class="trigger-btn" onclick="triggerPin(1)">Trigger 1</button>
-            <button class="trigger-btn" onclick="triggerPin(2)">Trigger 2</button>
-            <button class="trigger-btn" onclick="triggerPin(3)">Trigger 3</button>
-            <button class="trigger-btn" onclick="triggerPin(4)">Trigger 4</button>
-            <button class="trigger-btn" onclick="triggerPin(5)">Trigger 5</button>
-        </div>
-        <hr>
-        <label>Triggernummer (1-99):</label>
-        <input type="number" id="customTriggerPin" min="1" max="99" value="6">
-        <button onclick="triggerCustomPin()">Trigger senden</button>
-    </div>
-
-    <div class="card card-wide">
-        <h3>Diagnose / Live-Log</h3>
-        <div id="diagLog" class="diag-log"></div>
-        <div class="diag-actions">
-            <button class="btn-sm" onclick="clearDiagLog()">Log leeren</button>
-            <button class="btn-sm" onclick="triggerSilent(1)">Test Aktion 1</button>
-            <button class="btn-sm" onclick="triggerSilent(2)">Test Aktion 2</button>
-            <button class="btn-sm" onclick="triggerSilent(3)">Test Aktion 3</button>
+    <div class="card collapsible collapsed" data-collapsible="status">
+        <h3 tabindex="0" role="button" aria-expanded="false">System Status</h3>
+        <div class="card-body">
+            <p><b>WLAN IP:</b> <span id="val_ip">...</span></p>
+            <p><b>Hostname:</b> <span id="val_hostname">...</span> &nbsp;|&nbsp; <a id="val_mdns_link" href="#" target="_blank"><span id="val_mdns">...</span></a></p>
+            <p><b>RSSI:</b> <span id="val_rssi">...</span> dBm</p>
+            <p><b>MQTT Modus:</b> <span id="val_mode">...</span></p>
+            <p><b>MQTT Status:</b> <span id="val_mqtt">...</span></p>
+            <p><b>Root Topic:</b> <span id="val_root">...</span></p>
+            <p><b>Firmware Version:</b> <span id="val_version">...</span></p>
         </div>
     </div>
 
-    <div class="card card-wide">
-        <h3>Einstellungen</h3>
+    <div class="card collapsible" data-collapsible="trigger">
+        <h3 tabindex="0" role="button" aria-expanded="true">Bridge Trigger</h3>
+        <div class="card-body">
+            <div class="trigger-container">
+                <button class="trigger-btn" onclick="triggerPin(1)">Trigger 1</button>
+                <button class="trigger-btn" onclick="triggerPin(2)">Trigger 2</button>
+                <button class="trigger-btn" onclick="triggerPin(3)">Trigger 3</button>
+                <button class="trigger-btn" onclick="triggerPin(4)">Trigger 4</button>
+                <button class="trigger-btn" onclick="triggerPin(5)">Trigger 5</button>
+            </div>
+            <hr>
+            <label>Triggernummer (1-99):</label>
+            <input type="number" id="customTriggerPin" min="1" max="99" value="6">
+            <button onclick="triggerCustomPin()">Trigger senden</button>
+        </div>
+    </div>
+
+    <div class="card card-wide collapsible" data-collapsible="diag">
+        <h3 tabindex="0" role="button" aria-expanded="true">Diagnose / Live-Log</h3>
+        <div class="card-body">
+            <div id="diagLog" class="diag-log"></div>
+            <div class="diag-actions">
+                <button class="btn-sm" onclick="clearDiagLog()">Log leeren</button>
+                <button class="btn-sm" onclick="triggerSilent(1)">Test Aktion 1</button>
+                <button class="btn-sm" onclick="triggerSilent(2)">Test Aktion 2</button>
+                <button class="btn-sm" onclick="triggerSilent(3)">Test Aktion 3</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card card-wide collapsible collapsed" data-collapsible="settings">
+        <h3 tabindex="0" role="button" aria-expanded="false">Einstellungen</h3>
+        <div class="card-body">
         <form id="settingsForm" onsubmit="saveSettings(event)">
             <h4>WLAN</h4>
             <label>SSID:</label>
@@ -363,6 +398,7 @@
             <button type="submit" id="saveBtn">Einstellungen speichern</button>
         </form>
         <div id="saveMsg"></div>
+        </div>
     </div>
 
     </div>
@@ -512,10 +548,44 @@
             src.addEventListener('log', function(e) { appendLogLine(e.data); });
         })();
 
+        function initCollapsibleCards() {
+            const cards = document.querySelectorAll('.card.collapsible');
+            const mobile = window.matchMedia('(max-width: 860px)').matches;
+
+            cards.forEach(card => {
+                const header = card.querySelector('h3');
+                if (!header) return;
+
+                if (!header.dataset.bound) {
+                    const toggle = () => {
+                        if (!window.matchMedia('(max-width: 860px)').matches) return;
+                        card.classList.toggle('collapsed');
+                        header.setAttribute('aria-expanded', card.classList.contains('collapsed') ? 'false' : 'true');
+                    };
+                    header.addEventListener('click', toggle);
+                    header.addEventListener('keydown', (ev) => {
+                        if (ev.key === 'Enter' || ev.key === ' ') {
+                            ev.preventDefault();
+                            toggle();
+                        }
+                    });
+                    header.dataset.bound = '1';
+                }
+
+                if (!mobile) {
+                    card.classList.remove('collapsed');
+                    header.setAttribute('aria-expanded', 'true');
+                }
+            });
+        }
+
+        window.addEventListener('resize', initCollapsibleCards);
+
         window.onload = () => {
             loadStatus();
             loadSettings();
             loadLogHistory();
+            initCollapsibleCards();
             setInterval(loadStatus, 5000);
         };
     </script>
