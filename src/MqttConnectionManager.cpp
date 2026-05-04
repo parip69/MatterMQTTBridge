@@ -467,6 +467,12 @@ void MqttConnectionManager::_parseServerString(const String &serverConfig, int f
 
 bool MqttConnectionManager::publishMqttMessage(const String &topic, const String &payload, bool retain, int qos)
 {
+    if (!mqttClient.connected())
+    {
+        LOG_PRINTF("[CLIENT] publish skipped (disconnected): %s -> %s\n", topic.c_str(), payload.c_str());
+        return false;
+    }
+
     uint16_t packetId = mqttClient.publish(topic.c_str(), qos, retain, payload.c_str());
     return packetId != 0;
 }

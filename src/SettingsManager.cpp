@@ -1,6 +1,21 @@
 // Beschreibung: 🎉2.0.0 erste wo alles get mit dem Templade dowenload🎉
 #include "SettingsManager.h"
 
+namespace {
+String normalizeMqttRootTopicValue(const String &rawTopic)
+{
+    String root = rawTopic;
+    root.trim();
+    if (root.isEmpty()) {
+        return "fingerprint";
+    }
+    while (root.endsWith("/")) {
+        root.remove(root.length() - 1);
+    }
+    return root;
+}
+}
+
 
 bool SettingsManager::loadWifiSettings()
 {
@@ -38,9 +53,8 @@ bool SettingsManager::loadAppSettings()
     loaded.mqttUsername = preferences.getString("mqttUsername", loaded.mqttUsername);
     loaded.mqttPassword = preferences.getString("mqttPassword", loaded.mqttPassword);
     
-    String rt = preferences.getString("mqttRootTopic", loaded.mqttRootTopic);
-    if(rt.isEmpty()) rt = "fingerprint";
-    loaded.mqttRootTopic = rt;
+    loaded.mqttRootTopic = normalizeMqttRootTopicValue(
+        preferences.getString("mqttRootTopic", loaded.mqttRootTopic));
     
     loaded.ntpServer = preferences.getString("ntpServer", loaded.ntpServer);
     loaded.ntpOffset = preferences.getString("ntpOffset", loaded.ntpOffset);
@@ -94,7 +108,7 @@ void SettingsManager::saveAppSettings()
     preferences.putString("mqttServer", localCopy.mqttServer);
     preferences.putString("mqttUsername", localCopy.mqttUsername);
     preferences.putString("mqttPassword", localCopy.mqttPassword);
-    preferences.putString("mqttRootTopic", localCopy.mqttRootTopic);
+    preferences.putString("mqttRootTopic", normalizeMqttRootTopicValue(localCopy.mqttRootTopic));
     preferences.putString("ntpServer", localCopy.ntpServer);
     preferences.putString("ntpOffset", localCopy.ntpOffset);
     preferences.putString("passwordSetup", localCopy.passwordSetup);
@@ -140,6 +154,7 @@ AppSettings SettingsManager::getAppSettings()
 void SettingsManager::saveAppSettings(const AppSettings& newSettings)
 {
     AppSettings normalized = newSettings;
+    normalized.mqttRootTopic = normalizeMqttRootTopicValue(normalized.mqttRootTopic);
     if (settingsMutex && xSemaphoreTake(settingsMutex, pdMS_TO_TICKS(100)) == pdTRUE) {
         appSettings = normalized; xSemaphoreGive(settingsMutex);
     } else {

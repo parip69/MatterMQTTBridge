@@ -2,7 +2,7 @@
 //******************************************************
 //         Main of MatterMQTTBridge.
 // nur hier die start wert der version Aendern.OK=======
-// @version: 2.2.798 <br> Builddatum 16:14:26 04-05.2026
+// @version: 2.2.802 <br> Builddatum 18:08:22 04-05.2026
 //****************************************************
 
 #include <Arduino.h>
@@ -26,7 +26,7 @@
 #endif
 
 // ======================= GLOBALS =======================
-const char* firmwareVersion = "2.2.798 <br> Builddatum 16:14:26 04-05.2026";
+const char* firmwareVersion = "2.2.802 <br> Builddatum 18:08:22 04-05.2026";
 AsyncWebServer webServer(80);
 SettingsManager settingsManager;
 
@@ -251,9 +251,18 @@ void setupRouting() {
         restartAtMs = millis() + 1000UL;
     });
 
-    // Statische Dateien immer nach den API-Routen registrieren,
-    // damit /api/... nicht vom Dateihandler abgefangen wird.
-    webServer.serveStatic("/", LittleFS, "/").setDefaultFile("index.html");
+    // Statische Dateien explizit registrieren, damit /api/... nie in den Dateihandler fällt.
+    webServer.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
+        request->send(LittleFS, "/index.html", "text/html");
+    });
+    webServer.on("/index.html", HTTP_GET, [](AsyncWebServerRequest *request) {
+        request->send(LittleFS, "/index.html", "text/html");
+    });
+    webServer.serveStatic("/bootstrap.min.css", LittleFS, "/bootstrap.min.css");
+    webServer.serveStatic("/icon-192.png", LittleFS, "/icon-192.png");
+    webServer.serveStatic("/login.html", LittleFS, "/login.html");
+    webServer.serveStatic("/settings.html", LittleFS, "/settings.html");
+    webServer.serveStatic("/wificonfig.html", LittleFS, "/wificonfig.html");
 
     webServer.addHandler(&events);
     ElegantOTA.begin(&webServer);
