@@ -346,6 +346,17 @@
         </div>
     </div>
 
+    <div class="card collapsible" data-collapsible="matter">
+        <h3 tabindex="0" role="button" aria-expanded="true">Matter</h3>
+        <div class="card-body">
+            <p><b>Status:</b> <span id="matter_ready">...</span></p>
+            <p><b>Pairing-Code:</b> <span id="matter_pairing_code">...</span></p>
+            <p><b>QR-Text:</b> <span id="matter_qr_text">...</span></p>
+            <!-- TODO: Lokale QR-Code-Generierung (ohne Internet-Abhaengigkeit) nachruesten -->
+            <button onclick="startMatterPairing()">Matter Pairing starten</button>
+        </div>
+    </div>
+
     <div class="card card-wide collapsible" data-collapsible="diag">
         <h3 tabindex="0" role="button" aria-expanded="true">Diagnose / Live-Log</h3>
         <div class="card-body">
@@ -442,6 +453,48 @@
                     if(data.mqttRootTopic) document.getElementById('mqttRootTopic').value = data.mqttRootTopic;
                 })
                 .catch(err => console.error("Settings error:", err));
+        }
+
+        function updateMatterView(data) {
+            const ready = !!(data && data.ready);
+            const pairingCode = (data && data.pairingCode) ? data.pairingCode : '-';
+            const qrCode = (data && data.qrCode) ? data.qrCode : '-';
+
+            document.getElementById('matter_ready').innerText = ready ? 'bereit' : 'nicht bereit';
+            document.getElementById('matter_pairing_code').innerText = pairingCode;
+            document.getElementById('matter_qr_text').innerText = qrCode;
+        }
+
+        function loadMatterStatus() {
+            fetch('/api/matter/status')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.ok) {
+                        updateMatterView(data);
+                    }
+                })
+                .catch(err => console.error('Matter status error:', err));
+        }
+
+        function startMatterPairing() {
+            appendLogLine('Matter Pairing starten angefordert');
+            fetch('/api/matter/pairing/start')
+                .then(res => res.json())
+                .then(data => {
+                    updateMatterView({
+                        ready: data.ok,
+                        pairingCode: data.pairingCode,
+                        qrCode: data.qrCode
+                    });
+                    if (data.ok) {
+                        appendLogLine('Matter Pairing gestartet');
+                    } else {
+                        appendLogLine('Matter Pairing fehlgeschlagen');
+                    }
+                })
+                .catch(err => {
+                    appendLogLine('Matter Pairing Fehler: ' + err);
+                });
         }
 
         function triggerPin(pin) {
@@ -588,9 +641,11 @@
         window.onload = () => {
             loadStatus();
             loadSettings();
+            loadMatterStatus();
             loadLogHistory();
             initCollapsibleCards();
             setInterval(loadStatus, 5000);
+            setInterval(loadMatterStatus, 5000);
         };
     </script>
 </body>

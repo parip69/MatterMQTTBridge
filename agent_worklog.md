@@ -1,5 +1,36 @@
 ## 4. Mai 2026 - Versionsanzeige ohne <br>-Tag
 
+## 4. Mai 2026 - Matter-Grundintegration: Framework-Blocker sauber verifiziert
+
+**Aufgabe:** Erste echte Matter-Basis (On/Off + Pairing) vorbereiten und Build-Sicherheit prüfen
+
+**Durchgeführte Aktionen:**
+- `platformio.ini` geprüft: aktuelle Toolchain ist `espressif32 @ 6.13.0` mit `framework-arduinoespressif32 @ 3.20017.241212+sha.dcc1105b`.
+- Matter-Verfügbarkeit direkt im installierten Framework verifiziert:
+	- geprüft auf `C:\Users\gerha\.platformio\packages\framework-arduinoespressif32\libraries\Matter\src\Matter.h`
+	- Ergebnis: **nicht vorhanden** (`MatterPathExists=False`).
+- Rekursive Suche im Framework nach `Matter.h` ausgeführt: kein Treffer.
+- Gleichzeitig validiert, dass der aktuelle Stand weiterhin sauber baut: Task `B Bridge` erfolgreich.
+- Partitionen geprüft (`partitions.csv`): `app0/app1 = 0x1b0000` je OTA-Slot, damit von der Größe her grundsätzlich Matter-tauglich.
+
+**Technische Ursache:**
+- Das in PlatformIO aktuell installierte Arduino-ESP32-Paket enthält die Matter-Library nicht, daher würde eine Integration mit `#include <Matter.h>` in diesem Zustand in einen Compile-Fehler laufen (`Matter.h` nicht gefunden).
+
+**Empfohlene platformio.ini-Anpassung (Vorschlag, nicht blind übernommen):**
+- Entweder auf eine Platform/Framework-Kombination wechseln, die `libraries/Matter/src/Matter.h` tatsächlich mitliefert.
+- Praxisnaher Weg: `framework-arduinoespressif32` aus einem Arduino-ESP32-Tag beziehen, in dem Matter enthalten ist (vor Einsatz lokal prüfen, ob die Datei nach Paket-Download vorhanden ist).
+- C++17 beibehalten.
+
+**Partitionsempfehlung:**
+- Aktuelle `partitions.csv` kann beibehalten werden; aus Größenperspektive ist kein sofortiger Umbau notwendig.
+- Falls später Matter-Features stark wachsen, optional auf eine noch großzügigere OTA-Partition prüfen.
+
+**Ergebnis:**
+- **FAIL (bewusst ohne zerstörerische Änderungen):** Matter-Integration wurde nicht erzwungen, weil die benötigte Matter-API im aktiven Framework fehlt.
+- Bestehender Bridge-Stand (WLAN/Web/OTA/MQTT) bleibt unverändert funktionsfähig.
+
+---
+
 **Aufgabe:** `<br>` in der Firmware-Version auf der Weboberfläche ausblenden
 
 **Durchgeführte Aktionen:**
