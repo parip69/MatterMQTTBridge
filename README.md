@@ -1,51 +1,23 @@
 # MatterMQTTBridge
 
-**Version:** MatterMQTTBridge_BachnerGerhard_Ver1
-
 ## Beschreibung
+Schlanke ESP32 MQTT-Bridge-Basis als Zwischenschritt.
+Dies ist die bereinigte Firmware, die später für die Matter-Integration verwendet werden soll.
+Sie enthält nur:
+- WLAN
+- Webserver
+- OTA
+- MQTT Broker/Client
+- Bridge-Trigger API
 
-ESP32-basierte Matter-zu-MQTT-Bridge für den bestehenden Fingerprint-ESP32.
-
-Der Fingerprint-ESP32 bleibt die Zentrale und kann weiterhin als MQTT-Broker laufen.
-Diese Bridge läuft nur als MQTT-Client und verbindet Matter / Google Home mit dem bestehenden System.
-
-## Ziele
-
-- Matter / Google Home anbinden
-- MQTT-Befehle an Fingerprint senden
-- MQTT-Sensorwerte empfangen
-- Kleine Weboberfläche für WLAN, MQTT, Matter und OTA
-- ElegantOTA unter `/update`
-- Matter Pairing-Code und QR-Code im Web und im Serial Monitor
-
-## Architektur
-
-```
-Matter / Google Home
-  → MatterMQTTBridge (dieser ESP32)
-    → MQTT Client
-      → Fingerprint-ESP32 MQTT-Broker
-        → bestehende Output-/Trigger-/Modul-Logik
-```
+Der Fingerprint-ESP bleibt weiterhin die Hauptzentrale. Die Trigger werden über Topic `<mqttRootTopic>/TriggerOutPin` an diesen gemeldet.
 
 ## Build
-
 ```bash
-# Firmware bauen
-pio run -e max
-
-# Filesystem bauen
-pio run -e max -t buildfs
-
-# Flashen
-pio run -e max -t upload
-pio run -e max -t uploadfs
+pio run -e bridge
+pio run -e bridge -t buildfs
+pio run -e bridge -t uploadfs
+pio run -e bridge -t upload
 ```
 
-## Projektregeln
-
-Siehe [PROJECT_RULES.md](PROJECT_RULES.md)
-
-## TODO
-
-Siehe [TODO_BRIDGE.md](TODO_BRIDGE.md)
+Matter ist noch nicht eingebaut! Google Home ist noch nicht aktiv!

@@ -2,5 +2,6 @@
 #pragma once
 #include <Arduino.h>
 
-// Sendet einen MQTT-Trigger-Befehl über den konfigurierten Root-Topic
-void bridgeSendTrigger(uint8_t triggerNumber);
+bool bridgeSendTrigger(uint8_t triggerNumber);
+String bridgeTriggerTopic();
+String bridgeTriggerPayload(uint8_t triggerNumber);

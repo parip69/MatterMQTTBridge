@@ -24,3 +24,23 @@
 
 **Nächste Schritte:** Laut TODO_BRIDGE.md Schritt 2 – Fingerprint-spezifische Module deaktivieren/entfernen.
 
+## 4. Mai 2026 - Schritt 3: Abbau Legacy-Komponenten und minimalistische Bridge-Basis
+
+**Aufgabe:** Teil 3: Finaler harter Schnitt zur echten Bridge-Basis
+
+**Durchgeführte Aktionen:**
+- Alte `src/main.cpp` nach `doc/legacy_fingerprint_modules/main_legacy.cpp` verschoben
+- Schlanke neue `src/main.cpp` mit Basis (WLAN, OTA, MQTT, Web) erstellt
+- `SettingsManager` von Legacy-Feldern befreit
+- `data/index.html` und `data/settings.html` neu & klein aufgebaut
+- `Bridge.cpp` für API TriggerOutPin umgeschrieben 
+- Build-Check `pio run -e bridge` ausgeführt
+...
+
+**Geänderte Dateien:**
+- `src/main.cpp`
+- `src/SettingsManager.h`, `src/SettingsManager.cpp`
+- `src/Bridge.h`, `src/Bridge.cpp`
+- `data/index.html`, `data/settings.html`, `data/wificonfig.html`
+- `platformio.ini`, `README.md`, `TODO_BRIDGE.md`
+- `doc/CODEX_MATTER_MQTT_BRIDGE_ABBAU_REPORT.md` (neuer Report)
