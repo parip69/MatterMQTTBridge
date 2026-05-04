@@ -7,20 +7,26 @@
     <title>MatterMQTTBridge</title>
     <style>
         body { background-color: #383737; color: white; font-family: sans-serif; padding: 20px; text-align: center; }
-        .card { background-color: #8d8d8d; padding: 15px; border-radius: 8px; margin-bottom: 20px; max-width: 400px; margin-left: auto; margin-right: auto; }
-        button { background-color: #4CAF50; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; margin: 5px; font-size: 16px; }
+        .card { background-color: #8d8d8d; padding: 15px; border-radius: 8px; margin-bottom: 20px; max-width: 400px; margin-left: auto; margin-right: auto; text-align: left; }
+        .card h3 { text-align: center; margin-top: 0; }
+        button { background-color: #4CAF50; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; margin: 5px; font-size: 16px; width: 100%; box-sizing: border-box; }
         button:hover { background-color: #45a049; }
+        button.trigger-btn { width: auto; }
+        .nav-links { margin-bottom: 20px; }
         a { color: #81D4FA; text-decoration: none; font-weight: bold; margin: 0 10px; }
         a:hover { text-decoration: underline; }
-        .nav-links { margin-top: 20px; margin-bottom: 20px; }
+        label { display: block; margin-top: 10px; font-weight: bold; }
+        input, select { width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box; }
+        hr { border: 1px solid #777; margin: 15px 0; }
+        .trigger-container { text-align: center; }
     </style>
 </head>
 <body>
     <h1>MatterMQTTBridge</h1>
     
     <div class="nav-links">
-        <a href="/settings.html">⚙️ Settings</a>
         <a href="/update">🔄 OTA Update</a>
+        <a href="#" onclick="restartBridge()">🔄 Neustart</a>
     </div>
 
     <div class="card">
@@ -34,12 +40,58 @@
     </div>
 
     <div class="card">
-        <h3>Trigger Test (1-5)</h3>
-        <button onclick="triggerPin(1)">Trigger 1</button>
-        <button onclick="triggerPin(2)">Trigger 2</button>
-        <button onclick="triggerPin(3)">Trigger 3</button>
-        <button onclick="triggerPin(4)">Trigger 4</button>
-        <button onclick="triggerPin(5)">Trigger 5</button>
+        <h3>Bridge Trigger</h3>
+        <div class="trigger-container">
+            <button class="trigger-btn" onclick="triggerPin(1)">Trigger 1</button>
+            <button class="trigger-btn" onclick="triggerPin(2)">Trigger 2</button>
+            <button class="trigger-btn" onclick="triggerPin(3)">Trigger 3</button>
+            <button class="trigger-btn" onclick="triggerPin(4)">Trigger 4</button>
+            <button class="trigger-btn" onclick="triggerPin(5)">Trigger 5</button>
+        </div>
+        <hr>
+        <label>Triggernummer (1-99):</label>
+        <input type="number" id="customTriggerPin" min="1" max="99" value="6">
+        <button onclick="triggerCustomPin()">Trigger senden</button>
+    </div>
+
+    <div class="card">
+        <h3>Einstellungen</h3>
+        <form id="settingsForm" onsubmit="saveSettings(event)">
+            <h4>WLAN</h4>
+            <label>SSID:</label>
+            <input type="text" name="ssid" id="ssid">
+            <label>Passwort:</label>
+            <input type="password" name="password" id="password" placeholder="Nur bei Änderung ausfüllen">
+            <label>Hostname:</label>
+            <input type="text" name="hostname" id="hostname">
+            
+            <hr>
+            <h4>MQTT</h4>
+            <label>MQTT Modus:</label>
+            <select name="mqtt_mode" id="mqtt_mode">
+                <option value="off">Aus</option>
+                <option value="broker">Broker</option>
+                <option value="client">Client</option>
+            </select>
+            <label>MQTT Host:</label>
+            <input type="text" name="mqttServer" id="mqttServer">
+            <label>MQTT Port:</label>
+            <input type="text" name="mqtt_port" id="mqtt_port">
+            <label>MQTT Benutzer:</label>
+            <input type="text" name="mqttUsername" id="mqttUsername">
+            <label>MQTT Passwort:</label>
+            <input type="password" name="mqttPassword" id="mqttPassword" placeholder="Nur bei Änderung ausfüllen">
+            <label>MQTT Root Topic:</label>
+            <input type="text" name="mqttRootTopic" id="mqttRootTopic">
+            
+            <hr>
+            <h4>Web</h4>
+            <label>Admin Passwort:</label>
+            <input type="password" name="passwordAdmin" id="passwordAdmin" placeholder="Nur bei Änderung ausfüllen">
+
+            <button type="submit" id="saveBtn">Einstellungen speichern</button>
+        </form>
+        <div id="saveMsg" style="color: #4CAF50; font-weight: bold; margin-top: 10px; text-align: center;"></div>
     </div>
 
     <script>
@@ -59,12 +111,27 @@
                 .catch(err => console.error("Status error:", err));
         }
 
+        function loadSettings() {
+            fetch('/api/settings')
+                .then(res => res.json())
+                .then(data => {
+                    if(data.ssid) document.getElementById('ssid').value = data.ssid;
+                    if(data.hostname) document.getElementById('hostname').value = data.hostname;
+                    if(data.mqtt_mode) document.getElementById('mqtt_mode').value = data.mqtt_mode;
+                    if(data.mqttServer) document.getElementById('mqttServer').value = data.mqttServer;
+                    if(data.mqtt_port) document.getElementById('mqtt_port').value = data.mqtt_port;
+                    if(data.mqttUsername) document.getElementById('mqttUsername').value = data.mqttUsername;
+                    if(data.mqttRootTopic) document.getElementById('mqttRootTopic').value = data.mqttRootTopic;
+                })
+                .catch(err => console.error("Settings error:", err));
+        }
+
         function triggerPin(pin) {
             fetch('/api/bridge/trigger?pin=' + pin)
                 .then(res => res.json())
                 .then(data => {
                     if (data.ok) {
-                        alert("Trigger " + pin + " gesendet an " + data.topic);
+                        alert("Trigger " + pin + " gesendet\nTopic: " + data.topic + "\nPayload: " + data.payload);
                     } else {
                         alert("Fehler: " + data.error);
                     }
@@ -72,8 +139,53 @@
                 .catch(err => alert("Trigger fehlgeschlagen: " + err));
         }
 
+        function triggerCustomPin() {
+            let pin = document.getElementById("customTriggerPin").value;
+            triggerPin(pin);
+        }
+
+        function saveSettings(e) {
+            e.preventDefault();
+            const form = document.getElementById('settingsForm');
+            const data = new URLSearchParams(new FormData(form));
+            const saveBtn = document.getElementById('saveBtn');
+            const saveMsg = document.getElementById('saveMsg');
+            
+            saveBtn.disabled = true;
+            saveBtn.innerText = "Speichere...";
+            saveMsg.innerText = "";
+
+            fetch('/save_settings', {
+                method: 'POST',
+                body: data,
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                }
+            })
+            .then(res => res.text())
+            .then(text => {
+                saveMsg.innerText = text;
+            })
+            .catch(err => {
+                saveMsg.style.color = "red";
+                saveMsg.innerText = "Fehler beim Speichern: " + err;
+                saveBtn.disabled = false;
+                saveBtn.innerText = "Einstellungen speichern";
+            });
+        }
+
+        function restartBridge() {
+            if(confirm("Bridge wirklich neu starten?")) {
+                fetch('/api/restart')
+                    .then(res => res.text())
+                    .then(text => alert(text))
+                    .catch(err => alert("Fehler: " + err));
+            }
+        }
+
         window.onload = () => {
             loadStatus();
+            loadSettings();
             setInterval(loadStatus, 5000);
         };
     </script>

@@ -5,7 +5,13 @@ extern bool publishMqttMessage(const String &topic, const String &message, bool 
 extern String mqttRootTopic;
 
 String bridgeTriggerTopic() {
-    return mqttRootTopic + "/TriggerOutPin";
+    String root = mqttRootTopic;
+    root.trim();
+    if (root.isEmpty()) root = "fingerprint";
+    while (root.endsWith("/")) {
+        root.remove(root.length() - 1);
+    }
+    return root + "/TriggerOutPin";
 }
 
 String bridgeTriggerPayload(uint8_t triggerNumber) {

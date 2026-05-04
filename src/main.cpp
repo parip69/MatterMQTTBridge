@@ -34,6 +34,9 @@ String mqttRootTopic = "fingerprint";
 SemaphoreHandle_t networkMutex = xSemaphoreCreateMutex();
 volatile bool timeSet = false;
 
+static bool restartPending = false;
+static uint32_t restartAtMs = 0;
+
 AsyncEventSource events("/events");
 
 #if USE_MQTT_CLIENT
@@ -55,7 +58,7 @@ bool isBootNetworkGraceActive() {
 }
 
 bool hasActiveWebClients() {
-    return true; 
+    return events.count() > 0;
 }
 
 void notifyClients(String message, const char *sourceTag) {
@@ -114,14 +117,17 @@ void setupRouting() {
         doc["rssi"] = WiFi.RSSI();
         doc["version"] = firmwareVersion;
 
-        bool mqttConnected = false;
+        doc["mqtt"] = "disabled";
         #if USE_MQTT_CLIENT
-        if(settingsManager.getAppSettings().mqtt_isClient) mqttConnected = mqttClient.connected();
+        if(settingsManager.getAppSettings().mqtt_isClient) {
+            doc["mqtt"] = mqttClient.connected() ? "connected" : "disconnected";
+        }
         #endif
         #if USE_MQTT_BROKER
-        if(settingsManager.getAppSettings().mqtt_isBroker) mqttConnected = true; // broker is always "connected" locally
+        if(settingsManager.getAppSettings().mqtt_isBroker) {
+            doc["mqtt"] = "broker";
+        }
         #endif
-        doc["mqtt"] = mqttConnected ? "connected" : "disconnected";
 
         String resp;
         serializeJson(doc, resp);
@@ -166,8 +172,8 @@ void setupRouting() {
         settingsManager.saveAppSettings(as);
 
         request->send(200, "text/plain", "Einstellungen gespeichert. Neustart...");
-        delay(1000);
-        ESP.restart();
+        restartPending = true;
+        restartAtMs = millis() + 1000UL;
     });
 
     // Settings laden
@@ -230,6 +236,12 @@ void setupRouting() {
         request->send(sent ? 200 : 500, "application/json", resp);
     });
 
+    webServer.on("/api/restart", HTTP_GET, [](AsyncWebServerRequest *request) {
+        request->send(200, "text/plain", "Restarting...");
+        restartPending = true;
+        restartAtMs = millis() + 1000UL;
+    });
+
     webServer.addHandler(&events);
     ElegantOTA.begin(&webServer);
 }
@@ -246,7 +258,15 @@ void setup() {
 
     settingsManager.loadWifiSettings();
     settingsManager.loadAppSettings();
+    
     mqttRootTopic = settingsManager.getAppSettings().mqttRootTopic;
+    mqttRootTopic.trim();
+    if (mqttRootTopic.isEmpty()) {
+        mqttRootTopic = "fingerprint";
+    }
+    while (mqttRootTopic.endsWith("/")) {
+        mqttRootTopic.remove(mqttRootTopic.length() - 1);
+    }
 
     WifiSettings ws = settingsManager.getWifiSettings();
     if (ws.ssid.isEmpty()) {
@@ -308,6 +328,10 @@ void loop() {
         mqttManager.loop();
     }
 #endif
+
+    if (restartPending && millis() >= restartAtMs) {
+        ESP.restart();
+    }
 
     delay(10);
 }

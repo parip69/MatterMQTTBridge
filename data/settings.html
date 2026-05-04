@@ -1,78 +1,10 @@
 <!-- Beschreibung: 2.0.0 erste wo alles get mit dem Templade dowenload -->
 <!DOCTYPE html>
-<html lang="de">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MatterMQTTBridge Settings</title>
-    <style>
-        body { background-color: #383737; color: white; font-family: sans-serif; padding: 20px; text-align: center; }
-        .card { background-color: #8d8d8d; padding: 20px; border-radius: 8px; max-width: 400px; margin: 0 auto 20px auto; text-align: left; }
-        label { display: block; margin-top: 10px; font-weight: bold; }
-        input, select { width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box; }
-        button { background-color: #4CAF50; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; width: 100%; margin-top: 20px; font-size: 16px; }
-        button:hover { background-color: #45a049; }
-        a { color: #81D4FA; text-decoration: none; font-weight: bold; }
-        a:hover { text-decoration: underline; }
-    </style>
+<meta http-equiv="refresh" content="0; url=/">
 </head>
 <body>
-    <h1>MatterMQTTBridge Settings</h1>
-    <a href="/">⬅️ Zurück zur Startseite</a>
-
-    <form action="/save_settings" method="POST" class="card">
-        <h3>WLAN Einstellungen</h3>
-        <label>SSID:</label>
-        <input type="text" name="ssid" id="ssid">
-        <label>Passwort:</label>
-        <input type="password" name="password" id="password">
-        <label>Hostname:</label>
-        <input type="text" name="hostname" id="hostname" value="MatterMQTTBridge">
-        <label>Admin Passwort:</label>
-        <input type="password" name="passwordAdmin" id="passwordAdmin">
-
-        <hr>
-        <h3>MQTT Einstellungen</h3>
-        <label>MQTT Modus:</label>
-        <select name="mqtt_mode" id="mqtt_mode">
-            <option value="off">Deaktiviert</option>
-            <option value="broker">Lokaler Broker (ESP)</option>
-            <option value="client">Client (verbindet zu externem Broker)</option>
-        </select>
-
-        <label>MQTT Host / IP:</label>
-        <input type="text" name="mqttServer" id="mqttServer">
-        
-        <label>MQTT Port:</label>
-        <input type="text" name="mqtt_port" id="mqtt_port" value="1883">
-        
-        <label>MQTT Benutzer:</label>
-        <input type="text" name="mqttUsername" id="mqttUsername">
-        
-        <label>MQTT Passwort:</label>
-        <input type="password" name="mqttPassword" id="mqttPassword">
-        
-        <label>Root Topic:</label>
-        <input type="text" name="mqttRootTopic" id="mqttRootTopic" value="fingerprint">
-
-        <button type="submit">Speichern & Neustart</button>
-    </form>
-
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            fetch('/api/settings')
-                .then(response => response.json())
-                .then(data => {
-                    if(data.ssid) document.getElementById('ssid').value = data.ssid;
-                    if(data.hostname) document.getElementById('hostname').value = data.hostname;
-                    if(data.mqtt_mode) document.getElementById('mqtt_mode').value = data.mqtt_mode;
-                    if(data.mqttServer) document.getElementById('mqttServer').value = data.mqttServer;
-                    if(data.mqtt_port) document.getElementById('mqtt_port').value = data.mqtt_port;
-                    if(data.mqttUsername) document.getElementById('mqttUsername').value = data.mqttUsername;
-                    if(data.mqttRootTopic) document.getElementById('mqttRootTopic').value = data.mqttRootTopic;
-                })
-                .catch(err => console.error('Error loading settings:', err));
-        });
-    </script>
+<a href="/">Weiter zur MatterMQTTBridge</a>
 </body>
 </html>
