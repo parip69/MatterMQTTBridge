@@ -1,3 +1,17 @@
+## 4. Mai 2026 - Versionsanzeige ohne <br>-Tag
+
+**Aufgabe:** `<br>` in der Firmware-Version auf der Weboberfläche ausblenden
+
+**Durchgeführte Aktionen:**
+- `data/index.html`: In `loadStatus()` die Versionsanzeige bereinigt (`<br>` wird zu Leerzeichen normalisiert)
+- Anzeige bleibt Text-basiert, keine HTML-Ausführung erforderlich
+- `U FS` erfolgreich auf COM4 übertragen
+
+**Ergebnis:**
+- In „Firmware Version“ erscheint kein störendes `<br>` mehr
+
+---
+
 ## 4. Mai 2026 - Compact Mobile mit einklappbaren Karten
 
 **Aufgabe:** Kurze mobile Ansicht mit einklappbaren Sektionen umsetzen
