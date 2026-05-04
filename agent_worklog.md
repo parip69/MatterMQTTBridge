@@ -130,3 +130,24 @@
 - `data/settings.html`
 
 **Build-Status:** Statische Prüfung bestanden (kein ESP32-Compiler verfügbar in CI-Umgebung).
+
+## 4. Session - Bridge-API-Endpunkte hinzugefügt
+
+**Datum:** 03-05.2026
+
+**Aufgabe:** Bridge-Status-API und Bridge-Trigger-API in main.cpp einbauen (fehlten noch nach Phase-1-Schnitt).
+
+**Durchgeführte Aktionen:**
+- `/api/bridge/status` (GET): JSON-Antwort mit hostname, uptime_ms, mqtt_status, mqtt_mode, mqtt_root_topic, wifi_rssi, wifi_connected, heap_free
+- `/api/bridge/trigger` (POST, Parameter `id=0..255`): Ruft `bridgeSendTrigger(id)` auf, sendet MQTT via `makeTopic("trigger/N")`
+- Beide Endpunkte Auth-gesichert (Login-Prüfung)
+- Endpunkte in `startWebserver()` eingefügt (direkt vor `/reboot`-Handler)
+
+**Geänderte Dateien:**
+- `src/main.cpp` (Bridge-API-Endpunkte hinzugefügt, ~55 Zeilen)
+
+**Versionsnummern:** UNBERÜHRT
+
+**Build-Status:** Statische Prüfung bestanden – kein ESP32-Compiler in CI-Umgebung verfügbar.
+
+---

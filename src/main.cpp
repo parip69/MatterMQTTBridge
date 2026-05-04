@@ -3003,6 +3003,62 @@ void startWebserver()
 	}
 #endif
 
+	// ===== Bridge-Status-API =====
+	webServer.on("/api/bridge/status", HTTP_GET, [](AsyncWebServerRequest *request) {
+		noteHttpActivity(request);
+		if (!(loggedIn || ENABLE_PASSWORD != "on")) {
+			request->send(401, "application/json", "{\"error\":\"Nicht angemeldet\"}");
+			return;
+		}
+		const AppSettings app = settingsManager.getAppSettings();
+		const WifiSettings wifi = settingsManager.getWifiSettings();
+		String json;
+		json.reserve(256);
+		json = "{";
+		json += "\"hostname\":\"" + wifi.hostname + "\",";
+		json += "\"uptime_ms\":" + String(millis()) + ",";
+#if USE_MQTT_ANY
+		json += "\"mqtt_status\":\"" + mqttStatusString + "\",";
+		json += "\"mqtt_mode\":\"" + getModeString() + "\",";
+#else
+		json += "\"mqtt_status\":\"disabled\",";
+		json += "\"mqtt_mode\":\"off\",";
+#endif
+		json += "\"mqtt_root_topic\":\"" + app.mqttRootTopic + "\",";
+		json += "\"wifi_rssi\":" + String(WiFi.RSSI()) + ",";
+		json += "\"wifi_connected\":" + String(WiFi.status() == WL_CONNECTED ? "true" : "false") + ",";
+		json += "\"heap_free\":" + String(ESP.getFreeHeap());
+		json += "}";
+		AsyncWebServerResponse *response = request->beginResponse(200, "application/json", json);
+		response->addHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+		request->send(response);
+	});
+
+	// ===== Bridge-Trigger-API =====
+	webServer.on("/api/bridge/trigger", HTTP_POST, [](AsyncWebServerRequest *request) {
+		noteHttpActivity(request);
+		if (!(loggedIn || ENABLE_PASSWORD != "on")) {
+			request->send(401, "application/json", "{\"error\":\"Nicht angemeldet\"}");
+			return;
+		}
+#if USE_MQTT_CLIENT
+		if (!request->hasArg("id")) {
+			request->send(400, "application/json", "{\"error\":\"Parameter id fehlt\"}");
+			return;
+		}
+		int triggerId = request->arg("id").toInt();
+		if (triggerId < 0 || triggerId > 255) {
+			request->send(400, "application/json", "{\"error\":\"id ungueltig (0-255)\"}");
+			return;
+		}
+		bridgeSendTrigger((uint8_t)triggerId);
+		notifyClients("Bridge-Trigger " + String(triggerId) + " gesendet", "[API]");
+		request->send(200, "application/json", "{\"ok\":true,\"trigger\":" + String(triggerId) + "}");
+#else
+		request->send(503, "application/json", "{\"error\":\"MQTT Client nicht kompiliert\"}");
+#endif
+	});
+
 	// common url callbacks ESP.restart();
 	webServer.on("/reboot", HTTP_GET, [](AsyncWebServerRequest *request)
 				 {
