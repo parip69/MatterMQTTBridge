@@ -71,3 +71,62 @@
 **Geänderte Dateien:**
 - `src/SettingsManager.h` (Duplikat-Felder entfernt)
 - `src/main.cpp` (/editFingerprints-Stub)
+
+---
+
+## Phase-1-Schnitt: Bridge-Basis sauber machen
+
+**Aufgabe:** Alle Legacy-Bereiche entfernen – kompilierbare, reine Bridge-Basis herstellen (6 Schritte)
+
+**Durchgeführte Aktionen:**
+
+### Schritt 1: src/Bridge.cpp ✅
+- `extern String mqttRootTopic;` entfernt
+- `#include "global.h"` hinzugefügt
+- `mqttRootTopic + "/trigger/..."` → `makeTopic("trigger/...")`
+
+### Schritt 2: src/SettingsManager.h ✅
+- Legacy-Felder entfernt: `latitude`, `longitude`, `sunriseOffset`, `sunsetOffset`, `toggleButton0-6`, `delayButton1-6`, `currentUserID`, `sensorPin`, `sensorPairingCode`, `sensorPairingValid`, `ignorTouchRing`, `klingelAnAus`, `fingerprintScannerEnabled`
+- AppSettings enthält jetzt nur noch Bridge-relevante Felder
+
+### Schritt 3: src/SettingsManager.cpp ✅
+- `loadAppSettings()`: USE_TELEGRAM-Block, alle Legacy-Felder, USE_TEDEE und USE_NUKI Blöcke entfernt
+- `saveAppSettings()`: Entsprechende Legacy-Blöcke entfernt
+
+### Schritt 4: src/main.cpp ✅
+- Globale Variablen entfernt: IDParip, UserParip, OutputPin1-5, LedBeleuchtung, OutputPinStatus1-5, SingleOutputAction, lastActionTag/Name 1-5, pin1-5_timer, enrollId, enrollName
+- Funktionen entfernt: setLastActionLocked, isSingleOutputPinAction, applyOutputPinAction, logFingerprintOutputAction, triggerSingleOutputAction
+- Mode::enroll aus Enum entfernt
+- setup(): actionMutex-Erstellung, Pin-Konfiguration entfernt
+- loop(): OutputPinStatus, SolarCalc, pin_timer_expired Blöcke entfernt
+- processor(): SUNR, SUNS, PINSTA, TOGBUT0-6, TOGGLE_BUTTON_STATE, FS_FLIST, KOOR_LATITUDE/LONGITUDE, FP_SECTION_CLASS, SUNRISEOFFSET, SUNSETOFFSET entfernt
+- Web-Handler vereinfacht: /enroll, /settingsScanner, /saveButtonLabel → 410-Legacy-Stubs
+- Toggle0-6 Handler → 410-Legacy-Stubs
+- MQTT-Dispatch: Legacy-Befehle (ignorTouchRing, OutputPinStatus1-5, ring, klingelAnAus) entfernt, nur "notify" bleibt
+- Fingerprint-Init-Block entfernt
+- latitude/longitude aus Settings-Speicher-Handler entfernt
+- sunriseOffset/sunsetOffset aus Settings-Speicher-Handler entfernt
+
+### Schritt 5: data/index.html ✅
+- Sunrise/Sunset-Anzeige entfernt
+- Toggle-Buttons 0-6 entfernt
+- "Button bearbeiten ⚙️" Sektion entfernt
+- Fingerprint-Verwaltungs-Form entfernt
+- Fingerabdruck-Enroll-Form entfernt
+- Legacy-Legende entfernt
+
+### Schritt 6: data/settings.html ✅
+- sun-info Div entfernt (Sunrise/Sunset/PINSTA)
+- Latitude/Longitude/SunriseOffset/SunsetOffset Form-Gruppen entfernt
+- Fingerprint-Scanner-Form (/settingsScanner) entfernt
+- JavaScript für sunsetInput/sunriseInput entfernt
+
+**Geänderte Dateien:**
+- `src/Bridge.cpp`
+- `src/SettingsManager.h`
+- `src/SettingsManager.cpp`
+- `src/main.cpp`
+- `data/index.html`
+- `data/settings.html`
+
+**Build-Status:** Statische Prüfung bestanden (kein ESP32-Compiler verfügbar in CI-Umgebung).

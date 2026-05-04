@@ -343,11 +343,6 @@
   <main class="container" aria-label="Hauptinhalt">
     <div class="settings-container">
       <div class="header-info-bar">
-        <div class="sun-info">
-          <div>Sunrise: <span class="SunriseSunset %SUNRISE_HTML_TIME%">%SUNR%</span></div>
-          <div>Sunset: <span class="SunriseSunset %SUNSET_HTML_TIME%">%SUNS%</span></div>
-          <div>%PINSTA%</div>
-        </div>
         <div id="current-date-time"></div>
       </div>
 
@@ -542,72 +537,6 @@
               </div>
             </div>
 
-            <div class="form-group">
-              <label class="col-md-4 control-label" for="latitude">Latitude</label>
-              <div class="col-md-4">
-                <input id="latitude" name="latitude" type="text" placeholder="Latitude 48.77444"
-                  class="form-control input-md" value="%KOOR_LATITUDE%">
-                <small class="text-muted">Trage hier den Breitengrad ein, im Format 48.77444. Wenn dieses Feld leer
-                  bleibt, wird die sonnenbasierte Beleuchtung der Türklingel deaktiviert.
-                </small>
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label class="col-md-4 control-label" for="longitude">Longitude</label>
-              <div class="col-md-4">
-                <input id="longitude" name="longitude" type="text" placeholder="Longitude 11.619619"
-                  class="form-control input-md" value="%KOOR_LONGITUDE%">
-                <small class="text-muted">Trage hier den Längengrad ein, im Format 11.619619. Wenn dieses Feld leer
-                  bleibt, wird die sonnenbasierte Beleuchtung der Türklingel deaktiviert.
-                </small>
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label class="col-md-4 control-label">Zeitsteuerung</label>
-              <div class="col-md-4">
-                <div class="time-control-group">
-                  <!-- Sunrise input field -->
-                  <div class="time-input-container">
-                    <label class="control-label" for="sunriseOffset">Sunrise:</label>
-                    <input id="sunriseOffset" name="sunriseOffset" type="text" placeholder="Aus" maxlength="5"
-                      class="form-control input-md time-input-field" value="%SUNRISEOFFSET%"
-                      onblur="validateInput(this.id)">
-                  </div>
-
-                  <!-- Sunset input field -->
-                  <div class="time-input-container">
-                    <label class="control-label" for="sunsetOffset">Sunset:</label>
-                    <input id="sunsetOffset" name="sunsetOffset" type="text" placeholder="Aus" maxlength="5"
-                      class="form-control input-md time-input-field" value="%SUNSETOFFSET%"
-                      onblur="validateInput(this.id)">
-                  </div>
-                </div>
-
-                <!-- Error message area -->
-                <div id="error-message"></div>
-
-                <div class="text-muted form-text-block">
-                  Wenn kein Offset angegeben wird, bleibt die Klingelbeleuchtung aus, und auf der Anzeige steht "Aus".
-                  Bei einem Offset von 0 schaltet sich das Licht genau bei Sonnenaufgang und -untergang ein.
-                  <br><br>
-                  Du kannst den Zeitpunkt des Sonnenaufgangs und -untergangs beeinflussen, indem du eine positive oder
-                  negative Zahl eingibst. Die maximale Anpassung beträgt dabei &gt;99 Minuten.
-                  <br><br>
-                  Alternativ kannst du eine feste Uhrzeit im Format "HH:MM" eingeben, zu der die Beleuchtung
-                  eingeschaltet wird.
-                </div>
-
-                <br>
-
-                <div class="col-md-4 no-padding">
-                  <button id="btnSaveSettingsNtp" name="btnSaveSettings" value="ntp" class="btn btn-success"
-                    type="submit"
-                    onclick="return confirm('Möchten Sie die Einstellungen speichern und neu starten?')">Save and
-                    Restart</button>
-                </div>
-              </div>
             </div>
             <br>
           </div>
@@ -722,48 +651,6 @@
       </form>
 
       <div id="module-placeholder"></div>
-
-      <form class="form-horizontal" action="/settingsScanner" method="GET"
-        onsubmit="return closeEventSourceBeforeSubmit(this);">
-        <fieldset>
-          <legend class="legend-cursor" onclick="sectionToggleCollapse('scanner-setup')">Fingerprint Setup
-          </legend>
-          <div id="scanner-setup-content" class="collapsed-content">
-            <div class="form-group">
-              <label class="col-md-4 control-label" for="fingerprintScannerEnabled">Fingerabdruckscanner
-                aktivieren</label>
-              <div class="col-md-4">
-                <input id="fingerprintScannerEnabled" name="fingerprintScannerEnabled" type="checkbox"
-                  class="form-check-input" value="on" %fp_scanner_chk% onchange="confirmFingerprintScannerChange(this)">
-                <label class="form-check-label" for="fingerprintScannerEnabled">Scanner Deaktivieren /
-                  Aktivieren</label>
-                <br><small class="text-muted">
-                  Ein Neustart ist erforderlich.
-                </small>
-              </div>
-            </div>
-            <div class="form-group">
-              <label class="col-md-4 control-label" for="btnSaveSettingsScanner"></label>
-              <div class="col-md-4">
-                <button id="btnSaveSettingsScanner" name="btnSaveSettingsScanner" class="btn btn-success" type="submit"
-                  onclick="return confirm('Möchten Sie die Einstellungen speichern und neu starten?')">Save and
-                  Restart</button>
-                <div class="%FP_SECTION_CLASS%">
-                  <br><br>
-                  <button id="btnDoPairing" name="btnDoPairing" class="btn btn-warning" type="submit"
-                    formaction="pairing">Pairing a new sensor</button>
-                  <br><br>
-                  <button id="btnDeleteAllFingerprints" name="btnDeleteAllFingerprints" class="btn btn-danger"
-                    type="submit" formaction="deleteAllFingerprints"
-                    onclick="return confirm('Wollen Sie wirklich alle Fingerabdrücke löschen?')">Delete
-                    all Fingerprints</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </fieldset>
-      </form>
-
       <form class="form-horizontal" onsubmit="return closeEventSourceBeforeSubmit(this);">
         <fieldset>
           <legend class="legend-cursor" onclick="sectionToggleCollapse('advanced-actions')">Advanced Actions</legend>
@@ -976,18 +863,6 @@
         errorMessageElement.textContent = "Ungültiges Format. Bitte überprüfen Sie Ihre Eingabe.";
         saveButton.setAttribute("disabled", "disabled");
       }
-
-      const sunsetInput = document.getElementById("sunsetOffset");
-      const sunriseInput = document.getElementById("sunriseOffset");
-
-      if (!sunsetInput || !sunriseInput) return;
-
-      const sunsetInputIsValid = isValidTimeInput(sunsetInput.value) || isValidNumberInput(sunsetInput.value);
-      const sunriseInputIsValid = isValidTimeInput(sunriseInput.value) || isValidNumberInput(sunriseInput.value);
-
-      if (sunsetInputIsValid && sunriseInputIsValid) {
-        saveButton.removeAttribute("disabled");
-      } else {
         saveButton.setAttribute("disabled", "disabled");
       }
     }

@@ -23,7 +23,6 @@
 #if USE_MQTT_CLIENT
 #include <AsyncMqttClient.h>
 #endif
-#include "esp_timer.h" // NEU für präzise Pin-Steuerung
 #include "freertos/semphr.h"
 #include "nvs_flash.h"
 #include "esp_err.h"
@@ -549,15 +548,12 @@ const unsigned long intervalWifiQuality = 30000UL; // 30s nur bei verbundenen Cl
 enum class Mode
 {
 	scan,
-	enroll,
 	wificonfig,
 	maintenance
 };
 
 // Benutzer benutzer; // Benutzerklasse-Instanz
 
-uint16_t IDParip;
-String UserParip;
 // ===================================================================================================================
 // Caution: below are not the credentials for connecting to your home network, they are for the Access Point mode!!!
 // ===================================================================================================================
@@ -567,62 +563,6 @@ IPAddress WifiConfigIp(192, 168, 4, 1);				// IP of access point in wifi config 
 
 // FingerprintManager fingerManager; // Legacy entfernt
 SettingsManager settingsManager;
-
-// Pin belegung.
-const int OutputPin1 = 23; // Output (1) Haupteingang -Pin
-const int OutputPin2 = 19; // Output (2) GarageTor -Pin
-const int OutputPin3 = 18; // Output (3) OutputPin3
-const int OutputPin4 = 26; // Output (4) OutputPin4
-const int OutputPin5 = 21; // Output (5) Klingel (Doorbell) -Pin
-
-const int LedBeleuchtung = 22; // Gerhard pin 22 Andy 21 LedBeleuchtung Klingelschild	  // LedBeleuchtung Klingelschild
-
-// Status-Flags für Output-Pins
-bool OutputPinStatus1 = false;
-bool OutputPinStatus2 = false;
-bool OutputPinStatus3 = false;
-bool OutputPinStatus4 = false;
-bool OutputPinStatus5 = false;
-String SingleOutputAction = "";
-void triggerSingleOutputAction(const String &action, const String &sourceTag, const String &actionName);
-String lastActionTag1;
-String lastActionName1;
-String lastActionTag2;
-String lastActionName2;
-String lastActionTag3;
-String lastActionName3;
-String lastActionTag4;
-String lastActionName4;
-String lastActionTag5;	// für die Türklingel
-String lastActionName5; // für die Türklingel
-
-// NEU: esp_timer Handles für die Ausgangs-Pins
-static esp_timer_handle_t pin1_timer;
-static esp_timer_handle_t pin2_timer;
-static esp_timer_handle_t pin3_timer;
-static esp_timer_handle_t pin4_timer;
-static esp_timer_handle_t pin5_timer;
-
-// Volatile Flags für ISR-sichere Timer-Callbacks (P1-03)
-static volatile bool pin1_timer_expired = false;
-static volatile bool pin2_timer_expired = false;
-static volatile bool pin3_timer_expired = false;
-static volatile bool pin4_timer_expired = false;
-static volatile bool pin5_timer_expired = false;
-
-// NEU: Vorwärtsdeklarationen für Timer-Callbacks
-void pin1_timer_callback(void *arg);
-void pin2_timer_callback(void *arg);
-void pin3_timer_callback(void *arg);
-void pin4_timer_callback(void *arg);
-void pin5_timer_callback(void *arg);
-
-// FingerScaner pin belegung
-// pin 1, 6 sind auf 3.3V angeschlossen
-// pin 2 auf GND - an minus angeschlossen
-// pin 3 ist auf 16 angschlossen
-// pin 4 ist auf 17 angschlossen
-// pin 5 ist auf 5 angeschlossen
 
 const int logMessagesCount = 20;
 String logMessages[logMessagesCount]; // Ringpuffer für Log-Meldungen
@@ -665,8 +605,7 @@ String makeTopic(const String &tail)
 }
 #endif // USE_MQTT_ANY
 
-String enrollId;
-String enrollName;
+// [Legacy] enrollId/enrollName entfernt
 Mode currentMode = Mode::scan;
 
 const byte DNS_PORT = 53;
@@ -690,121 +629,10 @@ SemaphoreHandle_t logMutex = NULL; // schützt logMessages[]/logNextIndex gegen 
 
 SemaphoreHandle_t sseSendMutex = NULL; // serialisiert events.send(...) (Try-Lock), init in setup()
 
-SemaphoreHandle_t actionMutex = NULL; // schützt lastActionTag/Name (Async callbacks vs Loop/Timer)
-
 // DEGRADED-Modus: true wenn kritische Mutexe nicht erstellt werden konnten.
 // Im DEGRADED-Modus: Kern (Fingerprint/Relais/WLAN/Web/MQTT) bleibt aktiv,
 // Zusatzmodule (Telegram/Tedee) und Komfort-SSE werden deaktiviert.
 static bool degradedMode = false;
-
-// Helper: zentralisierte, race-sichere Zugriffe auf lastActionTag/lastActionName
-static void setLastActionLocked(String &tagVar, String &nameVar, const String &tag, const String &name)
-{
-	if (actionMutex)
-		xSemaphoreTake(actionMutex, portMAX_DELAY);
-	tagVar = tag;
-	nameVar = name;
-	if (actionMutex)
-		xSemaphoreGive(actionMutex);
-}
-
-static bool isSingleOutputPinAction(const String &action)
-{
-	return action.length() == 1 && action[0] >= '1' && action[0] <= '5';
-}
-
-static bool applyOutputPinAction(char action, const String &sourceTag, const String &actionName)
-{
-	switch (action)
-	{
-	case '1':
-		setLastActionLocked(lastActionTag1, lastActionName1, sourceTag, actionName);
-		OutputPinStatus1 = true;
-		return true;
-	case '2':
-		setLastActionLocked(lastActionTag2, lastActionName2, sourceTag, actionName);
-		OutputPinStatus2 = true;
-		return true;
-	case '3':
-		setLastActionLocked(lastActionTag3, lastActionName3, sourceTag, actionName);
-		OutputPinStatus3 = true;
-		return true;
-	case '4':
-		setLastActionLocked(lastActionTag4, lastActionName4, sourceTag, actionName);
-		OutputPinStatus4 = true;
-		return true;
-	case '5':
-		setLastActionLocked(lastActionTag5, lastActionName5, sourceTag, actionName);
-		OutputPinStatus5 = true;
-		return true;
-	default:
-		return false;
-	}
-}
-
-static void logFingerprintOutputAction(char action)
-{
-	if (action == '5')
-	{
-		LOG_PRINTLN("OutputPin5 (Klingel) wird mit finger geoeffnet.");
-		return;
-	}
-	String message = "OutputPin";
-	message += action;
-	message += " wird mit finger geoeffnet.";
-	LOG_PRINTLN(message);
-}
-
-void triggerSingleOutputAction(const String &action, const String &sourceTag, const String &actionName)
-{
-	SingleOutputAction = action;
-
-	LOG_PRINTLN("[SingleOutputAction] action=" + action + " source=" + sourceTag + " name=" + actionName);
-
-	if (isSingleOutputPinAction(action))
-	{
-		if (applyOutputPinAction(action[0], sourceTag, actionName) && sourceTag == "[FP]")
-		{
-			String outputTopic;
-			outputTopic.reserve(64);
-			outputTopic = mqttRootTopic;
-			outputTopic += "/OutputPinStatus";
-			outputTopic += action[0];
-			publishMqttMessage(outputTopic, "source:[FP];true", false, 0);
-			logFingerprintOutputAction(action[0]);
-		}
-	}
-
-#if USE_TEDEE
-	tedeeHandleSingleOutputAction(action);
-#endif
-#if USE_NUKI
-	nukiHandleSingleOutputAction(action);
-#endif
-}
-
-static void getLastActionSnapshotLocked(const String &tagVar, const String &nameVar, String &tagOut, String &nameOut)
-{
-	if (actionMutex)
-		xSemaphoreTake(actionMutex, portMAX_DELAY);
-	tagOut = tagVar;
-	nameOut = nameVar;
-	if (actionMutex)
-		xSemaphoreGive(actionMutex);
-}
-
-static void clearLastActionIfUnchangedLocked(String &tagVar, String &nameVar, const String &tagSnap, const String &nameSnap)
-{
-	if (actionMutex)
-		xSemaphoreTake(actionMutex, portMAX_DELAY);
-	if (tagVar == tagSnap && nameVar == nameSnap)
-	{
-		tagVar = "";
-		nameVar = "";
-	}
-	if (actionMutex)
-		xSemaphoreGive(actionMutex);
-}
 
 // ===== NET-MUTEX Helper (best-effort, kurz halten) =====
 static bool netTryLock(uint32_t timeoutMs, bool &locked)
@@ -1294,14 +1122,6 @@ String processor(const String &var)
 	{
 		return getLogMessagesAsHtml();
 	}
-	else if (var == "SUNR")
-	{
-		return String(String("--:--"));
-	}
-	else if (var == "SUNS")
-	{
-		return String(String("--:--"));
-	}
 	else if (var == "UHRZEIT_DATUM")
 	{
 		// Hängt die verwendete NTP-Quelle an den Zeitstempel an
@@ -1312,95 +1132,9 @@ String processor(const String &var)
 		result += ")";
 		return result;
 	}
-	else if (var == "PINSTA")
-	{
-		// Hier den aktuellen Status des Pins abrufen und zurückgeben
-		int pinStatus = digitalRead(LedBeleuchtung); // Annahme: LedBeleuchtung ist der Pin
-		if (pinStatus == HIGH)
-		{
-			// Emoji für eingeschaltet
-			return "<span style=\"color: yellow; font-size: inherit; display: inline-flex; align-items: center; vertical-align: middle;\">💡</span>";
-		}
-		else
-		{
-			// Emoji für ausgeschaltet
-			return "";
-		}
-	}
 	else if (var == "WIFIQUALITY")
 	{
 		return String(rssiToQuality(WiFi.RSSI()));
-	}
-
-	else if (var == "SUNRISE_HTML_TIME")
-	{
-		String offsetStr = app.sunriseOffset;
-		if (offsetStr.isEmpty())
-			return "ausSun";
-		int sunriseOffset = offsetStr.toInt();
-		if (sunriseOffset == 0)
-			return "exactSun";
-		if (sunriseOffset > 0)
-			return "offsetSunPlus";
-		return "offsetSunMinus"; // sunriseOffset < 0
-	}
-	else if (var == "SUNSET_HTML_TIME")
-	{
-		String offsetStr = app.sunsetOffset;
-		if (offsetStr.isEmpty())
-			return "ausSun";
-		int sunsetOffset = offsetStr.toInt();
-		if (sunsetOffset == 0)
-			return "exactSun";
-		if (sunsetOffset < 0)
-			return "offsetSunPlus"; // Absicht: Sunset-Vorzeichen umgekehrt zu Sunrise
-		return "offsetSunMinus";	// sunsetOffset > 0
-	}
-
-	// P4-07: TOGBUT0-6 via Array-Lookup (statt 7× Copy-Paste)
-	else if (var.startsWith("TOGBUT") && var.length() == 7)
-	{
-		int idx = var.charAt(6) - '0';
-		if (idx >= 0 && idx <= 6)
-		{
-			const String *btns[] = {&app.toggleButton0, &app.toggleButton1, &app.toggleButton2,
-									&app.toggleButton3, &app.toggleButton4, &app.toggleButton5, &app.toggleButton6};
-			return btns[idx]->isEmpty() ? ("Button" + String(idx)) : *btns[idx];
-		}
-	}
-
-	else if (var == "TOGGLE_BUTTON_0_STATE")
-	{
-		return app.ignorTouchRing ? "green" : "red";
-	}
-	else if (var == "TOGGLE_BUTTON_1_STATE")
-	{
-		return digitalRead(OutputPin1) ? "green" : "red";
-	}
-	else if (var == "TOGGLE_BUTTON_2_STATE")
-	{
-		return digitalRead(OutputPin2) ? "green" : "red";
-	}
-	else if (var == "TOGGLE_BUTTON_3_STATE")
-	{
-		return digitalRead(OutputPin3) ? "green" : "red";
-	}
-	else if (var == "TOGGLE_BUTTON_4_STATE")
-	{
-		return digitalRead(OutputPin4) ? "green" : "red";
-	}
-	else if (var == "TOGGLE_BUTTON_5_STATE")
-	{
-		return digitalRead(OutputPin5) ? "green" : "red";
-	}
-	else if (var == "TOGGLE_BUTTON_6_STATE")
-	{
-		return app.klingelAnAus ? "green" : "red";
-	}
-	/////////////////////////////////////////////////////////////////////////////
-	else if (var == "FS_FLIST")
-	{
-		return /* fingerManager Legacy */;
 	}
 	else if (var == "HOSTNAME")
 	{
@@ -1459,14 +1193,6 @@ String processor(const String &var)
 		// return settingsManager.getAppSettings().ntpOffset;
 		return timezoneOffset;
 	}
-	else if (var == "KOOR_LATITUDE")
-	{
-		return app.latitude;
-	}
-	else if (var == "KOOR_LONGITUDE")
-	{
-		return app.longitude;
-	}
 	else if (var == "PASSWORD_SETUP")
 	{
 		if (app.passwordSetup == "admin")
@@ -1480,24 +1206,6 @@ String processor(const String &var)
 		String enablePasswordTemp = app.enablePassword;
 		// Rückgabe von "checked", wenn ENABLE_PASSWORD "on" ist, ansonsten eine leere Zeichenkette
 		return (enablePasswordTemp == "on") ? "checked" : "";
-	}
-	else if (var == "fp_scanner_chk")
-	{
-		return app.fingerprintScannerEnabled ? "checked" : "";
-	}
-	else if (var == "FP_SECTION_CLASS")
-	{
-		// NEU: Gibt CSS-Klasse zurück wenn Scanner deaktiviert, sonst leer
-		return app.fingerprintScannerEnabled ? "" : "fp-section-hidden";
-	}
-
-	else if (var == "SUNRISEOFFSET")
-	{
-		return app.sunriseOffset;
-	}
-	else if (var == "SUNSETOFFSET")
-	{
-		return app.sunsetOffset;
 	}
 	else if (var == "MQTT_PORT")
 	{
@@ -2602,39 +2310,11 @@ void startWebserver()
 						request->send(LittleFS, "/login.html", String(), false);
 						} });
 
+		// [Legacy] /enroll entfernt – FingerprintManager nicht mehr vorhanden
 		webServer.on("/enroll", HTTP_GET, [](AsyncWebServerRequest *request)
 					 {
-						if(request->hasArg("startEnrollment"))
-						{
-							//////////////////////////////////////////////////////
-							enrollId = request->arg("newFingerprintId");
-							enrollName = request->arg("newFingerprintName");
-							
-								// P4-15: ID-Validierung (numerisch, Bereich 1-200)
-								int parsedId = enrollId.toInt();
-								if (parsedId < 1 || parsedId > 200)
-								{
-									notifyClients("Ungültige ID: " + enrollId + ". Erlaubt sind 1-200.");
-									LOG_PRINTLN("Ungültige Enroll-ID: " + enrollId);
-									currentMode = Mode::scan;
-								}
-								// Überprüfen, ob die ID bereits in der Fingerliste vorhanden ist
-// [Legacy] 								else if (fingerManager.isFingerIdInList(parsedId))
-								{
-									notifyClients("Die ID " + enrollId + " ist bereits in der Fingerliste vorhanden. Bitte wählen Sie eine andere ID oder löschen Sie den bereits vorhandenen Eintrag.");
-									LOG_PRINTLN("Die ID " + enrollId + " ist bereits in der Fingerliste vorhanden. Bitte wählen Sie eine andere ID oder löschen Sie den bereits vorhandenen Eintrag.");
-									currentMode = Mode::scan;
-								}
-								else
-								{
-									notifyClients("Die ID " + enrollId + " steht zur verfügung.");
-									LOG_PRINTLN("Die ID " + enrollId + " steht zur verfügung.");
-									currentMode = Mode::enroll;
-								}
-							
-						}
-
-      					request->redirect("/"); });
+						 request->send(410, "text/plain", "Fingerprint-Enroll nicht verfuegbar (Legacy)");
+					 });
 		//////////////////////////////////////////////////////
 
 		// [Legacy] /editFingerprints entfernt – FingerprintManager nicht mehr vorhanden
@@ -2915,7 +2595,7 @@ void startWebserver()
 									AppSettings settings = settingsManager.getAppSettings();
 									const String saveSection = request->arg("btnSaveSettings");
 
-									bool requestContainsGeneralSettingsArgs = request->hasArg("mqtt_isBroker") || request->hasArg("mqtt_isClient") || request->hasArg("mqtt_port") || request->hasArg("timezone") || request->hasArg("wifiRssiDisconnectThreshold") || request->hasArg("wifiRoamImproveDb") || request->hasArg("wifiRoamMinRssi") || request->hasArg("enablePassword") || request->hasArg("sunriseOffset") || request->hasArg("sunsetOffset") || request->hasArg("btnSaveSettings");
+									bool requestContainsGeneralSettingsArgs = request->hasArg("mqtt_isBroker") || request->hasArg("mqtt_isClient") || request->hasArg("mqtt_port") || request->hasArg("timezone") || request->hasArg("wifiRssiDisconnectThreshold") || request->hasArg("wifiRoamImproveDb") || request->hasArg("wifiRoamMinRssi") || request->hasArg("enablePassword") || request->hasArg("btnSaveSettings");
 
 									if (requestContainsGeneralSettingsArgs)
 									{
@@ -2991,14 +2671,6 @@ void startWebserver()
 												settings.ntpOffset = tzArg;
 											}
 										}
-										if (request->hasArg("latitude"))
-										{
-											settings.latitude = request->arg("latitude");
-										}
-										if (request->hasArg("longitude"))
-										{
-											settings.longitude = request->arg("longitude");
-										}
 										if (request->hasArg("passwordSetup"))
 										{
 											String passwordArg = request->arg("passwordSetup");
@@ -3035,14 +2707,6 @@ void startWebserver()
 												}
 											}
 											settings.enablePassword = enablePasswordEff;
-										}
-										if (request->hasArg("sunriseOffset"))
-										{
-											settings.sunriseOffset = request->arg("sunriseOffset");
-										}
-										if (request->hasArg("sunsetOffset"))
-										{
-											settings.sunsetOffset = request->arg("sunsetOffset");
 										}
 
 										// WiFi Stabilität
@@ -3081,129 +2745,17 @@ void startWebserver()
 						} });
 
 		/////////////////////////////////////////////////////////////////////////
-		// ========== SEPARATER ENDPUNKT F�R FINGERPRINT SCANNER SETTINGS ==========
+		// [Legacy] /settingsScanner entfernt – FingerprintScanner nicht mehr vorhanden
 		webServer.on("/settingsScanner", HTTP_GET, [](AsyncWebServerRequest *request)
 					 {
-				LOG_PRINTLN("[Scanner] Endpunkt /settingsScanner aufgerufen");
-
-				if (loggedIn || ENABLE_PASSWORD != "on")
-				{
-				if (request->hasArg("btnSaveSettingsScanner"))
-				{
-				LOG_PRINTLN("[Scanner] Speichere Scanner-Einstellungen...");
-				AppSettings settings = settingsManager.getAppSettings();
-				settings.fingerprintScannerEnabled = request->hasArg("fingerprintScannerEnabled");
-				settingsManager.saveAppSettings(settings);
-				LOG_PRINTLN("[Scanner] fingerprintScannerEnabled=" + String(settings.fingerprintScannerEnabled));
-				notifyClients(String("[Scanner] Scanner ") + (settings.fingerprintScannerEnabled ? "aktiviert" : "deaktiviert") + " - Neustart...");
-				request->redirect("/");
-				shouldReboot = true;
-				}
-				else
-				{
-				if (!fsFileReady(request, "/settings.html"))
-					return;
-				AsyncWebServerResponse *response = request->beginResponse(LittleFS, "/settings.html", String(), false, processor);
-				response->addHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-#if USE_TELEGRAM
-				noteHeavyHttpTransferForTelegram();
-#endif
-				request->send(response);
-				}
-				}
-				else
-				{
-				if (!fsFileReady(request, "/login.html"))
-					return;
-				request->send(LittleFS, "/login.html", String(), false);
-				} });
+						 request->send(410, "text/plain", "Scanner-Einstellungen nicht verfuegbar (Legacy)");
+					 });
 		/////////////////////////////////////////////////////////////////////////
+		// [Legacy] /saveButtonLabel entfernt – Toggle-Buttons nicht mehr vorhanden
 		webServer.on("/saveButtonLabel", HTTP_POST, [](AsyncWebServerRequest *request)
 					 {
-				if (loggedIn || ENABLE_PASSWORD != "on") { // Auth-Check (P2-04)
-				LOG_PRINTLN("POST-Anfrage auf /saveButtonLabel empfangen");
-
-				if (request->method() == HTTP_POST) {
-					String buttonId = request->arg("buttonId");
-					String newLabel = request->arg("newLabel");
-
-					LOG_PRINTLN(buttonId + " -++++- " + newLabel + " saveButtonLabel " + request->url());
-					LOG_PRINTLN("Button ID:+++++++++++++++ " + buttonId);
-					LOG_PRINTLN("Neue Beschriftung:+++++++++++++++ " + newLabel);
-					LOG_PRINTLN("Neue request:++++++++++++++++++++ " + request->url());
-					AppSettings settings = settingsManager.getAppSettings();
-
-
-					size_t position = 0;
-
-					// Überprüfe, ob das Zeichen an der aktuellen Position eine Ziffer oder ein Dezimalpunkt ist
-					while (position < newLabel.length() && (isDigit(newLabel[position]) || newLabel[position] == '.')) {
-						position++;
-					}
-
-					// Extrahiere die Zahl bis zur gefundenen Position
-					String extrahierte_zahl_str = newLabel.substring(0, position);
-
-					// Ersetze Komma durch Punkt für korrekte Float-Konvertierung
-					extrahierte_zahl_str.replace(',', '.');
-
-					// Konvertiere die extrahierte Zeichenkette in eine Gleitkommazahl
-					float extrahierte_zahl = extrahierte_zahl_str.toFloat();
-
-					// Multipliziere die Zahl mit 1000
-					if (extrahierte_zahl > 0)
-					{
-						int resultat_in_millis = extrahierte_zahl * 1000;
-						extrahierte_zahl_str = String(resultat_in_millis);
-					}
-
-					if (extrahierte_zahl_str == "0")
-					{
-						extrahierte_zahl_str = "0";
-						LOG_PRINTLN("extrahierte_zahl_str != 0");
-					}
-					if (extrahierte_zahl_str.isEmpty())
-					{
-						extrahierte_zahl_str = "";
-						LOG_PRINTLN("toggleButton wie lange er schalten muss = "+ extrahierte_zahl_str);
-					}
-					// Verwende extrahierte_zahl in deinem Code entsprechend
-
-
-
-
-					if (buttonId == "toggleButton0") {
-						settings.toggleButton0 = newLabel;
-					} else if (buttonId == "toggleButton1") {
-						settings.toggleButton1 = request->arg("newLabel");
-						settings.delayButton1 = extrahierte_zahl_str;
-					} else if (buttonId == "toggleButton2") {
-						settings.toggleButton2 = request->arg("newLabel");
-						settings.delayButton2 = extrahierte_zahl_str;
-					}  else if (buttonId == "toggleButton3") {
-						settings.toggleButton3 = request->arg("newLabel");
-						settings.delayButton3 = extrahierte_zahl_str;
-					} else if (buttonId == "toggleButton4") {
-						settings.toggleButton4 = request->arg("newLabel");
-						settings.delayButton4 = extrahierte_zahl_str;
-					} else if (buttonId == "toggleButton5") {
-						settings.toggleButton5 = request->arg("newLabel");
-						settings.delayButton5 = extrahierte_zahl_str;
-					} else if (buttonId == "toggleButton6") {
-						settings.toggleButton6 = request->arg("newLabel");
-						// Button 6 hat keine Verzögerung - wird ignoriert
-					}				
-				
-					settingsManager.saveAppSettings(settings);					
-					request->send(200, "text/plain", "Beschriftung erfolgreich geändert");
-				} else {
-					request->send(400, "text/plain", "Ungültige Anfrage. Es wird nur POST unterstützt.");
-				}
-				} else {
-					if (!fsFileReady(request, "/login.html"))
-						return;
-					request->send(LittleFS, "/login.html", String(), false);
-				} });
+						 request->send(410, "text/plain", "Button-Label nicht verfuegbar (Legacy)");
+					 });
 
 		/////////////////////////////////////////////////////////////////////////
 
@@ -3473,137 +3025,12 @@ void startWebserver()
 	/// begin Webserver initialisieren saveDataBank ////////////////////////////
 
 	/// end Webserver initialisieren saveDataBank ///////////////////////////////
-	webServer.on("/toggle0", HTTP_POST, [](AsyncWebServerRequest *request)
-				 {
-    
-    AppSettings settings = settingsManager.getAppSettings();
-
-    bool ignorTouchRing = settings.ignorTouchRing; // Aktuellen Wert aus den App-Einstellungen abrufen
-    bool newStatusIgnoreTouchRing = !ignorTouchRing; // Invertieren
-	LOG_PRINTLN(String(ignorTouchRing) + "Save settings button 0" + String(newStatusIgnoreTouchRing));
-    
-    // P3-10: Redundante if-Bedingung entfernt (newStatus = !current ist immer != current)
-    settings.ignorTouchRing = newStatusIgnoreTouchRing;
-    LOG_PRINTLN(newStatusIgnoreTouchRing);
-    digitalWrite(2, newStatusIgnoreTouchRing);
-    settingsManager.saveAppSettings(settings);
-    // /* fingerManager Legacy */;
-    
-    // MQTT-Nachricht senden (Status, Retain=true, QoS=0)
-    String mqttTopic = mqttRootTopic + "/ignorTouchRing";
-    publishMqttMessage(mqttTopic, newStatusIgnoreTouchRing ? "on" : "off", true, 0);
-    
-    // Log-Nachricht
-    notifyClients(String("ignorTouchRing auf ") + (newStatusIgnoreTouchRing ? "aktiviert" : "deaktiviert"), "[WEB]");
-	sendSSEEvent(newStatusIgnoreTouchRing ? "1" : "0", "Button0", static_cast<unsigned long>(millis()), 1000);
-    request->send(200, "text/plain", newStatusIgnoreTouchRing ? "1" : "0"); });
-
-	// Endpunkt für Relais 1 HTTP_GET  HTTP_POST
-	//////////////////////////////////////////////////////////////////////////////
-	webServer.on("/toggle1", HTTP_POST, [](AsyncWebServerRequest *request)
-				 {
-						LOG_PRINTLN("toggle1"); 
-						String outputTopic = mqttRootTopic;
-						outputTopic += "/OutputPinStatus1";
-						String buttonName = settingsManager.getAppSettings().toggleButton1;
-						// MQTT-Publish nur, wenn kein Stern im Namen
-						if (buttonName.indexOf('*') == -1) {
-							publishMqttMessage(outputTopic, "source:[WEB];true", false, 0);
-						} else {
-							LOG_PRINTLN("[WEB] MQTT Publish für Button1 unterdrückt (Name enthält '*')");
-							notifyClients("⚠️ MQTT Publish für Button1 unterdrückt (Name enthält '*')", "[WEB]");
-						}
-						// triggerSingleOutputAction("1", "[WEB]", buttonName);
-						request->send(200, "Ervolgreich 1 gesendet"); });
-
-	/////////////////////////////////////////////////////////////////////////////////////////////	// Endpunkt für Relais 2
-	webServer.on("/toggle2", HTTP_POST, [](AsyncWebServerRequest *request)
-				 {                   
-						LOG_PRINTLN("toggle2"); 
-						String outputTopic = mqttRootTopic;
-						outputTopic += "/OutputPinStatus2";
-						String buttonName = settingsManager.getAppSettings().toggleButton2;
-						if (buttonName.indexOf('*') == -1) {
-							publishMqttMessage(outputTopic, "source:[WEB];true", false, 0);
-						} else {
-							LOG_PRINTLN("[WEB] MQTT Publish für Button2 unterdrückt (Name enthält '*')");
-							notifyClients("⚠️ MQTT Publish für Button2 unterdrückt (Name enthält '*')", "[WEB]");
-						}
-						// triggerSingleOutputAction("2", "[WEB]", buttonName);
-						request->send(200, "Ervolgreich 2 gesendet"); });
-	// Endpunkt für Relais 3
-	webServer.on("/toggle3", HTTP_POST, [](AsyncWebServerRequest *request)
-				 {
-						LOG_PRINTLN("toggle3");
-						String outputTopic = mqttRootTopic;
-						outputTopic += "/OutputPinStatus3";
-						String buttonName = settingsManager.getAppSettings().toggleButton3;
-						if (buttonName.indexOf('*') == -1) {
-							publishMqttMessage(outputTopic, "source:[WEB];true", false, 0);
-						} else {
-							LOG_PRINTLN("[WEB] MQTT Publish für Button3 unterdrückt (Name enthält '*')");
-							notifyClients("⚠️ MQTT Publish für Button3 unterdrückt (Name enthält '*')", "[WEB]");
-						}
-						// triggerSingleOutputAction("3", "[WEB]", buttonName);
-						request->send(200, "Ervolgreich 3 gesendet"); });
-
-	// Endpunkt für Relais 4
-	webServer.on("/toggle4", HTTP_POST, [](AsyncWebServerRequest *request)
-				 {
-						LOG_PRINTLN("toggle4");
-						String outputTopic = mqttRootTopic;
-						outputTopic += "/OutputPinStatus4";
-						String buttonName = settingsManager.getAppSettings().toggleButton4;
-						if (buttonName.indexOf('*') == -1) {
-							publishMqttMessage(outputTopic, "source:[WEB];true", false, 0);
-						} else {
-							LOG_PRINTLN("[WEB] MQTT Publish für Button4 unterdrückt (Name enthält '*')");
-							notifyClients("⚠️ MQTT Publish für Button4 unterdrückt (Name enthält '*')", "[WEB]");
-						}
-						// triggerSingleOutputAction("4", "[WEB]", buttonName);
-						request->send(200, "Ervolgreich 4 gesendet"); });
-
-	webServer.on("/toggle5", HTTP_POST, [](AsyncWebServerRequest *request)
-				 {
-						LOG_PRINTLN("toggle5");
-						String outputTopic = mqttRootTopic;
-						outputTopic += "/OutputPinStatus5";
-						String buttonName = settingsManager.getAppSettings().toggleButton5;
-						if (buttonName.indexOf('*') == -1) {
-							publishMqttMessage(outputTopic, "source:[WEB];true", false, 0);
-						} else {
-							LOG_PRINTLN("[WEB] MQTT Publish für Button5 unterdrückt (Name enthält '*')");
-							notifyClients("⚠️ MQTT Publish für Button5 unterdrückt (Name enthält '*')", "[WEB]");
-						}
-						// triggerSingleOutputAction("5", "[WEB]", buttonName);
-						request->send(200, "Erfolgreich 5 gesendet"); });
-
-	/////////////////////////////////////////////////////////////////////////////////////////////	// Endpunkt für Button 6 - Klingel Auto-Funktion ein/ausschalten
-	webServer.on("/toggle6", HTTP_POST, [](AsyncWebServerRequest *request)
-				 {
-		AppSettings settings = settingsManager.getAppSettings();
-		String buttonName = settings.toggleButton6;
-		bool klingelAnAus = settings.klingelAnAus; // Aktuellen Wert abrufen
-		bool newStatusKlingelAnAus = !klingelAnAus; // Invertieren
-		LOG_PRINTLN(String(klingelAnAus) + " -> toggle6 -> " + String(newStatusKlingelAnAus));
-
-		// P3-10: Redundante if-Bedingung entfernt (newStatus = !current ist immer != current)
-		settings.klingelAnAus = newStatusKlingelAnAus;
-		LOG_PRINTLN("Klingel Auto-Funktion: " + String(newStatusKlingelAnAus ? "aktiviert" : "deaktiviert"));
-		settingsManager.saveAppSettings(settings);
-		// /* fingerManager Legacy */;
-		// MQTT-Nachricht nur senden, wenn kein Stern im Namen
-		if (buttonName.indexOf('*') == -1) {
-			String mqttTopic = mqttRootTopic + "/klingelAnAus";
-			publishMqttMessage(mqttTopic, newStatusKlingelAnAus ? "on" : "off", true, 0);
-		} else {
-			LOG_PRINTLN("[WEB] MQTT Publish für Button6 unterdrückt (Name enthält '*')");
-			notifyClients("⚠️ MQTT Publish für Button6 unterdrückt (Name enthält '*')", "[WEB]");
-		}
-		// Log-Nachricht
-		notifyClients(String("Klingel Auto-Funktion ") + (newStatusKlingelAnAus ? "aktiviert" : "deaktiviert"), "[WEB]");
-		sendSSEEvent(newStatusKlingelAnAus ? "1" : "0", "Button6", static_cast<unsigned long>(millis()), 1000);
-		request->send(200, "text/plain", newStatusKlingelAnAus ? "1" : "0"); });
+	// [Legacy] /toggle0-6 entfernt – Toggle-Buttons (OutputPins, Klingel) nicht mehr vorhanden
+	for (const char* legacyPath : {"/toggle0", "/toggle1", "/toggle2", "/toggle3", "/toggle4", "/toggle5", "/toggle6"}) {
+		webServer.on(legacyPath, HTTP_POST, [](AsyncWebServerRequest *request) {
+			request->send(410, "text/plain", "Toggle-Endpunkt nicht verfuegbar (Legacy)");
+		});
+	}
 	/////////////////////////////////////////////////////////////////////////////////////////////
 	// Serverstart EINMAL am Ende
 	// Start server
@@ -3910,136 +3337,8 @@ void handleMqttMessage(const String &topic, const String &fullPayload, const Str
 		return;
 	}
 
-	// Befehls-Dispatching mit endsWith() statt String-Allokationen (spart 9× Heap-Allokation pro Nachricht)
-	if (command == "ignorTouchRing" || topic.endsWith("/ignorTouchRing"))
-	{
-		if (app.toggleButton0.indexOf("°") != -1)
-		{
-			LOG_PRINTLN(logPrefix + " Befehl 'ignorTouchRing' blockiert, da Button-Name '°' enthält.");
-			return;
-		}
-		bool newState = (payload == "on" || payload == "true");
-
-		if (app.ignorTouchRing != newState)
-		{
-			AppSettings settings = app; // Create a mutable copy only when needed
-			settings.ignorTouchRing = newState;
-			settingsManager.saveAppSettings(settings);
-			// /* fingerManager Legacy */;
-			notifyClients(String("Ignorieren-Modus von ") + extractedSource + (newState ? " aktiviert" : " deaktiviert"), sourceTag.c_str());
-			sendSSEEvent(newState ? "1" : "0", "Button0");
-
-			if (!retained)
-			{
-				publishMqttMessage(rootTopic + "/ignorTouchRing/status", newState ? "on" : "off", true);
-			}
-		}
-	}
-	else if (command == "OutputPinStatus1" || topic.endsWith("/OutputPinStatus1"))
-	{
-		if (payload == "true")
-		{
-			if (app.toggleButton1.indexOf("°") != -1)
-			{
-				LOG_PRINTLN(logPrefix + " Befehl 'OutputPinStatus1' blockiert, da Button-Name '°' enthält.");
-				return;
-			}
-			// triggerSingleOutputAction("1", sourceTag, extractedSource);
-			LOG_PRINTLN(logPrefix + " OutputPinStatus1 ausgelöst");
-		}
-	}
-	else if (command == "OutputPinStatus2" || topic.endsWith("/OutputPinStatus2"))
-	{
-		if (payload == "true")
-		{
-			if (app.toggleButton2.indexOf("°") != -1)
-			{
-				LOG_PRINTLN(logPrefix + " Befehl 'OutputPinStatus2' blockiert, da Button-Name '°' enthält.");
-				return;
-			}
-			// triggerSingleOutputAction("2", sourceTag, extractedSource);
-			LOG_PRINTLN(logPrefix + " OutputPinStatus2 ausgelöst");
-		}
-	}
-	else if (command == "OutputPinStatus3" || topic.endsWith("/OutputPinStatus3"))
-	{
-		if (payload == "true")
-		{
-			if (app.toggleButton3.indexOf("°") != -1)
-			{
-				LOG_PRINTLN(logPrefix + " Befehl 'OutputPinStatus3' blockiert, da Button-Name '°' enthält.");
-				return;
-			}
-			// triggerSingleOutputAction("3", sourceTag, extractedSource);
-			LOG_PRINTLN(logPrefix + " OutputPinStatus3 ausgelöst");
-		}
-	}
-	else if (command == "OutputPinStatus4" || topic.endsWith("/OutputPinStatus4"))
-	{
-		if (payload == "true")
-		{
-			if (app.toggleButton4.indexOf("°") != -1)
-			{
-				LOG_PRINTLN(logPrefix + " Befehl 'OutputPinStatus4' blockiert, da Button-Name '°' enthält.");
-				return;
-			}
-			// triggerSingleOutputAction("4", sourceTag, extractedSource);
-			LOG_PRINTLN(logPrefix + " OutputPinStatus4 ausgelöst");
-		}
-	}
-	else if (command == "OutputPinStatus5" || topic.endsWith("/OutputPinStatus5"))
-	{
-		if (payload == "true")
-		{
-			if (app.toggleButton5.indexOf("°") != -1)
-			{
-				LOG_PRINTLN(logPrefix + " Befehl 'OutputPinStatus5' blockiert, da Button-Name '°' enthält.");
-				return;
-			}
-			// triggerSingleOutputAction("5", sourceTag, extractedSource);
-			LOG_PRINTLN(logPrefix + " OutputPinStatus5 ausgelöst");
-		}
-	}
-	else if (command == "ring" || topic.endsWith("/ring"))
-	{
-		if (payload == "true")
-		{
-			if (app.toggleButton5.indexOf("°") != -1)
-			{
-				LOG_PRINTLN(logPrefix + " Befehl 'ring' blockiert, da Button-Name '°' enthält.");
-				return;
-			}
-			setLastActionLocked(lastActionTag5, lastActionName5, sourceTag, extractedSource);
-			OutputPinStatus5 = true;
-			LOG_PRINTLN(logPrefix + " Klingel ausgelöst");
-			notifyClients("Klingel ausgelöst von " + extractedSource, sourceTag.c_str());
-		}
-	}
-	else if (command == "klingelAnAus" || topic.endsWith("/klingelAnAus"))
-	{
-		if (app.toggleButton6.indexOf("°") != -1)
-		{
-			LOG_PRINTLN(logPrefix + " Befehl 'klingelAnAus' blockiert, da Button-Name '°' enthält.");
-			return;
-		}
-		bool newStatusKlingelAnAus = (payload == "on" || payload == "true");
-
-		if (app.klingelAnAus != newStatusKlingelAnAus)
-		{
-			AppSettings settings = app; // Create a mutable copy only when needed
-			settings.klingelAnAus = newStatusKlingelAnAus;
-			settingsManager.saveAppSettings(settings);
-			// /* fingerManager Legacy */;
-			notifyClients(String("Klingel Auto-Funktion von ") + extractedSource + (newStatusKlingelAnAus ? " aktiviert" : " deaktiviert"), sourceTag.c_str());
-			sendSSEEvent(newStatusKlingelAnAus ? "1" : "0", "Button6");
-
-			if (!retained)
-			{
-				publishMqttMessage(rootTopic + "/klingelAnAus/status", newStatusKlingelAnAus ? "on" : "off", true);
-			}
-		}
-	}
-	else if (command == "notify" || topic.endsWith("/notify"))
+	// Befehls-Dispatching
+	if (command == "notify" || topic.endsWith("/notify"))
 	{
 		notifyClients(payload, sourceTag.c_str());
 	}
@@ -4617,8 +3916,7 @@ void setup()
 	networkMutex = xSemaphoreCreateMutex();
 	logMutex = xSemaphoreCreateMutex();
 	sseSendMutex = xSemaphoreCreateMutex();
-	actionMutex = xSemaphoreCreateMutex();
-	if (!networkMutex || !logMutex || !sseSendMutex || !actionMutex)
+	if (!networkMutex || !logMutex || !sseSendMutex)
 	{
 		Serial.println("\n[FATAL] ============================================");
 		Serial.println("[FATAL] Mutex-Erstellung fehlgeschlagen (Speichermangel?)");
@@ -4668,44 +3966,6 @@ void setup()
 	// ------------------------------
 	pinMode(LED_BUILTIN, OUTPUT);
 	digitalWrite(LED_BUILTIN, LOW);
-	pinMode(LedBeleuchtung, OUTPUT);
-	digitalWrite(LedBeleuchtung, LOW);
-	pinMode(OutputPin1, OUTPUT);
-	digitalWrite(OutputPin1, LOW);
-	pinMode(OutputPin2, OUTPUT);
-	digitalWrite(OutputPin2, LOW);
-	pinMode(OutputPin3, OUTPUT);
-	digitalWrite(OutputPin3, LOW);
-	pinMode(OutputPin4, OUTPUT);
-	digitalWrite(OutputPin4, LOW);
-	pinMode(OutputPin5, OUTPUT);
-	digitalWrite(OutputPin5, LOW);
-
-	// NEU: esp_timer für die Ausgangs-Pins initialisieren
-	esp_timer_create_args_t pin1_timer_args = {
-		.callback = &pin1_timer_callback,
-		.name = "pin1_off_timer"};
-	ESP_ERROR_CHECK(esp_timer_create(&pin1_timer_args, &pin1_timer));
-
-	esp_timer_create_args_t pin2_timer_args = {
-		.callback = &pin2_timer_callback,
-		.name = "pin2_off_timer"};
-	ESP_ERROR_CHECK(esp_timer_create(&pin2_timer_args, &pin2_timer));
-
-	esp_timer_create_args_t pin3_timer_args = {
-		.callback = &pin3_timer_callback,
-		.name = "pin3_off_timer"};
-	ESP_ERROR_CHECK(esp_timer_create(&pin3_timer_args, &pin3_timer));
-
-	esp_timer_create_args_t pin4_timer_args = {
-		.callback = &pin4_timer_callback,
-		.name = "pin4_off_timer"};
-	ESP_ERROR_CHECK(esp_timer_create(&pin4_timer_args, &pin4_timer));
-
-	esp_timer_create_args_t pin5_timer_args = {
-		.callback = &pin5_timer_callback,
-		.name = "pin5_off_timer"};
-	ESP_ERROR_CHECK(esp_timer_create(&pin5_timer_args, &pin5_timer));
 
 	// ------------------------------
 	// 5) LittleFS initialisieren
@@ -4802,35 +4062,8 @@ void setup()
 	www_password = resolveSetupPassword();
 	ENABLE_PASSWORD = String(settingsManager.getAppSettings().enablePassword);
 	// ------------------------------
-	// 7) Fingerprint-Sensor koppeln
-	// ------------------------------
-	// Die Einstellung wird ausgelesen und der Manager wird entsprechend konfiguriert.
-	// Die connect-Methode kümmert sich um die Details (Verbindung herstellen oder LED ausschalten).
-	// /* fingerManager Legacy */.fingerprintScannerEnabled);
+	// [Legacy] Fingerprint-Scanner entfernt
 
-// [Legacy] 	if (settingsManager.getAppSettings().fingerprintScannerEnabled && fingerManager.connect())
-	{
-		LOG_PRINTLN("✅ Fingerprint-Scanner erfolgreich verbunden");
-		// Pairing-Prüfung wird nach Kern-Betriebsbereitschaft (Webserver) durchgeführt,
-		// damit Scanner/Web nicht durch NVS-Zugriff verzögert werden.
-	}
-	else
-	{
-		if (settingsManager.getAppSettings().fingerprintScannerEnabled)
-		{
-			// Nur eine Fehlermeldung loggen, wenn der Scanner eigentlich aktiviert sein sollte.
-			LOG_PRINTLN("⚠️  Fingerprint-Scanner konnte nicht initialisiert werden");
-			addLogMessage("⚠️  Scanner-Init fehlgeschlagen");
-		}
-		else
-		{
-			// Wenn der Scanner deaktiviert ist, ist dies der erwartete Zustand.
-			LOG_PRINTLN("ℹ️  Fingerprint-Scanner ist deaktiviert (Settings) ℹ️");
-			addLogMessage("ℹ️  Fingerprint-Scanner deaktiviert ℹ️");
-		}
-	}
-
-	// ------------------------------
 	// 8) Netzwerkmode wählen
 	// ------------------------------
 	// (A) Konfig-Modus: kein WLAN konfiguriert ODER stabiles bewusstes Touch/Finger-Signal
@@ -5342,15 +4575,7 @@ void loop()
 	switch (currentMode)
 	{
 	case Mode::scan:
-		// Nur scannen, wenn Scanner aktiviert UND verbunden ist
-// [Legacy] 		if (false && fingerManager.isScannerEnabled())
-		{
-			// doScan() entfernt
-			currentMode = Mode::normal;
-		}
-		break;
-
-	case Mode::enroll:
+		currentMode = Mode::maintenance;
 		break;
 
 	case Mode::wificonfig:
@@ -5365,246 +4590,6 @@ void loop()
 		break;
 	}
 
-	// Kompakte Pin-Schaltlogik - NUR aktive Pins verarbeiten (keine unnötigen Schleifen!)
-
-	// --- PIN 1 ---
-
-	if (OutputPinStatus1)
-	{
-		int d = app.delayButton1.isEmpty() ? 500 : app.delayButton1.toInt();
-		if (d < 0)
-			d = 0;
-
-		// ✅ NEU: Wenn Verzögerung = 0, dann PIN deaktiviert - nichts tun!
-		// Pins 1 bis 5: Logik für alle OutputPins
-		// Pin 1
-		if (d != 0)
-		{
-			digitalWrite(OutputPin1, HIGH);
-			uint64_t duration_us = (uint64_t)d * 1000; // Dauer in Mikrosekunden
-			(void)esp_timer_stop(pin1_timer);
-			{
-				esp_err_t err = esp_timer_start_once(pin1_timer, duration_us);
-				if (err != ESP_OK) { LOG_PRINTF("[Timer] pin1 Start-Fehler: %s\n", esp_err_to_name(err)); }
-			}
-
-			// --- Snapshot lastActionTag/Name ---
-			String actionTag;
-			String actionName;
-			getLastActionSnapshotLocked(lastActionTag1, lastActionName1, actionTag, actionName);
-			sendSSEEvent("1", "Button1");
-			{
-				String actor = actionName.length() ? actionName : UserParip;
-				String message = String(app.toggleButton1);
-				if (actor.length())
-				{
-					message += " von ";
-					message += actor;
-				}
-				message += " geöffnet.";
-#if USE_TEDEE
-				// ✅ GANZ AM ANFANG prüfen - nur wenn enabled!
-				if (app.tedee_enabled)
-				{
-					LOG_PRINTLN("[Tedee] Sende Unlock-Befehl...");
-					tedeeUnlock();
-				}
-#endif
-				notifyClients(message, actionTag.length() ? actionTag.c_str() : nullptr);
-			}
-			clearLastActionIfUnchangedLocked(lastActionTag1, lastActionName1, actionTag, actionName);
-			OutputPinStatus1 = false;
-		}
-		else
-		{
-			// d == 0: Button1 deaktiviert (Verzögerung = 0)
-			notifyClients("⚠️ Button1 deaktiviert (Verzögerung = 0)", "[BUTTON1_DISABLED]");
-			LOG_PRINTLN("[Button1] Deaktiviert (Verzögerung = 0)");
-			OutputPinStatus1 = false;
-		}
-	}
-
-	// --- PIN 2 ---
-
-	if (OutputPinStatus2)
-	{
-		int d = app.delayButton2.isEmpty() ? 500 : app.delayButton2.toInt();
-		if (d < 0)
-			d = 0;
-
-		// Logik wie bei Pin 1: Alles außer 0 aktiviert, 0 deaktiviert
-		if (d != 0)
-		{
-			// --- Snapshot lastActionTag/Name ---
-			String actionTag;
-			String actionName;
-			getLastActionSnapshotLocked(lastActionTag2, lastActionName2, actionTag, actionName);
-			digitalWrite(OutputPin2, HIGH);
-			uint64_t duration_us = (uint64_t)d * 1000; // Dauer in Mikrosekunden
-			(void)esp_timer_stop(pin2_timer);
-			{
-				esp_err_t err = esp_timer_start_once(pin2_timer, duration_us);
-				if (err != ESP_OK) { LOG_PRINTF("[Timer] pin2 Start-Fehler: %s\n", esp_err_to_name(err)); }
-			}
-
-			sendSSEEvent("1", "Button2");
-			{
-				String actor = actionName.length() ? actionName : UserParip;
-				String message = String(app.toggleButton2);
-				if (actor.length())
-				{
-					message += " von ";
-					message += actor;
-				}
-				message += " geöffnet.";
-
-#if USE_TEDEE
-				// ✅ GANZ AM ANFANG prüfen - nur wenn enabled!
-				if (app.tedee_enabled)
-				{
-					LOG_PRINTLN("[Tedee] Sende Lock-Befehl...");
-					tedeeLock();
-				}
-#endif
-				notifyClients(message, actionTag.length() ? actionTag.c_str() : nullptr);
-			}
-			clearLastActionIfUnchangedLocked(lastActionTag2, lastActionName2, actionTag, actionName);
-			OutputPinStatus2 = false;
-		}
-		else
-		{
-			notifyClients("⚠️ Button2 deaktiviert (Verzögerung = 0)", "[BUTTON2_DISABLED]");
-			LOG_PRINTLN("[Button2] Deaktiviert (Verzögerung = 0)");
-			OutputPinStatus2 = false;
-		}
-	}
-
-	// --- PIN 3 ---
-
-	if (OutputPinStatus3)
-	{
-		int d = app.delayButton3.isEmpty() ? 500 : app.delayButton3.toInt();
-		if (d < 0)
-			d = 0;
-
-		// Logik wie bei Pin 1/2: Alles außer 0 aktiviert, 0 deaktiviert
-		if (d != 0)
-		{
-			// --- Snapshot lastActionTag/Name ---
-			String actionTag;
-			String actionName;
-			getLastActionSnapshotLocked(lastActionTag3, lastActionName3, actionTag, actionName);
-			digitalWrite(OutputPin3, HIGH);
-			uint64_t duration_us = (uint64_t)d * 1000; // Dauer in Mikrosekunden
-			(void)esp_timer_stop(pin3_timer);
-			{
-				esp_err_t err = esp_timer_start_once(pin3_timer, duration_us);
-				if (err != ESP_OK) { LOG_PRINTF("[Timer] pin3 Start-Fehler: %s\n", esp_err_to_name(err)); }
-			}
-
-			sendSSEEvent("1", "Button3");
-			{
-				String actor = actionName.length() ? actionName : UserParip;
-				String message = String(app.toggleButton3);
-				if (actor.length())
-				{
-					message += " von ";
-					message += actor;
-				}
-				message += " geöffnet.";
-				notifyClients(message, actionTag.length() ? actionTag.c_str() : nullptr);
-			}
-			clearLastActionIfUnchangedLocked(lastActionTag3, lastActionName3, actionTag, actionName);
-			OutputPinStatus3 = false;
-		}
-		else
-		{
-			notifyClients("⚠️ Button3 deaktiviert (Verzögerung = 0)", "[BUTTON3_DISABLED]");
-			LOG_PRINTLN("[Button3] Deaktiviert (Verzögerung = 0)");
-			OutputPinStatus3 = false;
-		}
-	}
-
-	// --- PIN 4 ---
-
-	if (OutputPinStatus4)
-	{
-		int d = app.delayButton4.isEmpty() ? 500 : app.delayButton4.toInt();
-		if (d < 0)
-			d = 0;
-
-		// Logik wie bei Pin 1/2/3: Alles außer 0 aktiviert, 0 deaktiviert
-		if (d != 0)
-		{
-			// --- Snapshot lastActionTag/Name ---
-			String actionTag;
-			String actionName;
-			getLastActionSnapshotLocked(lastActionTag4, lastActionName4, actionTag, actionName);
-			digitalWrite(OutputPin4, HIGH);
-			uint64_t duration_us = (uint64_t)d * 1000; // Dauer in Mikrosekunden
-			(void)esp_timer_stop(pin4_timer);
-			{
-				esp_err_t err = esp_timer_start_once(pin4_timer, duration_us);
-				if (err != ESP_OK) { LOG_PRINTF("[Timer] pin4 Start-Fehler: %s\n", esp_err_to_name(err)); }
-			}
-
-			sendSSEEvent("1", "Button4");
-			{
-				String actor = actionName.length() ? actionName : UserParip;
-				String message = String(app.toggleButton4);
-				if (actor.length())
-				{
-					message += " von ";
-					message += actor;
-				}
-				message += " geöffnet.";
-				notifyClients(message, actionTag.length() ? actionTag.c_str() : nullptr);
-			}
-			clearLastActionIfUnchangedLocked(lastActionTag4, lastActionName4, actionTag, actionName);
-			OutputPinStatus4 = false;
-		}
-		else
-		{
-			notifyClients("⚠️ Button4 deaktiviert (Verzögerung = 0)", "[BUTTON4_DISABLED]");
-			LOG_PRINTLN("[Button4] Deaktiviert (Verzögerung = 0)");
-			OutputPinStatus4 = false;
-		}
-	}
-
-	// --- PIN 5 ---
-	if (OutputPinStatus5)
-	{
-		int d = app.delayButton5.isEmpty() ? 1000 : app.delayButton5.toInt();
-		if (d < 0)
-			d = 0;
-
-		// Logik wie bei Pin 1-4: Alles außer 0 aktiviert, 0 deaktiviert
-		if (d != 0)
-		{
-			digitalWrite(OutputPin5, HIGH);
-			// SSE-Event für das Klingel-Icon senden (wird gelb)
-			sendSSEEvent("1", "Button5");
-			if (app.klingelAnAus)
-			{
-				sendSSEEvent("on", "bellRing");
-			}
-			uint64_t duration_us = (uint64_t)d * 1000; // Dauer in Mikrosekunden
-			notifyClients("🔔 Klingel aktiviert für " + String(d / 1000.0) + " Sekunden", "[DOORBELL]");
-			(void)esp_timer_stop(pin5_timer);
-			{
-				esp_err_t err = esp_timer_start_once(pin5_timer, duration_us);
-				if (err != ESP_OK) { LOG_PRINTF("[Timer] pin5 Start-Fehler: %s\n", esp_err_to_name(err)); }
-			}
-			OutputPinStatus5 = false;
-		}
-		else
-		{
-			notifyClients("⚠️ Klingel deaktiviert (Verzögerung = 0)", "[DOORBELL_DISABLED]");
-			LOG_PRINTLN("[Button5] Deaktiviert (Verzögerung = 0)");
-			OutputPinStatus5 = false;
-		}
-	}
-
 	// Auto-Logout nach Inaktivität
 	if (ENABLE_PASSWORD == "on")
 	{
@@ -5615,15 +4600,6 @@ void loop()
 				loggedIn = false;
 				LOG_PRINTLN("Automatisches Ausloggen aufgrund von Inaktivität.");
 			}
-		}
-	}
-
-	// SolarCalc: nur ausführen, wenn Koordinaten gesetzt sind und nicht im WiFi-Config-Modus
-	if (currentMode != Mode::wificonfig)
-	{
-		if (!app.latitude.isEmpty() && !app.longitude.isEmpty())
-		{
-			// solarCalc.loop();
 		}
 	}
 
@@ -5759,108 +4735,7 @@ void loop()
 			}
 		}
 	}
-	// --- Fingerprint-Housekeeping entfernt (Legacy FingerprintManager) ---
-	if (false) // [Legacy] if (!digitalRead(touchRingPin) && mySerial.available() > 0)
-	{
-		static uint32_t lastHousekeeping = 0;
-		if (millis() - lastHousekeeping > 1000)
-		{
-			// LOG_PRINTLN("[UART-Housekeeping] Leere Puffer...");
-			// while (mySerial.available())
-				// mySerial.read();
-			lastHousekeeping = millis();
-		}
-	}
-
-	// Timer-Expired-Flags verarbeiten (ISR-sichere Logik aus Callbacks hierher verlagert)
-	if (pin1_timer_expired)
-	{
-		pin1_timer_expired = false;
-		sendSSEEvent("0", "Button1");
-		if (actionMutex && xSemaphoreTake(actionMutex, 0) == pdTRUE)
-		{
-			lastActionTag1 = "";
-			lastActionName1 = "";
-			xSemaphoreGive(actionMutex);
-		}
-	}
-	if (pin2_timer_expired)
-	{
-		pin2_timer_expired = false;
-		sendSSEEvent("0", "Button2");
-		if (actionMutex && xSemaphoreTake(actionMutex, 0) == pdTRUE)
-		{
-			lastActionTag2 = "";
-			lastActionName2 = "";
-			xSemaphoreGive(actionMutex);
-		}
-	}
-	if (pin3_timer_expired)
-	{
-		pin3_timer_expired = false;
-		sendSSEEvent("0", "Button3");
-		if (actionMutex && xSemaphoreTake(actionMutex, 0) == pdTRUE)
-		{
-			lastActionTag3 = "";
-			lastActionName3 = "";
-			xSemaphoreGive(actionMutex);
-		}
-	}
-	if (pin4_timer_expired)
-	{
-		pin4_timer_expired = false;
-		sendSSEEvent("0", "Button4");
-		if (actionMutex && xSemaphoreTake(actionMutex, 0) == pdTRUE)
-		{
-			lastActionTag4 = "";
-			lastActionName4 = "";
-			xSemaphoreGive(actionMutex);
-		}
-	}
-	if (pin5_timer_expired)
-	{
-		pin5_timer_expired = false;
-		sendSSEEvent("0", "Button5");
-		sendSSEEvent("off", "bellRing");
-		if (actionMutex && xSemaphoreTake(actionMutex, 0) == pdTRUE)
-		{
-			lastActionTag5 = "";
-			lastActionName5 = "";
-			xSemaphoreGive(actionMutex);
-		}
-	}
 
 	// Längeres Delay für realistische CPU-Last-Messung
 	delay(5);
-}
-
-// NEU: Callback-Funktionen für die esp_timer (ISR-sicher: nur GPIO + volatile Flag)
-void pin1_timer_callback(void *arg)
-{
-	digitalWrite(OutputPin1, LOW);
-	pin1_timer_expired = true;
-}
-
-void pin2_timer_callback(void *arg)
-{
-	digitalWrite(OutputPin2, LOW);
-	pin2_timer_expired = true;
-}
-
-void pin3_timer_callback(void *arg)
-{
-	digitalWrite(OutputPin3, LOW);
-	pin3_timer_expired = true;
-}
-
-void pin4_timer_callback(void *arg)
-{
-	digitalWrite(OutputPin4, LOW);
-	pin4_timer_expired = true;
-}
-
-void pin5_timer_callback(void *arg)
-{
-	digitalWrite(OutputPin5, LOW);
-	pin5_timer_expired = true;
 }
