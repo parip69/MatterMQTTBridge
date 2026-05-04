@@ -64,30 +64,6 @@ bool SettingsManager::loadAppSettings()
 #endif
 
 
-    // Legacy-Felder (Phase 2 entfernen)
-    loaded.latitude = preferences.getString("latitude", loaded.latitude);
-    loaded.longitude = preferences.getString("longitude", loaded.longitude);
-    loaded.sunriseOffset = preferences.getString("sunriseOffset", loaded.sunriseOffset);
-    loaded.sunsetOffset = preferences.getString("sunsetOffset", loaded.sunsetOffset);
-    loaded.toggleButton0 = preferences.getString("toggleButton0", loaded.toggleButton0);
-    loaded.toggleButton1 = preferences.getString("toggleButton1", loaded.toggleButton1);
-    loaded.toggleButton2 = preferences.getString("toggleButton2", loaded.toggleButton2);
-    loaded.toggleButton3 = preferences.getString("toggleButton3", loaded.toggleButton3);
-    loaded.toggleButton4 = preferences.getString("toggleButton4", loaded.toggleButton4);
-    loaded.toggleButton5 = preferences.getString("toggleButton5", loaded.toggleButton5);
-    loaded.toggleButton6 = preferences.getString("toggleButton6", loaded.toggleButton6);
-    loaded.delayButton1 = preferences.getString("delayButton1", loaded.delayButton1);
-    loaded.delayButton2 = preferences.getString("delayButton2", loaded.delayButton2);
-    loaded.delayButton3 = preferences.getString("delayButton3", loaded.delayButton3);
-    loaded.delayButton4 = preferences.getString("delayButton4", loaded.delayButton4);
-    loaded.delayButton5 = preferences.getString("delayButton5", loaded.delayButton5);
-    loaded.delayButton6 = preferences.getString("delayButton6", loaded.delayButton6);
-    loaded.sensorPin = preferences.getString("sensorPin", loaded.sensorPin);
-    loaded.sensorPairingCode = preferences.getString("pairingCode", loaded.sensorPairingCode);
-    loaded.sensorPairingValid = preferences.getBool("pairingValid", loaded.sensorPairingValid);
-    loaded.ignorTouchRing = preferences.getBool("ignorTouchRing", loaded.ignorTouchRing);
-    loaded.klingelAnAus = preferences.getBool("klingelAnAus", loaded.klingelAnAus);
-    loaded.fingerprintScannerEnabled = preferences.getBool("fpEnabled", loaded.fingerprintScannerEnabled);
     loaded.wifiRssiDisconnectThreshold = preferences.getInt("wifiRssiD", loaded.wifiRssiDisconnectThreshold);
     loaded.wifiRoamImproveDb = normalizeWifiRoamImproveDb(preferences.getInt("wifiRoamImp", loaded.wifiRoamImproveDb));
     loaded.wifiRoamMinRssi = normalizeWifiRoamMinRssi(preferences.getInt("wifiRoamMin", loaded.wifiRoamMinRssi));
@@ -206,30 +182,6 @@ void SettingsManager::saveAppSettings()
 #endif
 
 
-    // Legacy-Felder (Phase 2 entfernen)
-    preferences.putString("latitude", localCopy.latitude);
-    preferences.putString("longitude", localCopy.longitude);
-    preferences.putString("sunriseOffset", localCopy.sunriseOffset);
-    preferences.putString("sunsetOffset", localCopy.sunsetOffset);
-    preferences.putString("toggleButton0", localCopy.toggleButton0);
-    preferences.putString("toggleButton1", localCopy.toggleButton1);
-    preferences.putString("toggleButton2", localCopy.toggleButton2);
-    preferences.putString("toggleButton3", localCopy.toggleButton3);
-    preferences.putString("toggleButton4", localCopy.toggleButton4);
-    preferences.putString("toggleButton5", localCopy.toggleButton5);
-    preferences.putString("toggleButton6", localCopy.toggleButton6);
-    preferences.putString("delayButton1", localCopy.delayButton1);
-    preferences.putString("delayButton2", localCopy.delayButton2);
-    preferences.putString("delayButton3", localCopy.delayButton3);
-    preferences.putString("delayButton4", localCopy.delayButton4);
-    preferences.putString("delayButton5", localCopy.delayButton5);
-    preferences.putString("delayButton6", localCopy.delayButton6);
-    preferences.putString("sensorPin", localCopy.sensorPin);
-    preferences.putString("pairingCode", localCopy.sensorPairingCode);
-    preferences.putBool("pairingValid", localCopy.sensorPairingValid);
-    preferences.putBool("ignorTouchRing", localCopy.ignorTouchRing);
-    preferences.putBool("klingelAnAus", localCopy.klingelAnAus);
-    preferences.putBool("fpEnabled", localCopy.fingerprintScannerEnabled);
     preferences.putInt("wifiRssiD", localCopy.wifiRssiDisconnectThreshold);
     localCopy.wifiRoamImproveDb = normalizeWifiRoamImproveDb(localCopy.wifiRoamImproveDb);
     localCopy.wifiRoamMinRssi = normalizeWifiRoamMinRssi(localCopy.wifiRoamMinRssi);
