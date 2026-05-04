@@ -414,7 +414,11 @@
                         document.getElementById('val_mode').innerText = data.mode;
                         document.getElementById('val_mqtt').innerText = data.mqtt;
                         document.getElementById('val_root').innerText = data.root;
-                        document.getElementById('val_version').innerText = data.version;
+                        const cleanVersion = String(data.version || '')
+                            .replace(/<br\s*\/?\s*>/gi, ' ')
+                            .replace(/\s+/g, ' ')
+                            .trim();
+                        document.getElementById('val_version').innerText = cleanVersion;
                         if (data.hostname) document.getElementById('val_hostname').innerText = data.hostname;
                         if (data.mdns) {
                             document.getElementById('val_mdns').innerText = data.mdns;
