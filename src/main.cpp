@@ -2,7 +2,7 @@
 //******************************************************
 //         Main of MatterMQTTBridge.
 // nur hier die start wert der version Aendern.OK=======
-// @version: 1.0.15 <br> Builddatum 20:36:17 04-05.2026
+// @version: 1.0.21 <br> Builddatum 21:09:10 04-05.2026
 //****************************************************
 
 #include <Arduino.h>
@@ -19,7 +19,6 @@
 
 #include "SettingsManager.h"
 #include "Bridge.h"
-#include "MatterBridgeManager.h"
 #include "global.h"
 
 #if USE_MQTT_CLIENT
@@ -40,10 +39,9 @@
 #define TEST_OUTPUT_PIN_5 33
 
 // ======================= GLOBALS =======================
-const char* firmwareVersion = "1.0.15 <br> Builddatum 20:36:17 04-05.2026";
+const char* firmwareVersion = "1.0.21 <br> Builddatum 21:09:10 04-05.2026";
 AsyncWebServer webServer(80);
 SettingsManager settingsManager;
-MatterBridgeManager matterBridge;
 
 String mqttRootTopic = "fingerprint";
 SemaphoreHandle_t networkMutex = nullptr;
@@ -239,32 +237,6 @@ void setupRouting() {
         String resp;
         serializeJson(doc, resp);
         request->send(200, "application/json", resp);
-    });
-
-    webServer.on("/api/matter/status", HTTP_GET, [](AsyncWebServerRequest *request) {
-        JsonDocument doc;
-        doc["ok"] = true;
-        doc["ready"] = matterBridge.isReady();
-        doc["pairingCode"] = matterBridge.getPairingCode();
-        doc["qrCode"] = matterBridge.getQrCode();
-
-        String resp;
-        serializeJson(doc, resp);
-        request->send(200, "application/json", resp);
-    });
-
-    webServer.on("/api/matter/pairing/start", HTTP_GET, [](AsyncWebServerRequest *request) {
-        bool ok = matterBridge.startPairing();
-
-        JsonDocument doc;
-        doc["ok"] = ok;
-        doc["ready"] = matterBridge.isReady();
-        doc["pairingCode"] = matterBridge.getPairingCode();
-        doc["qrCode"] = matterBridge.getQrCode();
-
-        String resp;
-        serializeJson(doc, resp);
-        request->send(ok ? 200 : 500, "application/json", resp);
     });
 
     // Settings speichern
@@ -501,8 +473,6 @@ void setup() {
     webServer.begin();
     addLogMessage("Webserver gestartet");
 
-    matterBridge.begin();
-
 #if USE_OUTPUT_TEST_PINS
     {
         const int testPins[] = {TEST_OUTPUT_PIN_1, TEST_OUTPUT_PIN_2, TEST_OUTPUT_PIN_3, TEST_OUTPUT_PIN_4, TEST_OUTPUT_PIN_5};
@@ -560,7 +530,6 @@ void setup() {
 // ======================= LOOP =======================
 void loop() {
     ElegantOTA.loop();
-    matterBridge.loop();
 
 #if USE_MQTT_CLIENT
     if (settingsManager.getAppSettings().mqtt_isClient) {

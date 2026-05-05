@@ -2,6 +2,74 @@
 
 ## 4. Mai 2026 - Matter-Grundintegration: Framework-Blocker sauber verifiziert
 
+## 4. Mai 2026 - index.html auf gewünschtes Preview-Layout umgestellt
+
+## 4. Mai 2026 - Rückbau auf Style-only ohne Matter-Umbau
+
+## 4. Mai 2026 - Preview-Style mit bestehender Bridge-API verfeinert
+
+**Aufgabe:** Den neuen Stil beibehalten und den Matter-Bereich nur als UI-Platzhalter sauber in die bestehende Bridge-Oberfläche einhängen
+
+**Durchgeführte Aktionen:**
+- `data/index.html` im Preview-Stil belassen.
+- Zusätzliche Statusfelder `Hostname` und `mDNS` an die vorhandene `/api/bridge/status`-API angebunden.
+- Versionsanzeige bereinigt, damit `<br>` nicht sichtbar wird.
+- Vorhandene Log-Historie über `/api/bridge/log` und Live-Log über `/events` an die neue Oberfläche angebunden.
+- Matter-Bereich bewusst als Platzhalter belassen, ohne neue Firmware- oder Backend-Logik.
+
+**Verifikation:**
+- Upload `U ALL` erfolgreich.
+
+**Ergebnis:**
+- **PASS** – neues UI erfolgreich auf COM4 übertragen, inklusive LittleFS und Firmware.
+
+**Geänderte Dateien:**
+- `data/index.html`
+- `agent_worklog.md`
+
+---
+
+**Aufgabe:** Das neue Seiten-Layout behalten, aber alle Matter-/Toolchain-Änderungen entfernen und den stabilen Build-Stand wiederherstellen
+
+**Durchgeführte Aktionen:**
+- `platformio.ini` von der Matter-/pioarduino-Umstellung zurück auf `platform = espressif32` gesetzt.
+- Matter-Build-Flag entfernt.
+- `src/main.cpp`: `MatterBridgeManager`-Einbindung, globale Instanz, Matter-API-Routen sowie `begin()`/`loop()`-Aufrufe entfernt.
+- `src/MatterBridgeManager.h/.cpp` entfernt.
+- `data/index.html` bereinigt und als saubere Preview-Variante im gewünschten Stil neu eingesetzt.
+
+**Verifikation:**
+- Normaler Firmware-Build `B Bridge` erfolgreich.
+
+**Ergebnis:**
+- **PASS** – alter stabiler Build-Stand wiederhergestellt, neues HTML-Layout bleibt erhalten.
+
+**Geänderte Dateien:**
+- `platformio.ini`
+- `src/main.cpp`
+- `data/index.html`
+- `agent_worklog.md`
+
+---
+
+**Aufgabe:** Die Startseite optisch und strukturell wie die bereitgestellte Vorschau übernehmen
+
+**Durchgeführte Aktionen:**
+- `data/index.html` vollständig auf das gewünschte Header-/Card-/Grid-Layout umgestellt.
+- Matter-Pairing-Bereich optisch wie in der Vorschau übernommen.
+- Status-, MQTT-, WLAN- und Trigger-Bereiche an das neue Layout angepasst.
+- Vorhandene Bridge-Funktionen beibehalten: Status laden, Settings laden/speichern, Trigger senden, Neustart, Live-Log über `/events`.
+- Matter-Ansicht defensiv angebunden: nutzt `/api/matter/status` und `/api/matter/pairing/start`, fällt bei nicht vorhandenem Backend sauber auf Platzhalter zurück.
+
+**Verifikation:**
+- LittleFS-Build `B FS` gestartet zur Prüfung der Weboberfläche im Dateisystem-Build.
+
+**Geänderte Dateien:**
+- `data/index.html` (Versionszeile unverändert)
+- `agent_worklog.md`
+
+---
+
 **Aufgabe:** Erste echte Matter-Basis (On/Off + Pairing) vorbereiten und Build-Sicherheit prüfen
 
 **Durchgeführte Aktionen:**
