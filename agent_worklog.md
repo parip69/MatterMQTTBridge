@@ -418,6 +418,46 @@
 
 **Ergebnis:** PASS – Nur das neue Bridge-Icon `data/icon-bridge.svg` bleibt aktiv.
 
+## 5. Mai 2026 - Gemeinsamer Web-/Matter-Triggerpfad fuer OutputPinStatus 1 bis 5
+
+**Aufgabe:** Die Matter-/Google-Schalter auf denselben Fingerprint-kompatiblen Ausloeseweg umstellen wie die vorhandenen Web-Buttons.
+
+**Durchgefuehrte Aktionen:**
+- `src/main.cpp`: zentrale Funktion `bridgeExecuteTrigger(uint8_t, const char*)` ergaenzt.
+- `src/main.cpp`: Source-Tag-Normalisierung ergaenzt, damit `WEB`, `MATTER` und Default `BRIDGE` ohne doppelte Klammern zu `source:[TAG];true` werden.
+- `src/main.cpp`: API `GET /api/bridge/trigger` auf den gemeinsamen Pfad umgebaut, JSON-Antwort bleibt kompatibel.
+- `src/Bridge.h`: Deklaration fuer `bridgeExecuteTrigger(...)` ergaenzt; bestehende Trigger-Deklarationen beibehalten.
+- `src/MatterBridgeManager.cpp`: direkter Pfad ueber `bridgeSendTrigger(...)` entfernt und auf `bridgeExecuteTrigger(slot, "MATTER")` umgestellt.
+- `src/MatterBridgeManager.cpp`: fuenf Matter-OnOff-Endpunkte mit `MatterOnOffPlugin` fuer Slots 1 bis 5 angelegt.
+- `src/MatterBridgeManager.cpp`: `OFF` loest keinen MQTT-Befehl aus; nach erfolgreichem `ON` wird per vorhandener oeffentlicher Methode `setOnOff(false)` ein Ruecksetzen auf `OFF` im Loop versucht.
+- Lokale Matter-Headers geprueft: `MatterOnOffPlugin` ist vorhanden und verwendet; keine belastbare API fuer Namen/Labels einzelner Endpunkte gefunden, daher nicht erzwungen.
+
+**Verifikation:**
+- Build ausgefuehrt: `B Bridge` erfolgreich.
+- Groesse dokumentiert:
+	- RAM: 34.2% (`112200 / 327680 Bytes`)
+	- Flash: 98.6% (`1937651 / 1966080 Bytes`)
+- Geraet per `U ALL` auf COM4 geflasht (MAC `88:57:21:b1:e4:10`).
+- HTTP-Test gegen erlaubtes Ziel `192.168.111.222` erfolgreich:
+	- `/api/bridge/status` liefert `ok=true`, Hostname `MatterMQTTBridge`, MQTT `connected`.
+	- `/api/bridge/trigger?pin=1` liefert `topic=GarageDE/TriggerOutPin`, `payload=1`, `outputTopic=GarageDE/OutputPinStatus1`, `outputPayload=source:[WEB];true`.
+	- `/api/bridge/trigger?pin=5` liefert `topic=GarageDE/TriggerOutPin`, `payload=5`, `outputTopic=GarageDE/OutputPinStatus5`, `outputPayload=source:[WEB];true`.
+	- `/api/bridge/log` bestaetigt TX fuer `GarageDE/TriggerOutPin` sowie `GarageDE/OutputPinStatus1` und `GarageDE/OutputPinStatus5` mit `source:[WEB];true`.
+
+**Offene Punkte:**
+- Live-Test `Matter/Google -> Slot 1/3 -> MQTT` in diesem Lauf nicht automatisiert ausgeloest; der Codepfad ist lokal gebaut und die Slots werden im Geraetelog als bereit angezeigt.
+- Bestaetigung im Fingerprint-Projekt, dass dort `triggerSingleOutputAction("1".."5")` ausgeloest wird, wurde in diesem Schritt nicht auf der Gegenstelle verifiziert, da die Fingerprint-Firmware nicht geaendert werden darf.
+
+**Geaenderte Dateien:**
+- `src/main.cpp`
+- `src/Bridge.h`
+- `src/MatterBridgeManager.cpp`
+- `agent_worklog.md`
+
+**Ergebnis:**
+- **PASS** fuer Build, Flash und Web-Trigger-Pfad auf echter Hardware.
+- **OFFEN** fuer echten Matter/Google-Schaltvorgang und End-to-End-Bestaetigung im Fingerprint-Zielsystem.
+
 ## 5. Mai 2026 - Schnellzugriff auf WLAN-Konfiguration ergänzt
 
 **Aufgabe:** Direkten Button zur WLAN-Konfigurationsseite bereitstellen.
