@@ -159,7 +159,6 @@ void handleIncomingMqttMessage(const String &topicStr, const String &payloadStr,
     }
 #endif
 
-    bridgeHandleMetaFeedback(topicStr, payloadStr);
 }
 
 String outputPinStatusTopic(uint8_t pin) {
@@ -221,8 +220,6 @@ void setupRouting() {
         doc["ip"] = WiFi.localIP().toString();
         doc["rssi"] = WiFi.RSSI();
         doc["version"] = firmwareVersion;
-        doc["metaSlots"] = bridgeMetaSlotCount();
-
         String hn = normalizeBridgeHostname(settingsManager.getWifiSettings().hostname);
         doc["hostname"] = hn;
         doc["mdns"] = hn + ".local";
@@ -269,73 +266,6 @@ void setupRouting() {
         serializeJson(doc, resp);
         request->send(ok ? 200 : 500, "application/json", resp);
     });
-
-    webServer.on("/api/meta-config", HTTP_GET, [](AsyncWebServerRequest *request) {
-        JsonDocument doc;
-        JsonObject root = doc.to<JsonObject>();
-        bridgeWriteMetaConfig(root);
-
-        String resp;
-        serializeJson(doc, resp);
-        request->send(200, "application/json", resp);
-    });
-
-    webServer.on(
-        "/api/meta-config",
-        HTTP_POST,
-        [](AsyncWebServerRequest *request) {
-            (void)request;
-        },
-        nullptr,
-        [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total) {
-            if (index == 0) {
-                if (total > 8192) {
-                    request->send(413, "application/json", "{\"ok\":false,\"error\":\"meta config too large\"}");
-                    return;
-                }
-                request->_tempObject = calloc(total + 1, sizeof(uint8_t));
-                if (request->_tempObject == nullptr) {
-                    request->send(500, "application/json", "{\"ok\":false,\"error\":\"out of memory\"}");
-                    return;
-                }
-            }
-
-            if (request->_tempObject == nullptr) {
-                return;
-            }
-
-            uint8_t *buffer = static_cast<uint8_t *>(request->_tempObject);
-            memcpy(buffer + index, data, len);
-
-            if (index + len == total) {
-                buffer[total] = 0;
-
-                JsonDocument input;
-                DeserializationError jsonError = deserializeJson(input, reinterpret_cast<const char *>(buffer));
-                free(request->_tempObject);
-                request->_tempObject = nullptr;
-
-                String error;
-                bool ok = false;
-                if (jsonError) {
-                    error = "invalid json";
-                } else {
-                    ok = bridgeSaveMetaConfig(input.as<JsonVariant>(), error);
-                }
-
-                JsonDocument doc;
-                doc["ok"] = ok;
-                doc["metaSlots"] = bridgeMetaSlotCount();
-                if (!ok) {
-                    doc["error"] = error;
-                }
-
-                String resp;
-                serializeJson(doc, resp);
-                request->send(ok ? 200 : 400, "application/json", resp);
-            }
-        }
-    );
 
     // Settings speichern
     webServer.on("/save_settings", HTTP_POST, [](AsyncWebServerRequest *request) {
@@ -447,8 +377,8 @@ void setupRouting() {
         if (sent) {
             doc["ok"] = true;
             doc["trigger"] = pin;
-            doc["topic"] = bridgeConfiguredSendTopic(pin);
-            doc["payload"] = bridgeConfiguredSendPayload(pin);
+            doc["topic"] = bridgeTriggerTopic();
+            doc["payload"] = bridgeTriggerPayload(pin);
             if (pin >= 1 && pin <= 5) {
                 doc["outputTopic"] = outputTopic;
                 doc["outputPayload"] = outputPayload;
@@ -526,7 +456,6 @@ void setup() {
     settingsManager.loadAppSettings();
     
     mqttRootTopic = normalizeMqttRootTopic(settingsManager.getAppSettings().mqttRootTopic);
-    bridgeLoadMetaConfig();
 
     WifiSettings ws = settingsManager.getWifiSettings();
     ws.hostname = normalizeBridgeHostname(ws.hostname);

@@ -556,3 +556,26 @@
 - `agent_worklog.md` (dieses Protokoll)
 
 **Ergebnis:** Analyse abgeschlossen; naechster sinnvoller Schritt ist Backend-Speicherung und Verwendung der Meta-Konfiguration.
+
+## 5. Mai 2026 - 18:51 Uhr
+
+**Aufgabe:** Rueckbau auf startbare 5-Pin-Basisfirmware.
+
+**Durchgefuehrte Aktionen:**
+- Matter im `bridge`-Build deaktiviert, damit die Firmware wieder deutlich kleiner wird.
+- Meta-Konfigurationslogik aus der laufenden Firmware entfernt; `Bridge.cpp` sendet wieder direkt `TriggerOutPin` mit Payload `1..5`.
+- Matter-Logmeldung angepasst: statt Fehler wird nun klar gemeldet, dass die 5-Pin-Basisfirmware aktiv ist.
+- Build ohne Versions-/Backup-Hooks ausgefuehrt: RAM 15,8 %, Flash 59,6 %.
+- Firmware direkt per `esptool` auf COM4 geflasht und verifiziert.
+- IP-Test ueber `192.168.111.222` ausgefuehrt: `/api/bridge/status` HTTP 200, MQTT `connected`.
+- Trigger-Tests ausgefuehrt: `/api/bridge/trigger?pin=1`, `pin=2` und `pin=5` jeweils HTTP 200.
+
+**Geaenderte Dateien:**
+- `platformio.ini`
+- `src/Bridge.cpp`
+- `src/Bridge.h`
+- `src/MatterBridgeManager.cpp`
+- `src/main.cpp`
+- `agent_worklog.md` (dieses Protokoll)
+
+**Ergebnis:** PASS - Bridge startet wieder und arbeitet als kleine 5-Pin-MQTT-Basisfirmware.

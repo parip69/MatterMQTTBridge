@@ -7,7 +7,7 @@
 #include "SettingsManager.h"
 
 extern SettingsManager settingsManager;
-extern bool bridgeSendMatterFunction(const String &matterFunction, uint8_t fallbackTriggerNumber);
+extern bool bridgeSendTrigger(uint8_t triggerNumber);
 extern void addLogMessage(const String& message);
 
 #ifdef BRIDGE_MATTER_ENABLED
@@ -70,17 +70,17 @@ void MatterBridgeManager::begin() {
 
     gOnOffLight.onChange([](bool state) -> bool {
         if (state) {
-            addLogMessage("Matter ON erhalten -> Funktion open");
-            if (!bridgeSendMatterFunction("open", 1)) {
-                addLogMessage("Matter Fehler: Funktion open konnte nicht gesendet werden");
+            addLogMessage("Matter ON erhalten -> TriggerOutPin=1");
+            if (!bridgeSendTrigger(1)) {
+                addLogMessage("Matter Fehler: TriggerOutPin=1 konnte nicht gesendet werden");
                 return false;
             }
             return true;
         }
 
-        addLogMessage("Matter OFF erhalten -> Funktion close");
-        if (!bridgeSendMatterFunction("close", 2)) {
-            addLogMessage("Matter Fehler: Funktion close konnte nicht gesendet werden");
+        addLogMessage("Matter OFF erhalten -> TriggerOutPin=2");
+        if (!bridgeSendTrigger(2)) {
+            addLogMessage("Matter Fehler: TriggerOutPin=2 konnte nicht gesendet werden");
             return false;
         }
         return true;
@@ -94,7 +94,7 @@ void MatterBridgeManager::begin() {
     printPairingToSerial();
 #else
     ready_ = false;
-    addLogMessage("Matter Fehler: Matter API im aktuellen Build nicht verfuegbar");
+    addLogMessage("Matter deaktiviert: 5-Pin-Basisfirmware aktiv");
 #endif
 }
 
@@ -120,7 +120,7 @@ bool MatterBridgeManager::startPairing() {
     addLogMessage("Matter Pairing gestartet");
     return true;
 #else
-    addLogMessage("Matter Fehler: Pairing-API nicht verfuegbar");
+    addLogMessage("Matter deaktiviert: Pairing-API nicht verfuegbar");
     return false;
 #endif
 }
