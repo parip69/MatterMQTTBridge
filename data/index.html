@@ -1146,6 +1146,22 @@
         }
     }
 
+    function getMatterQrPayload(qrCode) {
+        const qr = String(qrCode || "").trim();
+        if (!qr) return "";
+        if (qr.startsWith("MT:")) return qr;
+
+        try {
+            const url = new URL(qr);
+            const payload = url.searchParams.get("data");
+            if (payload && payload.startsWith("MT:")) return payload;
+        } catch (e) {
+            // Kein URL-Format, also direkt als Nutzdaten verwenden.
+        }
+
+        return qr;
+    }
+
     function renderMatterQr(qrCode) {
         const qr = String(qrCode || "").trim();
         const box = $("qrBox");
@@ -1154,7 +1170,8 @@
             return;
         }
 
-        const url = "https://quickchart.io/qr?size=170&text=" + encodeURIComponent(qr);
+        const payload = getMatterQrPayload(qr);
+        const url = "https://quickchart.io/qr?size=170&text=" + encodeURIComponent(payload);
         box.innerHTML = `<img src="${url}" alt="Matter QR-Code" />`;
     }
 

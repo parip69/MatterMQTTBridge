@@ -502,3 +502,41 @@
 - `agent_worklog.md` (dieses Protokoll)
 
 **Ergebnis:** TEILWEISE PASS – Build/Flash stabil mit neuer Toolchain, aber Matter bleibt auf diesem Ziel weiterhin nicht linkbar (`ready=false`), daher noch kein Pairing-Code/QR aus Firmware moeglich.
+
+## 5. Mai 2026 - 17:43 Uhr
+
+**Aufgabe:** Netzwerk-Test der MatterMQTTBridge ueber `.local` und IP.
+
+**Durchgefuehrte Aktionen:**
+- `MatterMQTTBridge.local` per DNS/Ping/HTTP geprueft: Namensaufloesung fehlgeschlagen.
+- Lokale WLAN-Nachbarliste ausgewertet und `192.168.111.222` als Bridge ueber `/api/bridge/status` identifiziert.
+- Weboberflaeche `http://192.168.111.222/` im Browser geoeffnet.
+- API-Status im Sekundentakt geprueft: `/api/bridge/status` HTTP 200, MQTT `connected`, RSSI ca. -45/-46 dBm.
+- Matter-API geprueft: `/api/matter/status` HTTP 200, `ready=true`, Pairing-Code und QR-Code vorhanden.
+- `/api/bridge/log` geprueft: LittleFS, WLAN, mDNS, Webserver, Matter und MQTT-Subscribe sichtbar.
+- `/events` geprueft: Antwort `Not found`.
+
+**Geaenderte Dateien:**
+- `agent_worklog.md` (dieses Protokoll)
+
+**Ergebnis:** PASS ueber IP; `.local` auf diesem Windows-System aktuell FAIL wegen fehlender Namensaufloesung.
+
+## 5. Mai 2026 - 17:52 Uhr
+
+**Aufgabe:** Matter-Pairing erklaeren und QR-Code-Anzeige korrigieren.
+
+**Durchgefuehrte Aktionen:**
+- Aktuelle Matter-Konfiguration analysiert: `MatterOnOffLight` ist aktiv, Google Home zeigt deshalb ein Licht mit An/Aus.
+- Mapping bestaetigt: Matter ON sendet `TriggerOutPin=1`, Matter OFF sendet `TriggerOutPin=2`.
+- MQTT-Ziel bestaetigt: Root-Topic `GarageDE`, Trigger-Topic `GarageDE/TriggerOutPin`.
+- QR-Anzeige in `data/index.html` korrigiert: Aus Matter-URLs mit `data=MT:...` wird vor der QR-Erzeugung der reine `MT:...`-Payload extrahiert.
+- Extraktion lokal mit dem aktuellen Bridge-Wert getestet: `MT:Y.K9042C00KA0648G00`.
+- LittleFS gebaut und per `U FS`/`uploadfs` erfolgreich auf COM4 hochgeladen.
+- Bridge danach per IP geprueft: `/api/bridge/status` HTTP 200, Matter `ready=true`, MQTT nach kurzem Reconnect wieder `connected`.
+- Unbeabsichtigte automatische Versionsaenderung durch den PlatformIO-Prebuild-Hook in `src/main.cpp` sofort rueckgaengig gemacht; keine funktionale Aenderung an `src/main.cpp` bleibt im Diff.
+
+**Geaenderte Dateien:**
+- `data/index.html`
+- `agent_worklog.md` (dieses Protokoll)
+
+**Ergebnis:** PASS - QR-Code wird nun fuer den Matter-Payload erzeugt; aktuelle Matter-Funktion bleibt ein An/Aus-Licht als erster Trigger-Test.
