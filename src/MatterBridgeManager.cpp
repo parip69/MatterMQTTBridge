@@ -10,15 +10,11 @@ extern SettingsManager settingsManager;
 extern bool bridgeSendTrigger(uint8_t triggerNumber);
 extern void addLogMessage(const String& message);
 
-#if __has_include(<Matter.h>)
+#ifdef BRIDGE_MATTER_ENABLED
 #include <Matter.h>
-#if __has_include(<MatterEndpoints/MatterOnOffLight.h>)
 #include <MatterEndpoints/MatterOnOffLight.h>
-#define BRIDGE_MATTER_ENDPOINT_AVAILABLE 1
-#else
-#define BRIDGE_MATTER_ENDPOINT_AVAILABLE 0
-#endif
 #define BRIDGE_MATTER_HEADER_AVAILABLE 1
+#define BRIDGE_MATTER_ENDPOINT_AVAILABLE 1
 #else
 #define BRIDGE_MATTER_HEADER_AVAILABLE 0
 #define BRIDGE_MATTER_ENDPOINT_AVAILABLE 0
