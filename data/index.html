@@ -391,9 +391,10 @@
             <h2>Matter Pairing</h2>
 
             <p class="small">
-                Musterbereich für später. Hier sollen Pairing-Code und QR-Code angezeigt werden,
-                sobald echtes Matter eingebaut ist.
+                Pairing-Code und QR-Code werden aus der Matter-API geladen.
             </p>
+
+            <p class="small" id="matterState">Status: wird geladen...</p>
 
             <button onclick="startMatterPairing()">Pairing starten</button>
             <button class="secondary" onclick="stopMatterPairing()">Pairing stoppen</button>
@@ -407,7 +408,7 @@
             </div>
 
             <p class="small">
-                Später: Google Home scannt diesen QR-Code oder nutzt den Pairing-Code.
+                Google Home scannt diesen QR-Code oder nutzt den Pairing-Code.
             </p>
         </section>
 
@@ -574,12 +575,19 @@
             $("pairingCode").textContent = code || "nicht verfügbar";
             renderMatterQr(j.qrCode || "");
 
+            if (j.ready) {
+                $("matterState").textContent = "Status: Matter bereit";
+            } else {
+                $("matterState").textContent = "Status: Matter im aktuellen Build nicht verfügbar";
+            }
+
             if (!j.ready && logOnError) {
                 log("Matter ist noch nicht bereit");
             }
         } catch (e) {
             $("pairingCode").textContent = "nicht verfügbar";
             renderMatterQr("");
+            $("matterState").textContent = "Status: Matter-API nicht erreichbar";
             if (logOnError) {
                 log("Matter-Status konnte nicht geladen werden");
             }
@@ -596,11 +604,16 @@
             renderMatterQr(j.qrCode || "");
 
             if (j.ok) {
+                $("matterState").textContent = "Status: Pairing aktiv";
                 log("Matter Pairing gestartet");
             } else {
+                $("matterState").textContent = "Status: Pairing konnte nicht gestartet werden";
                 log("Matter Pairing konnte nicht gestartet werden");
             }
         } catch (e) {
+            $("matterState").textContent = "Status: Pairing-API nicht verfügbar";
+            $("pairingCode").textContent = "nicht verfügbar";
+            renderMatterQr("");
             log("Matter Pairing konnte nicht gestartet werden");
         }
     }
@@ -641,7 +654,5 @@
     setInterval(loadMatterStatus, 8000);
 </script>
 
-</body>
-</html>
 </body>
 </html>

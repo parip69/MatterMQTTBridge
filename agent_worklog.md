@@ -465,3 +465,21 @@
 - `agent_worklog.md` (dieses Protokoll)
 
 **Ergebnis:** PASS – Pairing-Code und QR-Code werden nun aus der Matter-API geladen und angezeigt.
+
+## 5. Mai 2026 - Matter-Pairing ueber IP verifiziert und Status sichtbar gemacht
+
+**Aufgabe:** Ueber die Geraete-IP pruefen, warum beim Klick auf Pairing starten kein QR/Code erscheint.
+
+**Durchgefuehrte Aktionen:**
+- Direktzugriff auf `http://192.168.111.222` geprueft.
+- API-Check ausgefuehrt: `/api/matter/status` liefert `ready=false`, leerer `pairingCode` und leerer `qrCode`.
+- API-Check ausgefuehrt: `/api/matter/pairing/start` liefert HTTP 500.
+- `data/index.html` um klaren Statushinweis in der Matter-Kachel erweitert (`matterState`).
+- Fehlerfall sichtbar gemacht: Bei fehlender Matter-API wird jetzt in der Kachel direkt ein klarer Status angezeigt.
+- `U FS` ausgefuehrt und live ueber IP verifiziert.
+
+**Geaenderte Dateien:**
+- `data/index.html`
+- `agent_worklog.md` (dieses Protokoll)
+
+**Ergebnis:** PASS – UI reagiert sichtbar; Ursache ist aktuell Backend-seitig (`Matter API im aktuellen Build nicht verfuegbar`).
