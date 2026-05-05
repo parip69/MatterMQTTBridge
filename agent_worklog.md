@@ -540,3 +540,19 @@
 - `agent_worklog.md` (dieses Protokoll)
 
 **Ergebnis:** PASS - QR-Code wird nun fuer den Matter-Payload erzeugt; aktuelle Matter-Funktion bleibt ein An/Aus-Licht als erster Trigger-Test.
+
+## 5. Mai 2026 - 18:00 Uhr
+
+**Aufgabe:** Strategie fuer Meta-Konfiguration, Matter-Anzeige in Google Home und MQTT-Horch-/Sendeverhalten klaeren.
+
+**Durchgefuehrte Aktionen:**
+- Bestehende Meta-Konfigurations-UI in `data/index.html` analysiert.
+- Festgestellt: `/api/meta-config` fehlt im Backend noch; die UI speichert aktuell nur lokal im Browser.
+- Aktuelle Matter-Implementierung geprueft: Es ist ein einzelner `MatterOnOffLight` aktiv.
+- Verfuegbare Arduino-Matter-Endpunkte lokal geprueft: u.a. OnOff-Light/Plugin, ContactSensor, GenericSwitch und WindowCovering; kein fertiger DoorLock-/GarageDoor-Endpunkt vorhanden.
+- Strategie vorbereitet: Meta-Konfiguration zuerst persistent machen, danach Matter-Endpunkte aus der Konfiguration ableiten und MQTT-Horchlogik anbinden.
+
+**Geaenderte Dateien:**
+- `agent_worklog.md` (dieses Protokoll)
+
+**Ergebnis:** Analyse abgeschlossen; naechster sinnvoller Schritt ist Backend-Speicherung und Verwendung der Meta-Konfiguration.
