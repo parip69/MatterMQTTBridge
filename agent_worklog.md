@@ -432,3 +432,19 @@
 - `agent_worklog.md` (dieses Protokoll)
 
 **Ergebnis:** PASS – WLAN-Konfiguration ist jetzt direkt über die Startseite erreichbar.
+
+## 5. Mai 2026 - Login und WLAN-Konfig im selben UI-Stil wie Startseite
+
+**Aufgabe:** `wificonfig.html` und `login.html` optisch an den Stil von `index.html` angleichen.
+
+**Durchgeführte Aktionen:**
+- `data/wificonfig.html`: Farbpalette, Kartenstil, Inputs und Buttons auf den Bridge-Startseitenstil umgestellt.
+- `data/login.html`: Login-Karte, Hintergrund, Eingabefeld und Primärbutton auf denselben Stil umgestellt.
+- Nur CSS/Design angepasst, keine Endpunkte oder Formularlogik geändert.
+
+**Geänderte Dateien:**
+- `data/wificonfig.html`
+- `data/login.html`
+- `agent_worklog.md` (dieses Protokoll)
+
+**Ergebnis:** PASS – Login- und WLAN-Konfigurationsseite passen visuell zur `index.html`.
