@@ -184,7 +184,7 @@ void MqttConnectionManager::_resolveAndConnect()
 
             if (useFirstAvailable)
             {
-                this->resolvedIp = MDNS.IP(0);
+                this->resolvedIp = MDNS.address(0);
                 this->config.port = MDNS.port(0); // Port ebenfalls aktualisieren
                 success = true;
                 via = "mdns-auto";
@@ -206,7 +206,7 @@ void MqttConnectionManager::_resolveAndConnect()
                     LOG_PRINTF("[CLIENT] mDNS Check: Service %d, host='%s'\n", i, discoveredHost.c_str());
                     if (discoveredHost.equalsIgnoreCase(targetHost))
                     {
-                        this->resolvedIp = MDNS.IP(i);
+                        this->resolvedIp = MDNS.address(i);
                         this->config.port = MDNS.port(i); // Port ebenfalls aktualisieren
                         success = true;
                         via = "mdns-specific";
@@ -260,7 +260,7 @@ void MqttConnectionManager::_resolveAndConnect()
         int n = MDNS.queryService("mqtt", "tcp");
         if (n > 0)
         {
-            this->resolvedIp = MDNS.IP(0);
+            this->resolvedIp = MDNS.address(0);
             this->config.port = MDNS.port(0);
             success = true;
             via = "mdns-fallback-auto";

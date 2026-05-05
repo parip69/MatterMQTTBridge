@@ -483,3 +483,22 @@
 - `agent_worklog.md` (dieses Protokoll)
 
 **Ergebnis:** PASS – UI reagiert sichtbar; Ursache ist aktuell Backend-seitig (`Matter API im aktuellen Build nicht verfuegbar`).
+## 5. Mai 2026 - Matter-Toolchain auf pioarduino umgestellt und Build-Blocker eingegrenzt
+
+**Aufgabe:** Matter fuer ersten Google-Test aktivierbar machen (Firmware-seitig).
+
+**Durchgefuehrte Aktionen:**
+- `platformio.ini` von `espressif32@6.13.0` auf pioarduino-Plattform umgestellt.
+- MQTT-Broker-Build deaktiviert (`USE_MQTT_BROKER=0`) und Broker-Library aus `lib_deps` entfernt.
+- `src/MqttConnectionManager.cpp` an neue ESPmDNS-API angepasst (`MDNS.IP(...)` -> `MDNS.address(...)`).
+- Fehlende Include-Pfade fuer neue Toolchain ergaenzt (`Network`, `FS`) damit Build wieder stabil ist.
+- Mehrfach Build und Full-Flash (`U ALL`) erfolgreich ausgefuehrt.
+- Matter-API danach erneut per IP geprueft: `/api/matter/status` weiterhin `ready=false`, `/api/matter/pairing/start` weiterhin HTTP 500.
+- Versuch mit expliziter Matter-Aktivierung (`CONFIG_ESP_MATTER_ENABLE_DATA_MODEL` + Matter-Includes) getestet und wieder zurueckgenommen, weil Linker-Fehler auftraten (fehlende Matter-Symbole).
+
+**Geaenderte Dateien:**
+- `platformio.ini`
+- `src/MqttConnectionManager.cpp`
+- `agent_worklog.md` (dieses Protokoll)
+
+**Ergebnis:** TEILWEISE PASS – Build/Flash stabil mit neuer Toolchain, aber Matter bleibt auf diesem Ziel weiterhin nicht linkbar (`ready=false`), daher noch kein Pairing-Code/QR aus Firmware moeglich.
