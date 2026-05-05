@@ -382,3 +382,53 @@
 - `agent_worklog.md` (dieses Protokoll)
 
 **Ergebnis:** PASS – Die Bridge verwendet stabil einen Hostnamen statt `esp32-Default`.
+
+## 5. Mai 2026 - Passendes Bridge-Icon ersetzt
+
+**Aufgabe:** Ein passendes Icon für MatterMQTTBridge erstellen und das bisherige Icon ersetzen.
+
+**Durchgeführte Aktionen:**
+- Neues Icon als SVG erstellt: `data/icon-bridge.svg` (Bridge/MQTT-Optik in Projektfarben).
+- `data/index.html` um Favicon-Link auf das neue SVG ergänzt.
+- `data/login.html` vom alten PNG-Favicon auf das neue SVG umgestellt.
+- `data/wificonfig.html` vom alten PNG-Favicon auf das neue SVG umgestellt.
+- Keine Funktionslogik und keine API-Endpunkte geändert.
+
+**Geänderte Dateien:**
+- `data/icon-bridge.svg`
+- `data/index.html`
+- `data/login.html`
+- `data/wificonfig.html`
+- `agent_worklog.md` (dieses Protokoll)
+
+**Ergebnis:** PASS – Neues, thematisch passendes Bridge-Icon ist aktiv eingebunden.
+
+## 5. Mai 2026 - Altes PNG-Icon entfernt
+
+**Aufgabe:** Das alte, nicht mehr genutzte Icon löschen.
+
+**Durchgeführte Aktionen:**
+- Referenzen auf `data/icon-192.png` in den HTML-Dateien geprüft: keine Treffer.
+- Datei `data/icon-192.png` gelöscht.
+- Nachkontrolle im `data`-Ordner durchgeführt.
+
+**Geänderte Dateien:**
+- `data/icon-192.png` (gelöscht)
+- `agent_worklog.md` (dieses Protokoll)
+
+**Ergebnis:** PASS – Nur das neue Bridge-Icon `data/icon-bridge.svg` bleibt aktiv.
+
+## 5. Mai 2026 - Schnellzugriff auf WLAN-Konfiguration ergänzt
+
+**Aufgabe:** Direkten Button zur WLAN-Konfigurationsseite bereitstellen.
+
+**Durchgeführte Aktionen:**
+- In der WLAN/Gerät-Kachel auf der Startseite einen direkten Link ergänzt.
+- Neuer Button: `WLAN Konfiguration` mit Ziel `/wificonfig.html`.
+- Keine API- oder Firmware-Logik geändert.
+
+**Geänderte Dateien:**
+- `data/index.html`
+- `agent_worklog.md` (dieses Protokoll)
+
+**Ergebnis:** PASS – WLAN-Konfiguration ist jetzt direkt über die Startseite erreichbar.
