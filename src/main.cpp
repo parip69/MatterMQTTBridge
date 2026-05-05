@@ -2,7 +2,7 @@
 //******************************************************
 //         Main of MatterMQTTBridge.
 // nur hier die start wert der version Aendern.OK=======
-// @version: 1.0.46 <br> Builddatum 19:54:05 05-05.2026
+// @version: 1.0.48 <br> Builddatum 20:48:48 05-05.2026
 //****************************************************
 
 #include <Arduino.h>
@@ -40,7 +40,7 @@
 #define TEST_OUTPUT_PIN_5 33
 
 // ======================= GLOBALS =======================
-const char* firmwareVersion = "1.0.46 <br> Builddatum 19:54:05 05-05.2026";
+const char* firmwareVersion = "1.0.48 <br> Builddatum 20:48:48 05-05.2026";
 AsyncWebServer webServer(80);
 SettingsManager settingsManager;
 MatterBridgeManager matterBridge;
@@ -163,6 +163,58 @@ void handleIncomingMqttMessage(const String &topicStr, const String &payloadStr,
 
 String outputPinStatusTopic(uint8_t pin) {
     return makeTopic("OutputPinStatus" + String(pin));
+}
+
+void setOptionalTestOutputPin(uint8_t pin, bool high);
+bool publishMqttMessage(const String &topic, const String &message, bool retain, int qos);
+
+static String normalizeBridgeSourceTag(const char* sourceTag) {
+    String normalized = sourceTag ? String(sourceTag) : String("");
+    normalized.trim();
+    if (normalized.isEmpty()) {
+        return "BRIDGE";
+    }
+    if (normalized.startsWith("[") && normalized.endsWith("]") && normalized.length() >= 2) {
+        normalized = normalized.substring(1, normalized.length() - 1);
+        normalized.trim();
+    }
+    if (normalized.isEmpty()) {
+        return "BRIDGE";
+    }
+    return normalized;
+}
+
+bool bridgeExecuteTrigger(uint8_t pin, const char* sourceTag) {
+    if (pin < 1 || pin > 99) {
+        return false;
+    }
+
+    addLogMessage("Bridge TriggerOutPin=" + String(pin) + " angefordert");
+
+    bool sentTrigger = bridgeSendTrigger(pin);
+    if (sentTrigger) {
+        addLogMessage("Bridge TriggerOutPin=" + String(pin) + " gesendet");
+    } else {
+        addLogMessage("Bridge Fehler: TriggerOutPin=" + String(pin) + " konnte nicht gesendet werden");
+    }
+
+    if (pin > 5) {
+        return sentTrigger;
+    }
+
+    String normalizedSourceTag = normalizeBridgeSourceTag(sourceTag);
+    String outputTopic = outputPinStatusTopic(pin);
+    String outputPayload = "source:[" + normalizedSourceTag + "];true";
+    bool sentOutputStatus = publishMqttMessage(outputTopic, outputPayload, false, 0);
+
+    if (sentOutputStatus) {
+        addLogMessage("Bridge OutputPinStatus" + String(pin) + "=true gesendet");
+        setOptionalTestOutputPin(pin, true);
+    } else {
+        addLogMessage("Bridge Fehler: OutputPinStatus" + String(pin) + " konnte nicht gesendet werden");
+    }
+
+    return sentTrigger && sentOutputStatus;
 }
 
 void setOptionalTestOutputPin(uint8_t pin, bool high) {
@@ -351,27 +403,13 @@ void setupRouting() {
             return;
         }
 
-        addLogMessage("Bridge TriggerOutPin=" + String(pin) + " angefordert");
-        bool sentTrigger = bridgeSendTrigger(pin);
-        if (sentTrigger)
-        {
-            addLogMessage("Bridge TriggerOutPin=" + String(pin) + " gesendet");
-        }
-        bool sentOutputStatus = true;
-
-        String outputTopic = "";
-        String outputPayload = "";
+        bool sent = bridgeExecuteTrigger((uint8_t)pin, "WEB");
+        String outputTopic;
+        String outputPayload;
         if (pin >= 1 && pin <= 5) {
             outputTopic = outputPinStatusTopic((uint8_t)pin);
             outputPayload = "source:[WEB];true";
-            sentOutputStatus = publishMqttMessage(outputTopic, outputPayload, false, 0);
-            if (sentOutputStatus) {
-                addLogMessage("Bridge OutputPinStatus" + String(pin) + "=true gesendet");
-                setOptionalTestOutputPin((uint8_t)pin, true);
-            }
         }
-
-        bool sent = sentTrigger && sentOutputStatus;
         
         JsonDocument doc;
         if (sent) {
@@ -385,12 +423,10 @@ void setupRouting() {
             }
         } else {
             doc["ok"] = false;
-            if (!sentTrigger) {
-                doc["error"] = "trigger publish failed";
-            } else if (!sentOutputStatus) {
+            if (pin >= 1 && pin <= 5) {
                 doc["error"] = "output status publish failed";
             } else {
-                doc["error"] = "mqtt unavailable";
+                doc["error"] = "trigger publish failed";
             }
         }
 

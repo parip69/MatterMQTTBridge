@@ -7,12 +7,12 @@
 #include "SettingsManager.h"
 
 extern SettingsManager settingsManager;
-extern bool bridgeSendTrigger(uint8_t triggerNumber);
+extern bool bridgeExecuteTrigger(uint8_t triggerNumber, const char* sourceTag);
 extern void addLogMessage(const String& message);
 
 #ifdef BRIDGE_MATTER_ENABLED
 #include <Matter.h>
-#include <MatterEndpoints/MatterOnOffLight.h>
+#include <MatterEndpoints/MatterOnOffPlugin.h>
 #define BRIDGE_MATTER_HEADER_AVAILABLE 1
 #define BRIDGE_MATTER_ENDPOINT_AVAILABLE 1
 #else
@@ -21,7 +21,32 @@ extern void addLogMessage(const String& message);
 #endif
 
 #if BRIDGE_MATTER_ENDPOINT_AVAILABLE
-static MatterOnOffLight gOnOffLight;
+static constexpr uint8_t kMatterTriggerSlotCount = 5;
+static MatterOnOffPlugin gMatterTriggerEndpoints[kMatterTriggerSlotCount];
+static bool gMatterResetPending[kMatterTriggerSlotCount] = {false, false, false, false, false};
+static const char* kMatterTriggerLabels[kMatterTriggerSlotCount] = {
+    "Haustuer oeffnen",
+    "Haustuer schliessen",
+    "Falle ziehen",
+    "Status abfragen",
+    "Reserve"
+};
+
+static bool handleMatterTriggerState(uint8_t slot, bool state) {
+    if (!state) {
+        addLogMessage("Matter Slot " + String(slot) + " OFF erhalten");
+        return true;
+    }
+
+    addLogMessage("Matter Slot " + String(slot) + " ON erhalten -> TriggerOutPin=" + String(slot));
+    if (!bridgeExecuteTrigger(slot, "MATTER")) {
+        addLogMessage("Matter Fehler: TriggerOutPin=" + String(slot) + " konnte nicht gesendet werden");
+        return false;
+    }
+
+    gMatterResetPending[slot - 1] = true;
+    return true;
+}
 #endif
 
 void MatterBridgeManager::refreshPairingInfo() {
@@ -62,29 +87,24 @@ void MatterBridgeManager::begin() {
         deviceName = "MatterMQTTBridge";
     }
 
-    if (!gOnOffLight.begin(false)) {
-        addLogMessage("Matter Fehler: OnOff-Endpunkt konnte nicht erstellt werden");
+    bool endpointsReady = true;
+    for (uint8_t slot = 1; slot <= kMatterTriggerSlotCount; ++slot) {
+        if (!gMatterTriggerEndpoints[slot - 1].begin(false)) {
+            addLogMessage("Matter Fehler: OnOff-Endpunkt fuer Slot " + String(slot) + " konnte nicht erstellt werden");
+            endpointsReady = false;
+            break;
+        }
+
+        addLogMessage("Matter Slot " + String(slot) + " bereit: " + String(kMatterTriggerLabels[slot - 1]));
+        gMatterTriggerEndpoints[slot - 1].onChange([slot](bool state) -> bool {
+            return handleMatterTriggerState(slot, state);
+        });
+    }
+
+    if (!endpointsReady) {
         ready_ = false;
         return;
     }
-
-    gOnOffLight.onChange([](bool state) -> bool {
-        if (state) {
-            addLogMessage("Matter ON erhalten -> TriggerOutPin=1");
-            if (!bridgeSendTrigger(1)) {
-                addLogMessage("Matter Fehler: TriggerOutPin=1 konnte nicht gesendet werden");
-                return false;
-            }
-            return true;
-        }
-
-        addLogMessage("Matter OFF erhalten -> TriggerOutPin=2");
-        if (!bridgeSendTrigger(2)) {
-            addLogMessage("Matter Fehler: TriggerOutPin=2 konnte nicht gesendet werden");
-            return false;
-        }
-        return true;
-    });
 
     Matter.begin();
     ready_ = true;
@@ -99,7 +119,22 @@ void MatterBridgeManager::begin() {
 }
 
 void MatterBridgeManager::loop() {
-    // Aktuell keine zyklische Verarbeitung noetig.
+#if BRIDGE_MATTER_HEADER_AVAILABLE && BRIDGE_MATTER_ENDPOINT_AVAILABLE
+    if (!ready_) {
+        return;
+    }
+
+    for (uint8_t slot = 1; slot <= kMatterTriggerSlotCount; ++slot) {
+        if (!gMatterResetPending[slot - 1]) {
+            continue;
+        }
+
+        gMatterResetPending[slot - 1] = false;
+        if (!gMatterTriggerEndpoints[slot - 1].setOnOff(false)) {
+            addLogMessage("Matter Hinweis: Slot " + String(slot) + " konnte nicht automatisch auf OFF zurueckgesetzt werden");
+        }
+    }
+#endif
 }
 
 bool MatterBridgeManager::startPairing() {
