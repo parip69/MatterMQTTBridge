@@ -579,3 +579,66 @@
 - `agent_worklog.md` (dieses Protokoll)
 
 **Ergebnis:** PASS - Bridge startet wieder und arbeitet als kleine 5-Pin-MQTT-Basisfirmware.
+
+## 5. Mai 2026 - 19:08 Uhr
+
+**Aufgabe:** Meta-Konfigurationsbereich der Weboberflaeche vereinfachen und Wetter/Klima aufnehmen.
+
+**Durchgefuehrte Aktionen:**
+- Nur den Bereich `Meta-Konfiguration / flexible MQTT-Funktionen` in `data/index.html` umgebaut; Status, WLAN, MQTT, QR-Code, Pairing und OTA bleiben erhalten.
+- Breite Tabellenansicht durch fuenf feste Matter-Funktionskarten fuer Slot/TriggerOutPin 1 bis 5 ersetzt.
+- Pro Slot bleiben Name in Matter, Matter-Typ, MQTT Publish Topic/Payload sowie aufklappbare Horch-/Statusfelder konfigurierbar.
+- Wetter/Klima-Gruppe fuer Temperatur, Luftfeuchtigkeit, gefuehlte Temperatur und Taupunkt ergaenzt.
+- JSON-/localStorage-Struktur auf Version 2 erweitert: `slots` bleiben kompatibel, `weather` kommt neu dazu.
+- JavaScript-Syntax mit Node geprueft: `JS Syntax OK`.
+- LittleFS-Image direkt mit `mklittlefs` gebaut, ohne PlatformIO-Version-Hooks auszufuehren.
+- LittleFS per `esptool.py` auf COM4 bei Offset `0x3d0000` hochgeladen; Flash-Hash verifiziert.
+- Live-Test ueber `http://192.168.111.222/`: neue Texte `Matter-Funktionen` und `Wetter / Klima` vorhanden, alte Meta-Tabellenueberschrift nicht mehr vorhanden.
+- Status nach Neustart geprueft: HTTP 200, IP `192.168.111.222`, MQTT nach Reconnect wieder `connected`.
+
+**Geaenderte Dateien:**
+- `data/index.html`
+- `agent_worklog.md` (dieses Protokoll)
+
+**Ergebnis:** PASS - Oberflaeche ist fuer 5 Slots plus Wetter/Klima vorbereitet und auf das Geraet geladen, ohne Firmware-/Matter-Code wieder zu vergroessern.
+
+## 5. Mai 2026 - 19:15 Uhr
+
+**Aufgabe:** Trigger-Testbuttons automatisch nach den Matter-Funktionsnamen beschriften.
+
+**Durchgefuehrte Aktionen:**
+- `data/index.html`: Trigger-Buttons 1 bis 5 mit festen IDs versehen.
+- JavaScript-Funktion `refreshTriggerButtonLabels()` ergaenzt, die die Button-Texte aus `Name in Matter` der jeweiligen Funktionskarte uebernimmt.
+- Live-Aktualisierung angebunden: Beim Aendern eines Funktionsnamens wird der passende Trigger-Button sofort umbenannt.
+- CSS fuer Trigger-Buttons ergaenzt, damit laengere Namen sauber gekuerzt werden statt das Layout zu sprengen.
+- JavaScript-Syntax mit Node geprueft: `JS Syntax OK`.
+- LittleFS-Image direkt mit `mklittlefs` gebaut und per `esptool.py` auf COM4 bei Offset `0x3d0000` hochgeladen; Flash-Hash verifiziert.
+- Live-Test ueber `http://192.168.111.222/`: neue IDs und `refreshTriggerButtonLabels()` sind im ausgelieferten HTML vorhanden.
+- Status-Check nach Neustart: HTTP 200 und IP erreichbar; MQTT war zum Pruefzeitpunkt `disconnected`, Broker `192.168.111.99:1883` ist vom PC erreichbar.
+
+**Geaenderte Dateien:**
+- `data/index.html`
+- `agent_worklog.md` (dieses Protokoll)
+
+**Ergebnis:** TEILWEISE PASS - Button-Beschriftung ist ausgeliefert; MQTT-Reconnect muss separat beobachtet werden, da die Aenderung nur LittleFS/Weboberflaeche betrifft.
+
+## 5. Mai 2026 - 19:20 Uhr
+
+**Aufgabe:** Pairing-/QR-Kachel klar anzeigen, wenn Matter in der 5-Pin-Basisfirmware deaktiviert ist.
+
+**Durchgefuehrte Aktionen:**
+- Geraete-API geprueft: `/api/matter/status` liefert HTTP 200 mit `ready=false`, leerem Pairing-Code und leerem QR-Code.
+- `/api/matter/pairing/start` geprueft: HTTP 500, weil Matter in dieser Firmware nicht aktiv ist.
+- `data/index.html`: Pairing-Start/Stopp-Buttons mit IDs versehen und standardmaessig deaktiviert.
+- `data/index.html`: Anzeige `Matter deaktiviert, 5-Pin-Basisfirmware aktiv` ergaenzt; QR-Box und Code-Feld zeigen nun bewusst `Matter deaktiviert`.
+- `data/index.html`: Klick auf Pairing wird bei deaktiviertem Matter abgefangen und ruft die Pairing-API nicht mehr an.
+- JavaScript-Syntax mit Node geprueft: `JS Syntax OK`.
+- LittleFS-Image direkt mit `mklittlefs` gebaut und per `esptool.py` auf COM4 bei Offset `0x3d0000` hochgeladen; Flash-Hash verifiziert.
+- Live-Test ueber `http://192.168.111.222/`: neue Matter-deaktiviert-Texte und Button-IDs sind im ausgelieferten HTML vorhanden.
+- Status-Check: `/api/matter/status` weiterhin `ready=false`; `/api/bridge/status` HTTP 200, IP erreichbar, MQTT zum Pruefzeitpunkt `disconnected`.
+
+**Geaenderte Dateien:**
+- `data/index.html`
+- `agent_worklog.md` (dieses Protokoll)
+
+**Ergebnis:** PASS fuer die UI-Klaerung - QR/Pairing ist nicht defekt, sondern wegen 5-Pin-Basisfirmware deaktiviert. MQTT-Reconnect bleibt ein separater Punkt.

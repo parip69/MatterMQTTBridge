@@ -158,6 +158,11 @@
             color: #00150a;
         }
 
+        button:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+
         .small {
             font-size: 12px;
             color: var(--muted);
@@ -168,6 +173,13 @@
             grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
             gap: 8px;
             margin-top: 8px;
+        }
+
+        .trigger-grid button {
+            min-height: 40px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .qr-box {
@@ -361,57 +373,82 @@
         }
 
 
-        .table-wrap {
-            overflow-x: auto;
+        .matter-config-section {
+            display: grid;
+            gap: 12px;
+        }
+
+        .matter-function-list {
+            display: grid;
+            gap: 10px;
+        }
+
+        .matter-function-panel,
+        .weather-panel {
+            background: var(--card2);
             border: 1px solid var(--border);
-            border-radius: 12px;
-            background: #020617;
-            margin-top: 10px;
+            border-radius: 10px;
+            padding: 12px;
         }
 
-        .meta-table {
-            width: 100%;
-            min-width: 1120px;
-            border-collapse: collapse;
-            font-size: 12px;
+        .matter-function-head {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            align-items: flex-start;
+            margin-bottom: 8px;
         }
 
-        .meta-table th,
-        .meta-table td {
-            border-bottom: 1px solid rgba(255,255,255,0.07);
-            padding: 7px;
-            vertical-align: top;
-        }
-
-        .meta-table th {
-            color: var(--accent);
-            text-align: left;
-            background: rgba(56,189,248,0.08);
-            position: sticky;
-            top: 0;
-        }
-
-        .meta-table input,
-        .meta-table select {
+        .matter-function-title {
             margin: 0;
-            padding: 8px;
+            color: var(--text);
+            font-size: 15px;
+        }
+
+        .matter-badge {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 999px;
+            padding: 3px 8px;
+            border: 1px solid rgba(34,197,94,0.4);
+            background: rgba(34,197,94,0.12);
+            color: var(--ok);
+            font-size: 11px;
+            white-space: nowrap;
+        }
+
+        .matter-form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(180px, 1fr));
+            gap: 0 10px;
+        }
+
+        .matter-active-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--muted);
             font-size: 12px;
-            min-width: 95px;
+            white-space: nowrap;
+            margin: 0;
         }
 
-        .meta-table input[type="checkbox"] {
+        .matter-active-toggle input {
             width: auto;
-            min-width: auto;
-            transform: scale(1.15);
-            margin-top: 8px;
+            margin: 0;
         }
 
-        .meta-table .pin-input {
-            min-width: 70px;
+        .matter-details {
+            margin-top: 2px;
+            border-top: 1px solid rgba(255,255,255,0.08);
+            padding-top: 6px;
         }
 
-        .meta-table .topic-input {
-            min-width: 210px;
+        .matter-details summary {
+            cursor: pointer;
+            color: var(--accent);
+            font-size: 12px;
+            margin-bottom: 6px;
         }
 
         .inline-actions {
@@ -501,7 +538,8 @@
             }
 
             .trigger-layout,
-            .trigger-custom-row {
+            .trigger-custom-row,
+            .matter-form-grid {
                 grid-template-columns: 1fr;
             }
 
@@ -606,11 +644,11 @@
         </div>
 
         <div class="trigger-grid">
-            <button onclick="sendTrigger(1)">Trigger 1</button>
-            <button onclick="sendTrigger(2)">Trigger 2</button>
-            <button onclick="sendTrigger(3)">Trigger 3</button>
-            <button onclick="sendTrigger(4)">Trigger 4</button>
-            <button onclick="sendTrigger(5)">Trigger 5</button>
+            <button id="triggerButton1" onclick="sendTrigger(1)">Trigger 1</button>
+            <button id="triggerButton2" onclick="sendTrigger(2)">Trigger 2</button>
+            <button id="triggerButton3" onclick="sendTrigger(3)">Trigger 3</button>
+            <button id="triggerButton4" onclick="sendTrigger(4)">Trigger 4</button>
+            <button id="triggerButton5" onclick="sendTrigger(5)">Trigger 5</button>
         </div>
     </section>
 
@@ -622,47 +660,63 @@
     </section>
     <br>
 
-    <section class="card">
-        <h2>Meta-Konfiguration / flexible MQTT-Funktionen</h2>
+    <section class="card full-width-card matter-config-section">
+        <h2>Matter-Funktionen</h2>
         <p class="small">
-            Hier wird eine Funktion nicht fest verdrahtet, sondern frei beschrieben:
-            <span class="pill">Name</span>
-            <span class="pill">Matter-Funktion</span>
-            <span class="pill">TriggerOutPin</span>
-            <span class="pill">MQTT Senden</span>
-            <span class="pill">MQTT Horchen</span>
-            <span class="pill">Status-Text</span>
-        </p>
-        <p class="small">
-            Grundidee: Google/Matter löst eine Funktion aus → Bridge sendet MQTT.
-            Kommt derselbe oder ein anderer Befehl von Meter/Fingerprint/MQTT zurück, kann die Bridge auf ein Horch-Topic reagieren und den Status/Log aktualisieren.
+            Die Bridge arbeitet mit fünf festen Slots. Hier wird festgelegt, wie Matter/Google den Slot benennt und welcher MQTT-Befehl dahinter liegt.
         </p>
 
-        <div class="table-wrap">
-            <table class="meta-table">
-                <thead>
-                    <tr>
-                        <th>Aktiv</th>
-                        <th>Nr.</th>
-                        <th>Name / Anzeige</th>
-                        <th>Matter-Funktion</th>
-                        <th>TriggerOutPin</th>
-                        <th>Sende-Topic</th>
-                        <th>Sende-Payload</th>
-                        <th>Horch-Topic</th>
-                        <th>Horch-Payload</th>
-                        <th>Status / Logtext</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody id="metaConfigRows"></tbody>
-            </table>
+        <div id="matterFunctionCards" class="matter-function-list"></div>
+
+        <div class="weather-panel">
+            <div class="matter-function-head">
+                <div>
+                    <h3 class="matter-function-title">Wetter / Klima</h3>
+                    <div class="small">DHT22- und Klimawerte werden später nur angemeldet, wenn das jeweilige Topic gefüllt ist.</div>
+                </div>
+                <span class="matter-badge">Sensorgruppe</span>
+            </div>
+
+            <div class="matter-form-grid">
+                <label>Gruppenname in Matter
+                    <input id="weatherGroupName" class="weather-input" value="Klima Haustür" />
+                </label>
+                <label>Aktiv-Regel
+                    <select id="weatherActiveRule" class="weather-input">
+                        <option value="filled">Nur gefüllte Werte anmelden</option>
+                        <option value="disabled">Wetter/Klima nicht anmelden</option>
+                    </select>
+                </label>
+                <label>Temperatur Topic
+                    <input id="weatherTemperatureTopic" class="weather-input" placeholder="GarageDE/temperature" />
+                </label>
+                <label>Temperatur Name
+                    <input id="weatherTemperatureName" class="weather-input" value="Temperatur Haustür" />
+                </label>
+                <label>Luftfeuchtigkeit Topic
+                    <input id="weatherHumidityTopic" class="weather-input" placeholder="GarageDE/humidity" />
+                </label>
+                <label>Luftfeuchtigkeit Name
+                    <input id="weatherHumidityName" class="weather-input" value="Luftfeuchtigkeit Haustür" />
+                </label>
+                <label>Gefühlte Temperatur Topic
+                    <input id="weatherFeelsLikeTopic" class="weather-input" placeholder="GarageDE/feelsLike" />
+                </label>
+                <label>Gefühlte Temperatur Name
+                    <input id="weatherFeelsLikeName" class="weather-input" value="Gefühlte Temperatur" />
+                </label>
+                <label>Taupunkt Topic
+                    <input id="weatherDewPointTopic" class="weather-input" placeholder="GarageDE/dewPoint" />
+                </label>
+                <label>Taupunkt Name
+                    <input id="weatherDewPointName" class="weather-input" value="Taupunkt" />
+                </label>
+            </div>
         </div>
 
         <div class="inline-actions">
-            <button onclick="addMetaConfigRow()">Funktion hinzufügen</button>
-            <button class="secondary" onclick="resetMetaExamples()">Beispiele 1–5 laden</button>
-            <button onclick="saveMetaConfig()">Meta-Konfiguration speichern</button>
+            <button onclick="saveMetaConfig()">Matter-Funktionen speichern</button>
+            <button class="secondary" onclick="resetMetaExamples()">Standard 1–5 + Wetter laden</button>
             <button class="secondary" onclick="exportMetaConfig()">JSON anzeigen</button>
         </div>
 
@@ -731,8 +785,8 @@
 
             <p class="small" id="matterState">Status: wird geladen...</p>
 
-            <button onclick="startMatterPairing()">Pairing starten</button>
-            <button class="secondary" onclick="stopMatterPairing()">Pairing stoppen</button>
+            <button id="matterPairingStart" onclick="startMatterPairing()" disabled>Pairing starten</button>
+            <button id="matterPairingStop" class="secondary" onclick="stopMatterPairing()" disabled>Pairing stoppen</button>
 
             <div class="qr-box" id="qrBox">
                 QR-Code<br>Platzhalter
@@ -753,7 +807,7 @@
 </main>
 
 <footer>
-    MatterMQTTBridge – Phase 1/2 Musteroberfläche – Meta-Konfiguration ergänzt – Matter noch nicht aktiv
+    MatterMQTTBridge – 5-Pin-Basis – Matter-Funktionen und Wetter vorbereitet – Matter derzeit deaktiviert
 </footer>
 
 <script>
@@ -910,69 +964,6 @@
     }
 
 
-    const metaDefaultRows = [
-        {
-            enabled: true,
-            nr: 1,
-            name: "Haustür öffnen",
-            matterFunction: "open",
-            triggerOutPin: 1,
-            sendTopic: "fingerprint/TriggerOutPin",
-            sendPayload: "1",
-            listenTopic: "fingerprint/OutputPinStatus1",
-            listenPayload: "true",
-            statusText: "Öffnen / Trigger 1"
-        },
-        {
-            enabled: true,
-            nr: 2,
-            name: "Haustür schließen",
-            matterFunction: "close",
-            triggerOutPin: 2,
-            sendTopic: "fingerprint/TriggerOutPin",
-            sendPayload: "2",
-            listenTopic: "fingerprint/OutputPinStatus2",
-            listenPayload: "true",
-            statusText: "Schließen / Trigger 2"
-        },
-        {
-            enabled: true,
-            nr: 3,
-            name: "Falle ziehen",
-            matterFunction: "unlatch",
-            triggerOutPin: 3,
-            sendTopic: "fingerprint/TriggerOutPin",
-            sendPayload: "3",
-            listenTopic: "fingerprint/OutputPinStatus3",
-            listenPayload: "true",
-            statusText: "Falle ziehen / Trigger 3"
-        },
-        {
-            enabled: true,
-            nr: 4,
-            name: "Status abfragen",
-            matterFunction: "status",
-            triggerOutPin: 4,
-            sendTopic: "fingerprint/TriggerOutPin",
-            sendPayload: "4",
-            listenTopic: "fingerprint/status",
-            listenPayload: "online",
-            statusText: "Fingerprint online"
-        },
-        {
-            enabled: true,
-            nr: 5,
-            name: "Reserve / Licht / Zusatz",
-            matterFunction: "custom",
-            triggerOutPin: 5,
-            sendTopic: "fingerprint/TriggerOutPin",
-            sendPayload: "5",
-            listenTopic: "fingerprint/OutputPinStatus5",
-            listenPayload: "true",
-            statusText: "Reserve / Trigger 5"
-        }
-    ];
-
     function escAttr(value) {
         return String(value ?? "")
             .replace(/&/g, "&amp;")
@@ -981,89 +972,331 @@
             .replace(/>/g, "&gt;");
     }
 
+    function textValue(value, fallback = "") {
+        return value === undefined || value === null ? fallback : String(value);
+    }
+
+    function normalizeTopicPart(value) {
+        return String(value || "")
+            .trim()
+            .replace(/^\/+/, "")
+            .replace(/\/+$/, "");
+    }
+
+    function getRootTopic() {
+        const rootInput = $("mqttRootTopic");
+        return normalizeTopicPart(rootInput ? rootInput.value : "fingerprint") || "fingerprint";
+    }
+
+    function topicFromRoot(root, suffix) {
+        const cleanRoot = normalizeTopicPart(root);
+        const cleanSuffix = normalizeTopicPart(suffix);
+        return cleanRoot ? `${cleanRoot}/${cleanSuffix}` : cleanSuffix;
+    }
+
+    const matterTypeOptions = [
+        {value: "open", label: "Tür öffnen"},
+        {value: "close", label: "Tür schließen"},
+        {value: "unlatch", label: "Falle ziehen"},
+        {value: "status", label: "Status abfragen"},
+        {value: "toggle", label: "Aktion / Schalter"},
+        {value: "custom", label: "Benutzerdefiniert"}
+    ];
+
+    function renderMatterTypeOptions(selected) {
+        return matterTypeOptions.map((option) => {
+            const isSelected = option.value === selected ? "selected" : "";
+            return `<option value="${escAttr(option.value)}" ${isSelected}>${escAttr(option.label)}</option>`;
+        }).join("");
+    }
+
+    function createDefaultSlots(root = getRootTopic()) {
+        const triggerTopic = topicFromRoot(root, "TriggerOutPin");
+        return [
+            {
+                enabled: true,
+                nr: 1,
+                name: "Haustür öffnen",
+                matterFunction: "open",
+                triggerOutPin: 1,
+                sendTopic: triggerTopic,
+                sendPayload: "1",
+                listenTopic: topicFromRoot(root, "OutputPinStatus1"),
+                listenPayload: "true",
+                statusText: "Öffnen / Trigger 1"
+            },
+            {
+                enabled: true,
+                nr: 2,
+                name: "Haustür schließen",
+                matterFunction: "close",
+                triggerOutPin: 2,
+                sendTopic: triggerTopic,
+                sendPayload: "2",
+                listenTopic: topicFromRoot(root, "OutputPinStatus2"),
+                listenPayload: "true",
+                statusText: "Schließen / Trigger 2"
+            },
+            {
+                enabled: true,
+                nr: 3,
+                name: "Falle ziehen",
+                matterFunction: "unlatch",
+                triggerOutPin: 3,
+                sendTopic: triggerTopic,
+                sendPayload: "3",
+                listenTopic: topicFromRoot(root, "OutputPinStatus3"),
+                listenPayload: "true",
+                statusText: "Falle ziehen / Trigger 3"
+            },
+            {
+                enabled: true,
+                nr: 4,
+                name: "Status abfragen",
+                matterFunction: "status",
+                triggerOutPin: 4,
+                sendTopic: triggerTopic,
+                sendPayload: "4",
+                listenTopic: topicFromRoot(root, "status"),
+                listenPayload: "online",
+                statusText: "Fingerprint online"
+            },
+            {
+                enabled: true,
+                nr: 5,
+                name: "Reserve / Licht / Zusatz",
+                matterFunction: "custom",
+                triggerOutPin: 5,
+                sendTopic: triggerTopic,
+                sendPayload: "5",
+                listenTopic: topicFromRoot(root, "OutputPinStatus5"),
+                listenPayload: "true",
+                statusText: "Reserve / Trigger 5"
+            }
+        ];
+    }
+
+    function createDefaultWeather(root = getRootTopic()) {
+        return {
+            groupName: "Klima Haustür",
+            activeRule: "filled",
+            temperatureTopic: topicFromRoot(root, "temperature"),
+            temperatureName: "Temperatur Haustür",
+            humidityTopic: topicFromRoot(root, "humidity"),
+            humidityName: "Luftfeuchtigkeit Haustür",
+            feelsLikeTopic: topicFromRoot(root, "feelsLike"),
+            feelsLikeName: "Gefühlte Temperatur",
+            dewPointTopic: topicFromRoot(root, "dewPoint"),
+            dewPointName: "Taupunkt"
+        };
+    }
+
+    function normalizeSlot(row, index, root = getRootTopic()) {
+        const fallback = createDefaultSlots(root)[index] || createDefaultSlots(root)[4];
+        const source = row || {};
+        const nr = parseInt(textValue(source.nr, fallback.nr), 10) || fallback.nr;
+        const triggerOutPin = parseInt(textValue(source.triggerOutPin, nr), 10) || nr;
+        return {
+            enabled: source.enabled !== false,
+            nr,
+            name: textValue(source.name, fallback.name),
+            matterFunction: textValue(source.matterFunction, fallback.matterFunction),
+            triggerOutPin,
+            sendTopic: textValue(source.sendTopic, fallback.sendTopic),
+            sendPayload: textValue(source.sendPayload, fallback.sendPayload),
+            listenTopic: textValue(source.listenTopic, fallback.listenTopic),
+            listenPayload: textValue(source.listenPayload, fallback.listenPayload),
+            statusText: textValue(source.statusText, fallback.statusText)
+        };
+    }
+
+    function normalizeWeather(weather, root = getRootTopic()) {
+        const fallback = createDefaultWeather(root);
+        const source = weather || {};
+        return {
+            groupName: textValue(source.groupName, fallback.groupName),
+            activeRule: textValue(source.activeRule, fallback.activeRule),
+            temperatureTopic: textValue(source.temperatureTopic, fallback.temperatureTopic),
+            temperatureName: textValue(source.temperatureName, fallback.temperatureName),
+            humidityTopic: textValue(source.humidityTopic, fallback.humidityTopic),
+            humidityName: textValue(source.humidityName, fallback.humidityName),
+            feelsLikeTopic: textValue(source.feelsLikeTopic, fallback.feelsLikeTopic),
+            feelsLikeName: textValue(source.feelsLikeName, fallback.feelsLikeName),
+            dewPointTopic: textValue(source.dewPointTopic, fallback.dewPointTopic),
+            dewPointName: textValue(source.dewPointName, fallback.dewPointName)
+        };
+    }
+
+    function bindConfigAutoExport(root) {
+        root.querySelectorAll("input, select").forEach((el) => {
+            const updateConfigPreview = () => {
+                refreshTriggerButtonLabels();
+                exportMetaConfig(false);
+            };
+            el.addEventListener("input", updateConfigPreview);
+            el.addEventListener("change", updateConfigPreview);
+        });
+    }
+
+    function refreshTriggerButtonLabels(rows = null) {
+        const slots = rows || getMetaRowsFromDom();
+
+        for (let nr = 1; nr <= 5; nr++) {
+            const button = $(`triggerButton${nr}`);
+            if (!button) continue;
+
+            const slot = slots.find((row) => Number(row.nr) === nr) || slots[nr - 1] || {};
+            const label = String(slot.name || "").trim() || `Trigger ${nr}`;
+            button.textContent = label;
+            button.title = `Trigger ${nr}: ${label}`;
+            button.setAttribute("aria-label", `Trigger ${nr}: ${label}`);
+        }
+    }
+
     function getMetaRowsFromDom() {
         const rows = [];
-        document.querySelectorAll("#metaConfigRows tr").forEach((tr, index) => {
+        document.querySelectorAll("#matterFunctionCards .matter-function-panel").forEach((panel, index) => {
             rows.push({
-                enabled: tr.querySelector(".meta-enabled").checked,
-                nr: parseInt(tr.querySelector(".meta-nr").value, 10) || (index + 1),
-                name: tr.querySelector(".meta-name").value.trim(),
-                matterFunction: tr.querySelector(".meta-function").value,
-                triggerOutPin: parseInt(tr.querySelector(".meta-trigger").value, 10) || 0,
-                sendTopic: tr.querySelector(".meta-send-topic").value.trim(),
-                sendPayload: tr.querySelector(".meta-send-payload").value.trim(),
-                listenTopic: tr.querySelector(".meta-listen-topic").value.trim(),
-                listenPayload: tr.querySelector(".meta-listen-payload").value.trim(),
-                statusText: tr.querySelector(".meta-status-text").value.trim()
+                enabled: panel.querySelector(".meta-enabled").checked,
+                nr: parseInt(panel.querySelector(".meta-nr").value, 10) || (index + 1),
+                name: panel.querySelector(".meta-name").value.trim(),
+                matterFunction: panel.querySelector(".meta-function").value,
+                triggerOutPin: parseInt(panel.querySelector(".meta-trigger").value, 10) || (index + 1),
+                sendTopic: panel.querySelector(".meta-send-topic").value.trim(),
+                sendPayload: panel.querySelector(".meta-send-payload").value.trim(),
+                listenTopic: panel.querySelector(".meta-listen-topic").value.trim(),
+                listenPayload: panel.querySelector(".meta-listen-payload").value.trim(),
+                statusText: panel.querySelector(".meta-status-text").value.trim()
             });
         });
         return rows;
     }
 
     function renderMetaConfigRows(rows) {
-        const tbody = $("metaConfigRows");
-        tbody.innerHTML = "";
+        const container = $("matterFunctionCards");
+        if (!container) return;
 
-        (rows || []).forEach((row, index) => {
-            const tr = document.createElement("tr");
-            tr.innerHTML = `
-                <td><input class="meta-enabled" type="checkbox" ${row.enabled ? "checked" : ""}></td>
-                <td><input class="meta-nr pin-input" type="number" min="1" max="99" value="${escAttr(row.nr || index + 1)}"></td>
-                <td><input class="meta-name" value="${escAttr(row.name)}" placeholder="z.B. Haustür öffnen"></td>
-                <td>
-                    <select class="meta-function">
-                        <option value="open" ${row.matterFunction === "open" ? "selected" : ""}>open</option>
-                        <option value="close" ${row.matterFunction === "close" ? "selected" : ""}>close</option>
-                        <option value="unlatch" ${row.matterFunction === "unlatch" ? "selected" : ""}>unlatch</option>
-                        <option value="status" ${row.matterFunction === "status" ? "selected" : ""}>status</option>
-                        <option value="toggle" ${row.matterFunction === "toggle" ? "selected" : ""}>toggle</option>
-                        <option value="sensor" ${row.matterFunction === "sensor" ? "selected" : ""}>sensor</option>
-                        <option value="custom" ${row.matterFunction === "custom" ? "selected" : ""}>custom</option>
-                    </select>
-                </td>
-                <td><input class="meta-trigger pin-input" type="number" min="1" max="99" value="${escAttr(row.triggerOutPin)}"></td>
-                <td><input class="meta-send-topic topic-input" value="${escAttr(row.sendTopic)}" placeholder="fingerprint/TriggerOutPin"></td>
-                <td><input class="meta-send-payload" value="${escAttr(row.sendPayload)}" placeholder="1"></td>
-                <td><input class="meta-listen-topic topic-input" value="${escAttr(row.listenTopic)}" placeholder="fingerprint/OutputPinStatus1"></td>
-                <td><input class="meta-listen-payload" value="${escAttr(row.listenPayload)}" placeholder="true / 1 / open"></td>
-                <td><input class="meta-status-text" value="${escAttr(row.statusText)}" placeholder="Text für Log/Status"></td>
-                <td><button class="danger" onclick="removeMetaConfigRow(${index})">X</button></td>
+        const root = getRootTopic();
+        const normalizedRows = Array.from({length: 5}, (_, index) => normalizeSlot((rows || [])[index], index, root));
+        container.innerHTML = "";
+
+        normalizedRows.forEach((row) => {
+            const panel = document.createElement("div");
+            panel.className = "matter-function-panel";
+            panel.innerHTML = `
+                <div class="matter-function-head">
+                    <div>
+                        <h3 class="matter-function-title">Funktion ${escAttr(row.nr)}</h3>
+                        <div class="small">Fester Slot / TriggerOutPin ${escAttr(row.triggerOutPin)}</div>
+                    </div>
+                    <label class="matter-active-toggle">
+                        <input class="meta-enabled" type="checkbox" ${row.enabled ? "checked" : ""}>
+                        Aktiv
+                    </label>
+                </div>
+                <input class="meta-nr" type="hidden" value="${escAttr(row.nr)}">
+                <input class="meta-trigger" type="hidden" value="${escAttr(row.triggerOutPin)}">
+                <div class="matter-form-grid">
+                    <label>Name in Matter
+                        <input class="meta-name" value="${escAttr(row.name)}" placeholder="z.B. Haustür öffnen">
+                    </label>
+                    <label>Matter-Typ
+                        <select class="meta-function">
+                            ${renderMatterTypeOptions(row.matterFunction)}
+                        </select>
+                    </label>
+                    <label>MQTT Publish Topic
+                        <input class="meta-send-topic" value="${escAttr(row.sendTopic)}" placeholder="${escAttr(topicFromRoot(root, "TriggerOutPin"))}">
+                    </label>
+                    <label>MQTT Payload
+                        <input class="meta-send-payload" value="${escAttr(row.sendPayload)}" placeholder="${escAttr(String(row.nr))}">
+                    </label>
+                </div>
+                <details class="matter-details">
+                    <summary>Status / Horchen</summary>
+                    <div class="matter-form-grid">
+                        <label>Horch-Topic
+                            <input class="meta-listen-topic" value="${escAttr(row.listenTopic)}" placeholder="${escAttr(topicFromRoot(root, `OutputPinStatus${row.nr}`))}">
+                        </label>
+                        <label>Horch-Payload
+                            <input class="meta-listen-payload" value="${escAttr(row.listenPayload)}" placeholder="true / online">
+                        </label>
+                        <label>Status / Logtext
+                            <input class="meta-status-text" value="${escAttr(row.statusText)}" placeholder="Text für Status und Log">
+                        </label>
+                    </div>
+                </details>
             `;
-            tbody.appendChild(tr);
+            container.appendChild(panel);
+            bindConfigAutoExport(panel);
         });
 
+        refreshTriggerButtonLabels(normalizedRows);
+    }
+
+    function setInputValue(id, value) {
+        const el = $(id);
+        if (el) el.value = value;
+    }
+
+    function getWeatherFromDom() {
+        return {
+            groupName: $("weatherGroupName").value.trim(),
+            activeRule: $("weatherActiveRule").value,
+            temperatureTopic: $("weatherTemperatureTopic").value.trim(),
+            temperatureName: $("weatherTemperatureName").value.trim(),
+            humidityTopic: $("weatherHumidityTopic").value.trim(),
+            humidityName: $("weatherHumidityName").value.trim(),
+            feelsLikeTopic: $("weatherFeelsLikeTopic").value.trim(),
+            feelsLikeName: $("weatherFeelsLikeName").value.trim(),
+            dewPointTopic: $("weatherDewPointTopic").value.trim(),
+            dewPointName: $("weatherDewPointName").value.trim()
+        };
+    }
+
+    function renderWeatherConfig(weather) {
+        const normalized = normalizeWeather(weather);
+        setInputValue("weatherGroupName", normalized.groupName);
+        setInputValue("weatherActiveRule", normalized.activeRule);
+        setInputValue("weatherTemperatureTopic", normalized.temperatureTopic);
+        setInputValue("weatherTemperatureName", normalized.temperatureName);
+        setInputValue("weatherHumidityTopic", normalized.humidityTopic);
+        setInputValue("weatherHumidityName", normalized.humidityName);
+        setInputValue("weatherFeelsLikeTopic", normalized.feelsLikeTopic);
+        setInputValue("weatherFeelsLikeName", normalized.feelsLikeName);
+        setInputValue("weatherDewPointTopic", normalized.dewPointTopic);
+        setInputValue("weatherDewPointName", normalized.dewPointName);
+        document.querySelectorAll(".weather-input").forEach((el) => {
+            el.oninput = () => exportMetaConfig(false);
+            el.onchange = () => exportMetaConfig(false);
+        });
+    }
+
+    function getActiveWeatherValueCount(weather = getWeatherFromDom()) {
+        if (!weather || weather.activeRule === "disabled") return 0;
+        return [
+            weather.temperatureTopic,
+            weather.humidityTopic,
+            weather.feelsLikeTopic,
+            weather.dewPointTopic
+        ].filter((topic) => String(topic || "").trim()).length;
+    }
+
+    function renderMatterConfig(config = null) {
+        const root = getRootTopic();
+        const slots = config && Array.isArray(config.slots) ? config.slots : createDefaultSlots(root);
+        const weather = config && config.weather ? config.weather : createDefaultWeather(root);
+        renderMetaConfigRows(slots);
+        renderWeatherConfig(weather);
         exportMetaConfig(false);
-    }
-
-    function addMetaConfigRow(row = null) {
-        const rows = getMetaRowsFromDom();
-        const nr = rows.length + 1;
-        rows.push(row || {
-            enabled: true,
-            nr,
-            name: `Funktion ${nr}`,
-            matterFunction: "custom",
-            triggerOutPin: nr,
-            sendTopic: "fingerprint/TriggerOutPin",
-            sendPayload: String(nr),
-            listenTopic: `fingerprint/OutputPinStatus${nr}`,
-            listenPayload: "true",
-            statusText: `Trigger ${nr}`
-        });
-        renderMetaConfigRows(rows);
-    }
-
-    function removeMetaConfigRow(index) {
-        const rows = getMetaRowsFromDom();
-        rows.splice(index, 1);
-        renderMetaConfigRows(rows);
     }
 
     function getMetaConfigObject() {
         return {
-            version: 1,
-            rootTopic: $("mqttRootTopic") ? $("mqttRootTopic").value.trim() || "fingerprint" : "fingerprint",
-            slots: getMetaRowsFromDom().filter(row => row.name || row.sendTopic || row.listenTopic)
+            version: 2,
+            rootTopic: getRootTopic(),
+            slots: getMetaRowsFromDom().filter(row => row.name || row.sendTopic || row.listenTopic),
+            weather: getWeatherFromDom()
         };
     }
 
@@ -1075,7 +1308,7 @@
         box.value = JSON.stringify(config, null, 2);
 
         if (writeLog) {
-            log(`Meta-Konfiguration exportiert: ${config.slots.length} Slot(s)`);
+            log(`Matter-Konfiguration exportiert: ${config.slots.length} Slot(s), ${getActiveWeatherValueCount(config.weather)} Wetterwert(e)`);
         }
     }
 
@@ -1100,11 +1333,11 @@
         }
 
         if (config && Array.isArray(config.slots)) {
-            renderMetaConfigRows(config.slots);
-            log(`Meta-Konfiguration geladen: ${config.slots.length} Slot(s)`);
+            renderMatterConfig(config);
+            log(`Matter-Konfiguration geladen: ${getMetaRowsFromDom().length} Slot(s), ${getActiveWeatherValueCount()} Wetterwert(e)`);
         } else {
-            renderMetaConfigRows(metaDefaultRows);
-            log("Meta-Konfiguration Beispiele 1–5 geladen");
+            renderMatterConfig({slots: createDefaultSlots(), weather: createDefaultWeather()});
+            log("Standard 1–5 + Wetter geladen");
         }
     }
 
@@ -1121,19 +1354,19 @@
             });
 
             if (r.ok) {
-                log(`Meta-Konfiguration gespeichert: ${config.slots.length} Slot(s)`);
+                log(`Matter-Funktionen gespeichert: ${config.slots.length} Slot(s), ${getActiveWeatherValueCount(config.weather)} Wetterwert(e)`);
             } else {
-                log("Meta-Konfiguration lokal gespeichert. Backend-Endpunkt /api/meta-config fehlt noch.");
+                log("Matter-Funktionen lokal gespeichert. Backend-Endpunkt /api/meta-config fehlt noch.");
             }
         } catch (e) {
-            log("Meta-Konfiguration lokal gespeichert. Backend-Endpunkt /api/meta-config ist noch nicht aktiv.");
+            log("Matter-Funktionen lokal gespeichert. Backend-Endpunkt /api/meta-config ist noch nicht aktiv.");
         }
     }
 
     function resetMetaExamples() {
-        renderMetaConfigRows(metaDefaultRows);
+        renderMatterConfig({slots: createDefaultSlots(), weather: createDefaultWeather()});
         localStorage.setItem("matterBridgeMetaConfig", JSON.stringify(getMetaConfigObject()));
-        log("Beispiele 1–5 neu geladen");
+        log("Standard 1–5 + Wetter neu geladen");
     }
 
 
@@ -1144,6 +1377,23 @@
         } catch (e) {
             log("Neustart konnte nicht ausgelöst werden");
         }
+    }
+
+    let matterReadyForPairing = false;
+
+    function setMatterPairingButtons(enabled) {
+        matterReadyForPairing = !!enabled;
+        const startButton = $("matterPairingStart");
+        const stopButton = $("matterPairingStop");
+        if (startButton) startButton.disabled = !matterReadyForPairing;
+        if (stopButton) stopButton.disabled = !matterReadyForPairing;
+    }
+
+    function showMatterDisabled() {
+        $("matterState").textContent = "Status: Matter deaktiviert, 5-Pin-Basisfirmware aktiv";
+        $("pairingCode").textContent = "Matter deaktiviert";
+        $("qrBox").innerHTML = "Matter<br>deaktiviert";
+        setMatterPairingButtons(false);
     }
 
     function getMatterQrPayload(qrCode) {
@@ -1180,23 +1430,24 @@
             const r = await fetch("/api/matter/status");
             const j = await r.json();
 
+            if (!j.ready) {
+                showMatterDisabled();
+                if (logOnError) {
+                    log("Matter ist deaktiviert: 5-Pin-Basisfirmware aktiv");
+                }
+                return;
+            }
+
             const code = String(j.pairingCode || "").trim();
             $("pairingCode").textContent = code || "nicht verfügbar";
             renderMatterQr(j.qrCode || "");
-
-            if (j.ready) {
-                $("matterState").textContent = "Status: Matter bereit";
-            } else {
-                $("matterState").textContent = "Status: Matter im aktuellen Build nicht verfügbar";
-            }
-
-            if (!j.ready && logOnError) {
-                log("Matter ist noch nicht bereit");
-            }
+            $("matterState").textContent = "Status: Matter bereit";
+            setMatterPairingButtons(true);
         } catch (e) {
             $("pairingCode").textContent = "nicht verfügbar";
             renderMatterQr("");
             $("matterState").textContent = "Status: Matter-API nicht erreichbar";
+            setMatterPairingButtons(false);
             if (logOnError) {
                 log("Matter-Status konnte nicht geladen werden");
             }
@@ -1204,6 +1455,12 @@
     }
 
     async function startMatterPairing() {
+        if (!matterReadyForPairing) {
+            showMatterDisabled();
+            log("Pairing nicht möglich: Matter ist in dieser Basisfirmware deaktiviert");
+            return;
+        }
+
         try {
             const r = await fetch("/api/matter/pairing/start");
             const j = await r.json();
@@ -1228,6 +1485,12 @@
     }
 
     async function stopMatterPairing() {
+        if (!matterReadyForPairing) {
+            showMatterDisabled();
+            log("Pairing-Stopp nicht möglich: Matter ist deaktiviert");
+            return;
+        }
+
         await loadMatterStatus(true);
         log("Pairing-Stopp wird von der aktuellen Matter-API nicht separat unterstützt");
     }
@@ -1256,9 +1519,8 @@
     })();
 
     loadStatus();
-    loadSettings();
     loadMatterStatus();
-    loadMetaConfig();
+    loadSettings().finally(loadMetaConfig);
     loadLogHistory();
     setInterval(loadStatus, 5000);
     setInterval(loadMatterStatus, 8000);
