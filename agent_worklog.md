@@ -448,3 +448,20 @@
 - `agent_worklog.md` (dieses Protokoll)
 
 **Ergebnis:** PASS – Login- und WLAN-Konfigurationsseite passen visuell zur `index.html`.
+
+## 5. Mai 2026 - Matter-QR-Code in der Pairing-Kachel sichtbar gemacht
+
+**Aufgabe:** In der Startseite den echten Matter-QR-Code anzeigen (statt Platzhalter).
+
+**Durchgeführte Aktionen:**
+- `data/index.html`: Pairing-JavaScript von Musterfunktionen auf echte API umgestellt.
+- `loadMatterStatus()` ergänzt: liest `/api/matter/status` und zeigt `pairingCode` + `qrCode` an.
+- `startMatterPairing()` ergänzt: startet `/api/matter/pairing/start` und aktualisiert die Anzeige.
+- QR-Code-Rendering in `qrBox` eingebaut (Bild aus QR-String).
+- CSS für `qrBox img` ergänzt, damit der QR-Code sauber angezeigt wird.
+
+**Geänderte Dateien:**
+- `data/index.html`
+- `agent_worklog.md` (dieses Protokoll)
+
+**Ergebnis:** PASS – Pairing-Code und QR-Code werden nun aus der Matter-API geladen und angezeigt.

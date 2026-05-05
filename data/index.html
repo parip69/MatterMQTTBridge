@@ -184,6 +184,13 @@
             text-align: center;
         }
 
+        .qr-box img {
+            width: 160px;
+            height: 160px;
+            object-fit: contain;
+            border-radius: 6px;
+        }
+
         .code-box {
             background: var(--card2);
             border: 1px dashed var(--accent);
@@ -546,14 +553,61 @@
         }
     }
 
-    function startMatterPairing() {
-        $("pairingCode").textContent = "3840-123-4567";
-        $("qrBox").innerHTML = "Matter QR<br>Platzhalter";
-        log("Matter Pairing gestartet (Muster)");
+    function renderMatterQr(qrCode) {
+        const qr = String(qrCode || "").trim();
+        const box = $("qrBox");
+        if (!qr) {
+            box.innerHTML = "QR-Code<br>nicht verfügbar";
+            return;
+        }
+
+        const url = "https://quickchart.io/qr?size=170&text=" + encodeURIComponent(qr);
+        box.innerHTML = `<img src="${url}" alt="Matter QR-Code" />`;
     }
 
-    function stopMatterPairing() {
-        log("Matter Pairing gestoppt (Muster)");
+    async function loadMatterStatus(logOnError = false) {
+        try {
+            const r = await fetch("/api/matter/status");
+            const j = await r.json();
+
+            const code = String(j.pairingCode || "").trim();
+            $("pairingCode").textContent = code || "nicht verfügbar";
+            renderMatterQr(j.qrCode || "");
+
+            if (!j.ready && logOnError) {
+                log("Matter ist noch nicht bereit");
+            }
+        } catch (e) {
+            $("pairingCode").textContent = "nicht verfügbar";
+            renderMatterQr("");
+            if (logOnError) {
+                log("Matter-Status konnte nicht geladen werden");
+            }
+        }
+    }
+
+    async function startMatterPairing() {
+        try {
+            const r = await fetch("/api/matter/pairing/start");
+            const j = await r.json();
+
+            const code = String(j.pairingCode || "").trim();
+            $("pairingCode").textContent = code || "nicht verfügbar";
+            renderMatterQr(j.qrCode || "");
+
+            if (j.ok) {
+                log("Matter Pairing gestartet");
+            } else {
+                log("Matter Pairing konnte nicht gestartet werden");
+            }
+        } catch (e) {
+            log("Matter Pairing konnte nicht gestartet werden");
+        }
+    }
+
+    async function stopMatterPairing() {
+        await loadMatterStatus(true);
+        log("Pairing-Stopp wird von der aktuellen Matter-API nicht separat unterstützt");
     }
 
     async function loadLogHistory() {
@@ -581,8 +635,10 @@
 
     loadStatus();
     loadSettings();
+    loadMatterStatus();
     loadLogHistory();
     setInterval(loadStatus, 5000);
+    setInterval(loadMatterStatus, 8000);
 </script>
 
 </body>
