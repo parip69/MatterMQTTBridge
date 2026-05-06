@@ -682,3 +682,54 @@
 - `agent_worklog.md` (dieses Protokoll)
 
 **Ergebnis:** PASS fuer die UI-Klaerung - QR/Pairing ist nicht defekt, sondern wegen 5-Pin-Basisfirmware deaktiviert. MQTT-Reconnect bleibt ein separater Punkt.
+
+## 6. Mai 2026 - 15:08 Uhr
+
+**Aufgabe:** Zweiten Build-Env `bridge_noble` anlegen und BLE-aktivierte vs. BLE-deaktivierte Matter-Variante vergleichen.
+
+**Durchgefuehrte Aktionen:**
+- In `platformio.ini` neuen Env `bridge_noble` ergaenzt (abgeleitet von `env:bridge`).
+- Fuer `bridge_noble` ausschliesslich `CONFIG_ENABLE_CHIPOBLE` auf `0` gesetzt (via `-UCONFIG_ENABLE_CHIPOBLE` und `-D CONFIG_ENABLE_CHIPOBLE=0`).
+- Standard-Env `bridge` unveraendert beibehalten.
+
+**Geaenderte Dateien:**
+- `platformio.ini`
+- `agent_worklog.md` (dieses Protokoll)
+
+**Ergebnis:** In Arbeit - Build-/Flash-/Pairing-Verifikation folgt im Anschluss.
+
+## 6. Mai 2026 - 15:28 Uhr
+
+**Aufgabe:** Reconnect-Test auf COM4 nach USB-Aus-/Einstecken und Endverifikation fuer `bridge_noble`.
+
+**Durchgefuehrte Aktionen:**
+- Beide Build-Varianten gebaut und Groessen notiert:
+	- `bridge`: Flash 98,6% (`1937651 / 1966080`), `firmware.bin` `1921088` Bytes.
+	- `bridge_noble`: Flash 98,6% (`1937651 / 1966080`), `firmware.bin` `1938048` Bytes.
+- `bridge_noble` erneut auf COM4 geflasht (ESP32 MAC `88:57:21:b1:e4:10`).
+- Seriell auf COM4 verifiziert:
+	- `=== MATTER START ===`
+	- `Matter gestartet`
+	- `Pairing Code: 34970112332`
+	- `QR: https://project-chip.github.io/connectedhomeip/qrcode.html?data=MT:Y.K9042C00KA0648G00`
+- Laufzeitstatus ueber API geprueft:
+	- `/api/bridge/status`: `ok=true`, `ip=192.168.111.222`, `mqtt=connected`.
+	- `/api/matter/status`: `ready=true`, Pairing-Code und QR vorhanden.
+
+**Geaenderte Dateien:**
+- `agent_worklog.md` (dieses Protokoll)
+
+**Ergebnis:** PASS fuer Build, Flash, WLAN/MQTT-Verbundenheit und Pairing-Code-Ausgabe in `bridge_noble`. Google-Home-Anmeldung muss als manueller Schritt am Smartphone bestaetigt werden.
+
+## 6. Mai 2026 - 15:34 Uhr
+
+**Aufgabe:** Manuelle Google-Home-Anmeldung mit `bridge_noble` abschliessen und Entscheid festhalten.
+
+**Durchgefuehrte Aktionen:**
+- Rueckmeldung vom Projektinhaber erhalten: Anmeldung in Google Home war erfolgreich.
+- Ergebnisregel umgesetzt und festgehalten: `klappt = BLE raus`.
+
+**Geaenderte Dateien:**
+- `agent_worklog.md` (dieses Protokoll)
+
+**Ergebnis:** PASS - `bridge_noble` funktioniert inkl. Google-Home-Anmeldung. Naechster Schritt: BLE in der Hauptvariante entfernen bzw. `bridge_noble` als neuen Standard uebernehmen.
