@@ -733,3 +733,17 @@
 - `agent_worklog.md` (dieses Protokoll)
 
 **Ergebnis:** PASS - `bridge_noble` funktioniert inkl. Google-Home-Anmeldung. Naechster Schritt: BLE in der Hauptvariante entfernen bzw. `bridge_noble` als neuen Standard uebernehmen.
+
+## 6. Mai 2026 - 15:40 Uhr
+
+**Aufgabe:** Rueckbau auf den urspruenglichen BLE-Standardzustand.
+
+**Durchgefuehrte Aktionen:**
+- Test-Umgebung `env:bridge_noble` wieder aus `platformio.ini` entfernt.
+- Standard `env:bridge` mit `CONFIG_ENABLE_CHIPOBLE=1` unveraendert beibehalten.
+
+**Geaenderte Dateien:**
+- `platformio.ini`
+- `agent_worklog.md` (dieses Protokoll)
+
+**Ergebnis:** PASS - Konfiguration ist wieder wie zuvor mit BLE im Standard-Env.
