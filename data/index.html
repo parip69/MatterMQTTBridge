@@ -130,6 +130,19 @@
             margin-top: 4px;
         }
 
+        .checkline {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 10px 0 14px;
+            color: var(--text);
+            font-size: 14px;
+        }
+
+        .checkline input {
+            width: auto;
+        }
+
         button, .btn {
             border: none;
             border-radius: 10px;
@@ -770,6 +783,11 @@
             <label>Admin Passwort</label>
             <input id="passwordAdmin" type="password" placeholder="leer lassen = nicht ändern" />
 
+            <label class="checkline">
+                <input id="enablePassword" type="checkbox" />
+                Weboberfläche mit Login schützen
+            </label>
+
             <button onclick="saveSettings()">Speichern</button>
             <button class="secondary" onclick="restartBridge()">Neustart</button>
             <a class="btn secondary" href="/wificonfig.html">WLAN Konfiguration</a>
@@ -905,6 +923,9 @@
             $("mqtt_port").value = j.mqtt_port || 1883;
             $("mqttUsername").value = j.mqttUsername || "";
             $("mqttRootTopic").value = j.mqttRootTopic || "fingerprint";
+            if ($("enablePassword")) {
+                $("enablePassword").checked = (j.enablePassword === "on");
+            }
         } catch (e) {
             log("Einstellungen konnten nicht geladen werden");
         }
@@ -941,6 +962,7 @@
         data.append("password", $("password").value);
         data.append("hostname", $("hostname").value);
         data.append("passwordAdmin", $("passwordAdmin").value);
+        data.append("enablePassword", $("enablePassword") && $("enablePassword").checked ? "on" : "off");
 
         data.append("mqtt_mode", $("mqtt_mode").value);
         data.append("mqttServer", $("mqttServer").value);

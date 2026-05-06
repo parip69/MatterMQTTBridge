@@ -10,7 +10,6 @@
   <meta http-equiv="Expires" content="0">
   <title>Login</title>
   <link rel="icon" type="image/svg+xml" href="/icon-bridge.svg">
-  <link rel="stylesheet" href="/bootstrap.min.css">
   <style>
     :root {
       --bg: #0f172a;
@@ -96,6 +95,21 @@
     .btn-primary:hover {
       background: #1eb455;
     }
+
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    .text-center {
+      text-align: center;
+    }
+
+    .error {
+      margin-top: 12px;
+      color: #fecaca;
+      text-align: center;
+      font-size: 13px;
+    }
   </style>
 </head>
 
@@ -112,8 +126,15 @@
           <button type="submit" class="btn btn-primary">Einloggen</button>
         </div>
       </form>
+      <p class="error" id="loginError" style="display:none">Passwort falsch</p>
     </div>
   </div>
+
+  <script>
+    if (location.search.indexOf("error=1") >= 0) {
+      document.getElementById("loginError").style.display = "block";
+    }
+  </script>
 </body>
 
 </html>

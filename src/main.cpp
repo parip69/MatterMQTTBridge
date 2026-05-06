@@ -2,7 +2,7 @@
 //******************************************************
 //         Main of MatterMQTTBridge.
 // nur hier die start wert der version Aendern.OK=======
-// @version: 1.0.58 <br> Builddatum 15:49:22 06-05.2026
+// @version: 1.0.60 <br> Builddatum 16:02:44 06-05.2026
 //****************************************************
 
 #include <Arduino.h>
@@ -40,7 +40,7 @@
 #define TEST_OUTPUT_PIN_5 33
 
 // ======================= GLOBALS =======================
-const char* firmwareVersion = "1.0.58 <br> Builddatum 15:49:22 06-05.2026";
+const char* firmwareVersion = "1.0.60 <br> Builddatum 16:02:44 06-05.2026";
 AsyncWebServer webServer(80);
 SettingsManager settingsManager;
 MatterBridgeManager matterBridge;
@@ -53,6 +53,9 @@ bool isApConfigMode = false;
 
 static bool restartPending = false;
 static uint32_t restartAtMs = 0;
+static bool loggedIn = false;
+static uint32_t lastActivityTime = 0;
+static const uint32_t WEB_LOGIN_TIMEOUT_MS = 10UL * 60UL * 1000UL;
 
 // ======================= LOG PUFFER =======================
 #define LOG_BUFFER_SIZE 50
@@ -121,6 +124,115 @@ String normalizeBridgeHostname(const String &rawHostname) {
     // Leerzeichen für DNS/mDNS vermeiden.
     hn.replace(" ", "-");
     return hn;
+}
+
+static String resolveSetupPassword()
+{
+    AppSettings app = settingsManager.getAppSettings();
+    WifiSettings wifi = settingsManager.getWifiSettings();
+
+    String password = app.passwordSetup;
+    password.trim();
+
+    if (password.isEmpty()) {
+        password = wifi.passwordAdmin;
+        password.trim();
+    }
+
+    if (password.isEmpty()) {
+        password = "admin";
+    }
+
+    return password;
+}
+
+static bool isPasswordEnabled()
+{
+    AppSettings app = settingsManager.getAppSettings();
+    return app.enablePassword == "on";
+}
+
+static void markWebActivity()
+{
+    lastActivityTime = millis();
+}
+
+static bool isWebAccessAllowed()
+{
+    return (!isPasswordEnabled()) || loggedIn;
+}
+
+static bool requireWebLogin(AsyncWebServerRequest *request)
+{
+    if (isWebAccessAllowed()) {
+        markWebActivity();
+        return true;
+    }
+
+    request->redirect("/login.html");
+    return false;
+}
+
+static String readEnablePasswordFromRequest(AsyncWebServerRequest *request)
+{
+    String result = "off";
+
+    const int paramCount = request->params();
+    for (int i = 0; i < paramCount; i++) {
+        const AsyncWebParameter *p = request->getParam(i);
+        if (!p) {
+            continue;
+        }
+
+        if (p->name() == "enablePassword") {
+            if (p->value() == "on") {
+                result = "on";
+                break;
+            }
+        }
+    }
+
+    return result;
+}
+
+String processor(const String &var)
+{
+    WifiSettings ws = settingsManager.getWifiSettings();
+    AppSettings as = settingsManager.getAppSettings();
+
+    if (var == "HOSTNAME") {
+        return normalizeBridgeHostname(ws.hostname);
+    }
+
+    if (var == "WIFI_SSID") {
+        return ws.ssid;
+    }
+
+    if (var == "WIFI_PASSWORD") {
+        return ws.password.isEmpty() ? "" : "********";
+    }
+
+    if (var == "PASSWORD_SETUP_WiFi_CONFIG") {
+        String pass = resolveSetupPassword();
+        if (pass == "admin") {
+            return "admin";
+        }
+        return "********";
+    }
+
+    if (var == "PASSWORD_SETUP") {
+        String pass = resolveSetupPassword();
+        if (pass == "admin") {
+            return "admin";
+        }
+        return "********";
+    }
+
+    if (var == "password_enabled_checked" || var == "PASSWORD_ENABLED_CHECKED") {
+        return as.enablePassword == "on" ? "checked" : "";
+    }
+
+    return String();
 }
 
 String makeTopic(const String &tail) {
@@ -262,8 +374,33 @@ bool publishMqttMessage(const String &topic, const String &message, bool retain,
 
 // ======================= SETUP ROUTING =======================
 void setupRouting() {
+    webServer.on("/login", HTTP_POST, [](AsyncWebServerRequest *request) {
+        String password = "";
+
+        if (request->hasParam("password", true)) {
+            password = request->getParam("password", true)->value();
+        }
+
+        if (password == resolveSetupPassword()) {
+            loggedIn = true;
+            markWebActivity();
+            request->redirect("/");
+            return;
+        }
+
+        loggedIn = false;
+        request->redirect("/login.html?error=1");
+    });
+
+    webServer.on("/logout", HTTP_GET, [](AsyncWebServerRequest *request) {
+        loggedIn = false;
+        request->redirect("/login.html");
+    });
+
     // API Status
     webServer.on("/api/bridge/status", HTTP_GET, [](AsyncWebServerRequest *request) {
+        if (!requireWebLogin(request)) return;
+
         AppSettings appSettings = settingsManager.getAppSettings();
         JsonDocument doc;
         doc["ok"] = true;
@@ -294,6 +431,8 @@ void setupRouting() {
     });
 
     webServer.on("/api/matter/status", HTTP_GET, [](AsyncWebServerRequest *request) {
+        if (!requireWebLogin(request)) return;
+
         JsonDocument doc;
         doc["ok"] = true;
         doc["ready"] = matterBridge.isReady();
@@ -306,6 +445,8 @@ void setupRouting() {
     });
 
     webServer.on("/api/matter/pairing/start", HTTP_GET, [](AsyncWebServerRequest *request) {
+        if (!requireWebLogin(request)) return;
+
         bool ok = matterBridge.startPairing();
 
         JsonDocument doc;
@@ -321,18 +462,41 @@ void setupRouting() {
 
     // Settings speichern
     webServer.on("/save_settings", HTTP_POST, [](AsyncWebServerRequest *request) {
+        if (!isApConfigMode && !requireWebLogin(request)) return;
+
         WifiSettings ws = settingsManager.getWifiSettings();
+        AppSettings as = settingsManager.getAppSettings();
+
         if (request->hasParam("ssid", true)) ws.ssid = request->getParam("ssid", true)->value();
         if (request->hasParam("password", true) && request->getParam("password", true)->value().length() > 0) {
             ws.password = request->getParam("password", true)->value();
         }
         if (request->hasParam("hostname", true)) ws.hostname = normalizeBridgeHostname(request->getParam("hostname", true)->value());
-        if (request->hasParam("passwordAdmin", true) && request->getParam("passwordAdmin", true)->value().length() > 0) {
-            ws.passwordAdmin = request->getParam("passwordAdmin", true)->value();
+
+        if (request->hasParam("passwordSetup", true)) {
+            String setupPass = request->getParam("passwordSetup", true)->value();
+            setupPass.trim();
+            if (!setupPass.isEmpty() && setupPass != "********") {
+                as.passwordSetup = setupPass;
+                ws.passwordAdmin = setupPass;
+            }
         }
+
+        if (request->hasParam("passwordAdmin", true) && request->getParam("passwordAdmin", true)->value().length() > 0) {
+            String adminPass = request->getParam("passwordAdmin", true)->value();
+            adminPass.trim();
+            if (!adminPass.isEmpty() && adminPass != "********") {
+                as.passwordSetup = adminPass;
+                ws.passwordAdmin = adminPass;
+            }
+        }
+
+        if (request->hasParam("enablePassword", true)) {
+            as.enablePassword = readEnablePasswordFromRequest(request);
+        }
+
         settingsManager.saveWifiSettings(ws);
 
-        AppSettings as = settingsManager.getAppSettings();
         if (request->hasParam("mqtt_mode", true)) {
             String mode = request->getParam("mqtt_mode", true)->value();
             if (mode == "off") {
@@ -363,6 +527,8 @@ void setupRouting() {
 
     // Settings laden
     webServer.on("/api/settings", HTTP_GET, [](AsyncWebServerRequest *request) {
+        if (!requireWebLogin(request)) return;
+
         JsonDocument doc;
         WifiSettings ws = settingsManager.getWifiSettings();
         AppSettings as = settingsManager.getAppSettings();
@@ -374,6 +540,7 @@ void setupRouting() {
         doc["mqtt_port"] = as.mqtt_port;
         doc["mqttUsername"] = as.mqttUsername;
         doc["mqttRootTopic"] = normalizeMqttRootTopic(as.mqttRootTopic);
+        doc["enablePassword"] = as.enablePassword;
         
         String resp;
         serializeJson(doc, resp);
@@ -382,6 +549,8 @@ void setupRouting() {
 
     // API Trigger
     webServer.on("/api/bridge/trigger", HTTP_GET, [](AsyncWebServerRequest *request) {
+        if (!requireWebLogin(request)) return;
+
         if (!request->hasParam("pin")) {
             JsonDocument doc;
             doc["ok"] = false;
@@ -436,12 +605,16 @@ void setupRouting() {
     });
 
     webServer.on("/api/restart", HTTP_GET, [](AsyncWebServerRequest *request) {
+        if (!requireWebLogin(request)) return;
+
         request->send(200, "text/plain", "Restarting...");
         restartPending = true;
         restartAtMs = millis() + 1000UL;
     });
 
     webServer.on("/api/bridge/log", HTTP_GET, [](AsyncWebServerRequest *request) {
+        if (!requireWebLogin(request)) return;
+
         JsonDocument doc;
         JsonArray arr = doc["log"].to<JsonArray>();
         int start = (s_logCount < LOG_BUFFER_SIZE) ? 0 : s_logHead;
@@ -455,19 +628,35 @@ void setupRouting() {
 
     // Statische Dateien explizit registrieren, damit /api/... nie in den Dateihandler fällt.
     webServer.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
+        if (!requireWebLogin(request)) return;
         request->send(LittleFS, "/index.html", "text/html");
     });
     webServer.on("/index.html", HTTP_GET, [](AsyncWebServerRequest *request) {
+        if (!requireWebLogin(request)) return;
         request->send(LittleFS, "/index.html", "text/html");
     });
-    webServer.serveStatic("/bootstrap.min.css", LittleFS, "/bootstrap.min.css");
-    webServer.serveStatic("/icon-192.png", LittleFS, "/icon-192.png");
+    webServer.serveStatic("/icon-bridge.svg", LittleFS, "/icon-bridge.svg");
     webServer.serveStatic("/login.html", LittleFS, "/login.html");
     webServer.serveStatic("/settings.html", LittleFS, "/settings.html");
-    webServer.serveStatic("/wificonfig.html", LittleFS, "/wificonfig.html");
+    webServer.on("/wificonfig.html", HTTP_GET, [](AsyncWebServerRequest *request) {
+        AsyncWebServerResponse *response = request->beginResponse(LittleFS, "/wificonfig.html", "text/html", false, processor);
+        response->addHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+        request->send(response);
+    });
 
     webServer.addHandler(&events);
-    ElegantOTA.begin(&webServer);
+    if (isApConfigMode) {
+        String otaPassword = resolveSetupPassword();
+        ElegantOTA.begin(&webServer, "admin", otaPassword.c_str());
+        addLogMessage("OTA im WLAN-Konfigurationsmodus mit Passwortschutz aktiv");
+    } else if (isPasswordEnabled()) {
+        String otaPassword = resolveSetupPassword();
+        ElegantOTA.begin(&webServer, "admin", otaPassword.c_str());
+        addLogMessage("OTA mit Passwortschutz aktiv");
+    } else {
+        ElegantOTA.begin(&webServer);
+        addLogMessage("OTA ohne Passwortschutz aktiv");
+    }
 }
 
 // ======================= SETUP =======================
@@ -624,6 +813,13 @@ void loop() {
     if (restartPending && millis() >= restartAtMs) {
         digitalWrite(LED_BUILTIN, LOW);
         ESP.restart();
+    }
+
+    if (isPasswordEnabled() && loggedIn) {
+        if (millis() - lastActivityTime > WEB_LOGIN_TIMEOUT_MS) {
+            loggedIn = false;
+            addLogMessage("Web-Login automatisch abgelaufen");
+        }
     }
 
     delay(10);

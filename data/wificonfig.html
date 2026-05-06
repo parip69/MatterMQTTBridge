@@ -218,6 +218,18 @@
             color: var(--muted)
         }
 
+        .checkline {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--textOnDark);
+            font-weight: 700;
+        }
+
+        .checkline input[type="checkbox"] {
+            width: auto;
+        }
+
         input:-webkit-autofill {
             -webkit-text-fill-color: var(--textOnDark);
             transition: background-color 5000s ease-in-out 0s;
@@ -240,7 +252,7 @@
                     zurückzukehren.</small>
             </div>
             <div class="panel-inner">
-                <form action="/save" method="get" autocomplete="off">
+                <form action="/save_settings" method="post" autocomplete="off">
                     <div class="field"><label for="ssid">SSID</label><input id="ssid" name="ssid" class="input"
                             type="text" placeholder="SSID Ihres WLANs" value="%WIFI_SSID%" required
                             autocapitalize="none" autocorrect="off" spellcheck="false" /></div>
@@ -255,17 +267,26 @@
                             required autocapitalize="none" autocorrect="off" spellcheck="false" />
                         <p class="help">Name im Netzwerk. Standard: MatterMQTTBridge.</p>
                     </div>
-                    <div class="field"><label for="passwordSetup">Passwort für Homepage-Setup</label><input
-                            id="passwordSetup" name="passwordSetup" class="input" type="text"
+                    <div class="field">
+                        <label for="passwordSetup">Passwort für Weboberfläche / OTA</label>
+                        <input id="passwordSetup" name="passwordSetup" class="input" type="text"
                             placeholder="Setup-Passwort" value="%PASSWORD_SETUP_WiFi_CONFIG%" autocapitalize="none"
                             autocorrect="off" spellcheck="false" />
-                        <p class="help">Hier wird das Passwort für die WWW gesetzt.</p>
+                        <p class="help">Standard ist admin. Dieses Passwort schützt später Login und OTA.</p>
+                    </div>
+                    <div class="field">
+                        <label class="checkline" for="enablePassword">
+                            <input type="hidden" name="enablePassword" value="off">
+                            <input id="enablePassword" name="enablePassword" type="checkbox" value="on" %PASSWORD_ENABLED_CHECKED%>
+                            Weboberfläche mit Login schützen
+                        </label>
+                        <p class="help">Wenn aktiviert, erscheint nach dem Neustart zuerst die Login-Seite.</p>
                     </div>
                     <div class="actions"><button id="save" name="save" class="btn btn-success" type="submit"> Speichern
                             &amp; Neustart
                         </button><!-- Absoluter Pfad ist robuster (egal, unter welcher URL die Seite liegt) --><button
                             id="btnFirmwareUpdate" name="btnFirmwareUpdate" class="btn btn-info" type="button"
-                            onclick="fetch('/otaPrepare').then(()=>window.location='/update')"> Firmware-Update </button></div>
+                            onclick="window.location='/update'"> Firmware-Update </button></div>
                 </form>
             </div>
         </section>

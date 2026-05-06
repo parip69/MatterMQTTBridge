@@ -26,7 +26,7 @@ struct AppSettings
   String ntpServer = "pool.ntp.org";
   String ntpOffset = "CET-1CEST,M3.5.0/2,M10.5.0/3";
   String passwordSetup = "";
-  String enablePassword = "";
+  String enablePassword = "off";
 };
 
 class SettingsManager

@@ -60,6 +60,7 @@ bool SettingsManager::loadAppSettings()
     loaded.ntpOffset = preferences.getString("ntpOffset", loaded.ntpOffset);
     loaded.passwordSetup = preferences.getString("passwordSetup", loaded.passwordSetup);
     loaded.enablePassword = preferences.getString("enablePassword", loaded.enablePassword);
+    loaded.enablePassword = (loaded.enablePassword == "on") ? "on" : "off";
 
 
     preferences.end();
@@ -112,7 +113,7 @@ void SettingsManager::saveAppSettings()
     preferences.putString("ntpServer", localCopy.ntpServer);
     preferences.putString("ntpOffset", localCopy.ntpOffset);
     preferences.putString("passwordSetup", localCopy.passwordSetup);
-    preferences.putString("enablePassword", localCopy.enablePassword);
+    preferences.putString("enablePassword", localCopy.enablePassword == "on" ? "on" : "off");
 
     preferences.end();
 }
@@ -155,6 +156,7 @@ void SettingsManager::saveAppSettings(const AppSettings& newSettings)
 {
     AppSettings normalized = newSettings;
     normalized.mqttRootTopic = normalizeMqttRootTopicValue(normalized.mqttRootTopic);
+    normalized.enablePassword = (normalized.enablePassword == "on") ? "on" : "off";
     if (settingsMutex && xSemaphoreTake(settingsMutex, pdMS_TO_TICKS(100)) == pdTRUE) {
         appSettings = normalized; xSemaphoreGive(settingsMutex);
     } else {

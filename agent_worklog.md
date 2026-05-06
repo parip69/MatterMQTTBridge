@@ -747,3 +747,38 @@
 - `agent_worklog.md` (dieses Protokoll)
 
 **Ergebnis:** PASS - Konfiguration ist wieder wie zuvor mit BLE im Standard-Env.
+
+## 6. Mai 2026 - Login-Schutz und OTA-Passwortlogik wie Fingerprint
+
+**Aufgabe:** Login-Schutz und OTA-Passwortverhalten in der MatterMQTTBridge wieder auf Fingerprint-Prinzip bringen, inkl. `enablePassword`-Checkbox, Passwortauflösung und Bootstrap-Entfernung.
+
+**Durchgefuehrte Aktionen:**
+- `src/SettingsManager.h/.cpp` angepasst: `passwordSetup` bleibt erhalten, `enablePassword` wird beim Laden/Speichern auf `on/off` normalisiert.
+- `src/main.cpp` erweitert: zentrale Passwortauflösung (`AppSettings.passwordSetup` -> `WifiSettings.passwordAdmin` -> `admin`), Login-Status, Aktivitätszeit und Auto-Logout (10 Minuten).
+- `src/main.cpp` Routing angepasst: neue Routen `/login` und `/logout`; Schutz für Web/API-Endpunkte nur wenn `enablePassword=on`; `/login.html` bleibt offen.
+- `src/main.cpp` Sonderfall umgesetzt: `/save_settings` bleibt im AP-Konfigurationsmodus ohne Login erreichbar.
+- `src/main.cpp` Passwort- und Checkbox-Handling in `/save_settings` kompatibel umgesetzt (`passwordSetup` und `passwordAdmin` synchron, `enablePassword` über alle Parameter ausgewertet).
+- `src/main.cpp` `/api/settings` erweitert um `enablePassword`, ohne Klartext-Passwortrückgabe.
+- `src/main.cpp` `wificonfig.html` auf Template-Auslieferung mit `processor(...)` umgestellt (Platzhalter für Hostname/WLAN/Passwortmaske/Checkbox).
+- `src/main.cpp` ElegantOTA-Startlogik angepasst: im AP-Modus immer Passwortschutz, im Normalmodus nur bei `enablePassword=on`, `ElegantOTA.begin(...)` genau einmal.
+- `data/login.html` von Bootstrap entkoppelt und Fehlermeldung bei falschem Passwort ergänzt.
+- `data/index.html` um Checkbox `enablePassword` inkl. Laden/Speichern erweitert.
+- `data/wificonfig.html` korrigiert: `POST /save_settings`, `passwordSetup` beibehalten, `enablePassword`-Checkbox ergänzt, OTA-Button auf `/update` direkt gesetzt.
+- `src/main.cpp` statische Route `/bootstrap.min.css` entfernt, `/icon-192.png` entfernt, `/icon-bridge.svg` registriert.
+- `data/bootstrap.min.css` aus dem Projekt gelöscht.
+
+**Verifikation:**
+- Editor-Diagnostik ohne Fehler in den geänderten Dateien.
+- Textsuche: keine aktiven `bootstrap.min.css`-Referenzen mehr in Laufzeitdateien (`src`/`data`), nur historische Treffer in Doku/Logs.
+
+**Geaenderte Dateien:**
+- `src/SettingsManager.h`
+- `src/SettingsManager.cpp`
+- `src/main.cpp`
+- `data/index.html`
+- `data/login.html`
+- `data/wificonfig.html`
+- `data/bootstrap.min.css` (geloescht)
+- `agent_worklog.md`
+
+**Ergebnis:** PASS (Code- und Build-Ebene) - Fingerprint-kompatible Login-/OTA-Logik ist implementiert, minimal-invasiv und ohne Änderungen an Matter-/MQTT-/Trigger-Kernlogik.
