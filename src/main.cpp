@@ -2,7 +2,7 @@
 //******************************************************
 //         Main of MatterMQTTBridge.
 // nur hier die start wert der version Aendern.OK=======
-// @version: 1.0.48 <br> Builddatum 20:48:48 05-05.2026
+// @version: 1.0.49 <br> Builddatum 20:57:38 05-05.2026
 //****************************************************
 
 #include <Arduino.h>
@@ -40,7 +40,7 @@
 #define TEST_OUTPUT_PIN_5 33
 
 // ======================= GLOBALS =======================
-const char* firmwareVersion = "1.0.48 <br> Builddatum 20:48:48 05-05.2026";
+const char* firmwareVersion = "1.0.49 <br> Builddatum 20:57:38 05-05.2026";
 AsyncWebServer webServer(80);
 SettingsManager settingsManager;
 MatterBridgeManager matterBridge;
