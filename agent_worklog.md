@@ -1,3 +1,62 @@
+## 6. Mai 2026 - Wetterquelle (Host/IP) in Liveanzeige + robuste Topic-Erkennung
+
+**Aufgabe:** Wetterdaten aus MQTT sensorunabhängig verarbeiten und in der Bridge-Liveanzeige mit Quelle (Host/IP/Absender) kennzeichnen.
+
+**Durchgefuehrte Aktionen:**
+- `src/main.cpp` erweitert: Wetter-Erkennung akzeptiert jetzt auch Sensor-Unterpfade unter dem Root-Topic (z. B. `fingerprint/Garage/temperature`) sowie Alias-Suffixe (`temp`, `hum`).
+- `src/main.cpp` erweitert: Quelle wird aus Payload-Marker `source:[...]` gelesen; falls nicht vorhanden, aus Topic-Pfad oder RX-Quelle abgeleitet.
+- `src/main.cpp` erweitert: pro Wetterwert werden letzte Quelle und letztes Topic gespeichert und ueber `/api/weather/status` ausgegeben.
+- `data/index.html` erweitert: Wetterkarte zeigt jetzt zusaetzlich `Quelle` und `Topic` der zuletzt relevanten Wettermeldung.
+- Fehlerfall im Frontend angepasst: Quelle/Topic werden bei API-Fehler auf `-` zurueckgesetzt.
+
+**Geaenderte Dateien:**
+- `src/main.cpp`
+- `data/index.html`
+- `agent_worklog.md`
+
+---
+
+## 6. Mai 2026 - Fingerprint Flash auf Geraet mit IP 192.168.111.99
+
+**Aufgabe:** Fingerprint-Projekt auf das Geraet mit IP `192.168.111.99` aktualisieren (OTA angefragt)
+
+**Durchgefuehrte Aktionen:**
+- Ziel-IP geprueft: `192.168.111.99` im Netz erreichbar.
+- OTA-Upload per PlatformIO auf IP gestartet (`espota` Auto-Switch aktiv).
+- Ergebnis OTA: keine Antwort vom ESP auf OTA-Port 3232 (`No response from the ESP`).
+- Danach USB-Fallback genutzt, weil Geraet auf `COM3` angeschlossen war.
+- Direktflash mit vorhandenem Binary per `esptool` ausgefuehrt (`bootloader`, `partitions`, `firmware`).
+
+**Verifikation:**
+- USB-Flash auf `COM3` erfolgreich, Schreibvorgaenge verifiziert (`Hash of data verified`), abschliessender Hard-Reset ausgefuehrt.
+
+**Ergebnis:**
+- **PASS (per USB COM3)**
+- **OTA auf 192.168.111.99 aktuell FAIL** (ESP antwortet nicht auf `espota`/Port 3232)
+
+---
+
+## 6. Mai 2026 - Wetter-Liveanzeige Bridge + MQTT-Wetterpublishing Parip69
+
+**Aufgabe:** Wetterdaten aus Parip69 in der MatterMQTTBridge sichtbar machen und Datenpfad Ende-zu-Ende vorbereiten
+
+**Durchgeführte Aktionen:**
+- Bridge-Firmware erweitert: Live-Wettercache für `temperature`, `humidity`, `feelsLike`, `dewPoint` aus eingehenden MQTT-Topics ergänzt.
+- Bridge-API erweitert: neuer Endpunkt `/api/weather/status` für die Weboberfläche.
+- Bridge-Weboberfläche erweitert: kompakte Karte „Wetter Live“ mit Status sowie 4 Live-Werten und Auto-Refresh.
+- Parip69-Quellen analysiert: DHT-Werte vorhanden, aber bisher nicht auf die Bridge-erwarteten Wettertopics publiziert.
+- Parip69 angepasst: zyklische MQTT-Publish-Logik ergänzt (`<root>/temperature`, `<root>/humidity`, `<root>/feelsLike`, `<root>/dewPoint`) mit Change-Detection und Intervallschutz.
+
+**Verifikation:**
+- MatterMQTTBridge Build `B Bridge`: erfolgreich.
+- Parip69 Build `pio run -e max`: fehlgeschlagen (bestehende Toolchain/Lib-Inkompatibilitäten wie `Network.h`/`NetworkInterface.h` und Broker-Signaturkonflikte).
+
+**Ergebnis:**
+- **Bridge: PASS** – Wetter-Liveanzeige + API kompilieren und sind integriert.
+- **Parip69: FAIL (Umgebungsbedingt)** – Build blockiert aktuell durch bestehende Abhängigkeits-/Framework-Konflikte, nicht durch die neue Wetter-Logik.
+
+---
+
 ## 4. Mai 2026 - Versionsanzeige ohne <br>-Tag
 
 ## 4. Mai 2026 - Matter-Grundintegration: Framework-Blocker sauber verifiziert

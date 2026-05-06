@@ -2,7 +2,7 @@
 //******************************************************
 //         Main of MatterMQTTBridge.
 // nur hier die start wert der version Aendern.OK=======
-// @version: 1.0.61 <br> Builddatum 18:55:40 06-05.2026
+// @version: 1.0.63 <br> Builddatum 21:02:05 06-05.2026
 //****************************************************
 
 #include <Arduino.h>
@@ -40,7 +40,7 @@
 #define TEST_OUTPUT_PIN_5 33
 
 // ======================= GLOBALS =======================
-const char* firmwareVersion = "1.0.61 <br> Builddatum 18:55:40 06-05.2026";
+const char* firmwareVersion = "1.0.63 <br> Builddatum 21:02:05 06-05.2026";
 AsyncWebServer webServer(80);
 SettingsManager settingsManager;
 MatterBridgeManager matterBridge;
@@ -56,6 +56,24 @@ static uint32_t restartAtMs = 0;
 static bool loggedIn = false;
 static uint32_t lastActivityTime = 0;
 static const uint32_t WEB_LOGIN_TIMEOUT_MS = 10UL * 60UL * 1000UL;
+
+static String s_weatherTemperature = "";
+static String s_weatherHumidity = "";
+static String s_weatherFeelsLike = "";
+static String s_weatherDewPoint = "";
+static String s_weatherTemperatureSource = "";
+static String s_weatherHumiditySource = "";
+static String s_weatherFeelsLikeSource = "";
+static String s_weatherDewPointSource = "";
+static String s_weatherTemperatureTopic = "";
+static String s_weatherHumidityTopic = "";
+static String s_weatherFeelsLikeTopic = "";
+static String s_weatherDewPointTopic = "";
+static uint32_t s_weatherTemperatureAtMs = 0;
+static uint32_t s_weatherHumidityAtMs = 0;
+static uint32_t s_weatherFeelsLikeAtMs = 0;
+static uint32_t s_weatherDewPointAtMs = 0;
+static const uint32_t WEATHER_VALUE_FRESH_MS = 2UL * 60UL * 1000UL;
 
 // ======================= LOG PUFFER =======================
 #define LOG_BUFFER_SIZE 50
@@ -240,6 +258,144 @@ String makeTopic(const String &tail) {
     return root + "/" + tail;
 }
 
+static String normalizeWeatherPayload(const String &rawPayload)
+{
+    String value = rawPayload;
+    value.trim();
+
+    const int lastSeparator = value.lastIndexOf(';');
+    if (lastSeparator >= 0 && lastSeparator + 1 < (int)value.length()) {
+        String candidate = value.substring(lastSeparator + 1);
+        candidate.trim();
+        if (!candidate.isEmpty()) {
+            value = candidate;
+        }
+    }
+
+    return value;
+}
+
+static bool endsWithIgnoreCase(const String &value, const String &suffix)
+{
+    if (suffix.length() > value.length()) {
+        return false;
+    }
+    return value.substring(value.length() - suffix.length()).equalsIgnoreCase(suffix);
+}
+
+static String parseWeatherSourceFromPayload(const String &payloadStr)
+{
+    const String marker = "source:[";
+    const int start = payloadStr.indexOf(marker);
+    if (start < 0) {
+        return "";
+    }
+
+    const int valueStart = start + (int)marker.length();
+    const int end = payloadStr.indexOf(']', valueStart);
+    if (end < 0) {
+        return "";
+    }
+
+    String source = payloadStr.substring(valueStart, end);
+    source.trim();
+    return source;
+}
+
+static String parseWeatherSourceFromTopic(const String &topicStr, const String &root)
+{
+    const String rootPrefix = root + "/";
+    if (!topicStr.startsWith(rootPrefix)) {
+        return "";
+    }
+
+    String relative = topicStr.substring(rootPrefix.length());
+    const int slashPos = relative.lastIndexOf('/');
+    if (slashPos <= 0) {
+        return "";
+    }
+
+    String source = relative.substring(0, slashPos);
+    source.trim();
+    return source;
+}
+
+static void updateWeatherValueFromTopic(const String &topicStr, const String &payloadStr, const String &rxSource)
+{
+    const String root = normalizeMqttRootTopic(settingsManager.getAppSettings().mqttRootTopic);
+    if (root.isEmpty()) {
+        return;
+    }
+
+    const String value = normalizeWeatherPayload(payloadStr);
+    if (value.isEmpty()) {
+        return;
+    }
+
+    const uint32_t nowMs = millis();
+    const String rootPrefix = root + "/";
+    if (!topicStr.startsWith(rootPrefix)) {
+        return;
+    }
+
+    String topicLower = topicStr;
+    topicLower.toLowerCase();
+
+    String source = parseWeatherSourceFromPayload(payloadStr);
+    if (source.isEmpty()) {
+        source = parseWeatherSourceFromTopic(topicStr, root);
+    }
+    if (source.isEmpty()) {
+        source = rxSource;
+    }
+
+    String sourceLabel = source;
+    sourceLabel.trim();
+    if (sourceLabel.isEmpty()) {
+        sourceLabel = "unbekannt";
+    }
+
+    if (endsWithIgnoreCase(topicLower, "/temperature") || endsWithIgnoreCase(topicLower, "/temp")) {
+        s_weatherTemperature = value;
+        s_weatherTemperatureAtMs = nowMs;
+        s_weatherTemperatureSource = sourceLabel;
+        s_weatherTemperatureTopic = topicStr;
+        return;
+    }
+
+    if (endsWithIgnoreCase(topicLower, "/humidity") || endsWithIgnoreCase(topicLower, "/hum")) {
+        s_weatherHumidity = value;
+        s_weatherHumidityAtMs = nowMs;
+        s_weatherHumiditySource = sourceLabel;
+        s_weatherHumidityTopic = topicStr;
+        return;
+    }
+
+    if (endsWithIgnoreCase(topicLower, "/feelslike")) {
+        s_weatherFeelsLike = value;
+        s_weatherFeelsLikeAtMs = nowMs;
+        s_weatherFeelsLikeSource = sourceLabel;
+        s_weatherFeelsLikeTopic = topicStr;
+        return;
+    }
+
+    if (endsWithIgnoreCase(topicLower, "/dewpoint")) {
+        s_weatherDewPoint = value;
+        s_weatherDewPointAtMs = nowMs;
+        s_weatherDewPointSource = sourceLabel;
+        s_weatherDewPointTopic = topicStr;
+        return;
+    }
+}
+
+static bool isWeatherFresh(uint32_t updatedAtMs)
+{
+    if (updatedAtMs == 0) {
+        return false;
+    }
+    return (millis() - updatedAtMs) <= WEATHER_VALUE_FRESH_MS;
+}
+
 // ======================= DIAGNOSE-LOG =======================
 void addLogMessage(const String& message) {
     LOG_PRINTLN(message);
@@ -256,6 +412,7 @@ void handleIncomingMqttMessage(const String &topicStr, const String &payloadStr,
     }
     line += "  " + topicStr + "  ->  " + payloadStr.substring(0, 80);
     addLogMessage(line);
+    updateWeatherValueFromTopic(topicStr, payloadStr, rxSource);
 
 #if USE_OUTPUT_TEST_PINS
     String root = normalizeMqttRootTopic(settingsManager.getAppSettings().mqttRootTopic);
@@ -621,6 +778,37 @@ void setupRouting() {
         for (int i = 0; i < s_logCount; i++) {
             arr.add(s_logBuf[(start + i) % LOG_BUFFER_SIZE]);
         }
+        String resp;
+        serializeJson(doc, resp);
+        request->send(200, "application/json", resp);
+    });
+
+    webServer.on("/api/weather/status", HTTP_GET, [](AsyncWebServerRequest *request) {
+        if (!requireWebLogin(request)) return;
+
+        JsonDocument doc;
+        doc["ok"] = true;
+        doc["temperature"] = s_weatherTemperature;
+        doc["humidity"] = s_weatherHumidity;
+        doc["feelsLike"] = s_weatherFeelsLike;
+        doc["dewPoint"] = s_weatherDewPoint;
+        doc["temperatureSource"] = s_weatherTemperatureSource;
+        doc["humiditySource"] = s_weatherHumiditySource;
+        doc["feelsLikeSource"] = s_weatherFeelsLikeSource;
+        doc["dewPointSource"] = s_weatherDewPointSource;
+        doc["temperatureTopic"] = s_weatherTemperatureTopic;
+        doc["humidityTopic"] = s_weatherHumidityTopic;
+        doc["feelsLikeTopic"] = s_weatherFeelsLikeTopic;
+        doc["dewPointTopic"] = s_weatherDewPointTopic;
+
+        doc["temperatureFresh"] = isWeatherFresh(s_weatherTemperatureAtMs);
+        doc["humidityFresh"] = isWeatherFresh(s_weatherHumidityAtMs);
+        doc["feelsLikeFresh"] = isWeatherFresh(s_weatherFeelsLikeAtMs);
+        doc["dewPointFresh"] = isWeatherFresh(s_weatherDewPointAtMs);
+
+        doc["freshWindowMs"] = WEATHER_VALUE_FRESH_MS;
+        doc["rootTopic"] = normalizeMqttRootTopic(settingsManager.getAppSettings().mqttRootTopic);
+
         String resp;
         serializeJson(doc, resp);
         request->send(200, "application/json", resp);

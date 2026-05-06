@@ -628,6 +628,17 @@
                     <div class="row"><span class="label">Trigger Topic</span><span id="triggerTopicStatus" class="value">fingerprint/TriggerOutPin</span></div>
                     <div class="row"><span class="label">Anzeige</span><span class="value">Status oben kompakt</span></div>
                 </div>
+
+                <div class="status-mini-card">
+                    <h3>Wetter Live</h3>
+                    <div class="row"><span class="label">Status</span><span id="weatherStatus" class="value warn">warte auf MQTT...</span></div>
+                    <div class="row"><span class="label">Quelle</span><span id="weatherSource" class="value">-</span></div>
+                    <div class="row"><span class="label">Topic</span><span id="weatherTopic" class="value">-</span></div>
+                    <div class="row"><span class="label">Temperatur</span><span id="weatherTemp" class="value">-</span></div>
+                    <div class="row"><span class="label">Luftfeuchte</span><span id="weatherHum" class="value">-</span></div>
+                    <div class="row"><span class="label">Gefühlt</span><span id="weatherFeels" class="value">-</span></div>
+                    <div class="row"><span class="label">Taupunkt</span><span id="weatherDew" class="value">-</span></div>
+                </div>
             </div>
         </details>
     </section>
@@ -866,6 +877,12 @@
         return "warn";
     }
 
+    function formatWeatherValue(value, unit = "") {
+        const v = String(value || "").trim();
+        if (!v || v === "--.-") return "-";
+        return unit ? `${v} ${unit}` : v;
+    }
+
     async function loadStatus() {
         try {
             const r = await fetch("/api/bridge/status");
@@ -928,6 +945,51 @@
             }
         } catch (e) {
             log("Einstellungen konnten nicht geladen werden");
+        }
+    }
+
+    async function loadWeatherStatus() {
+        try {
+            const r = await fetch("/api/weather/status");
+            const j = await r.json();
+
+            const tempFresh = !!j.temperatureFresh;
+            const humFresh = !!j.humidityFresh;
+            const feelsFresh = !!j.feelsLikeFresh;
+            const dewFresh = !!j.dewPointFresh;
+            const anyFresh = tempFresh || humFresh || feelsFresh || dewFresh;
+
+            const statusText = anyFresh ? "live" : "keine frischen Daten";
+            setText("weatherStatus", statusText);
+            setClass("weatherStatus", `value ${anyFresh ? "ok" : "warn"}`);
+
+            const candidates = [
+                {fresh: tempFresh, source: j.temperatureSource, topic: j.temperatureTopic},
+                {fresh: humFresh, source: j.humiditySource, topic: j.humidityTopic},
+                {fresh: feelsFresh, source: j.feelsLikeSource, topic: j.feelsLikeTopic},
+                {fresh: dewFresh, source: j.dewPointSource, topic: j.dewPointTopic}
+            ];
+
+            const preferred = candidates.find((entry) => entry.fresh && (entry.source || entry.topic))
+                || candidates.find((entry) => entry.source || entry.topic)
+                || {source: "", topic: ""};
+
+            setText("weatherSource", preferred.source || "-");
+            setText("weatherTopic", preferred.topic || "-");
+
+            setText("weatherTemp", formatWeatherValue(j.temperature, "°C"));
+            setText("weatherHum", formatWeatherValue(j.humidity, "%"));
+            setText("weatherFeels", formatWeatherValue(j.feelsLike, "°C"));
+            setText("weatherDew", formatWeatherValue(j.dewPoint, "°C"));
+        } catch (e) {
+            setText("weatherStatus", "API nicht erreichbar");
+            setClass("weatherStatus", "value err");
+            setText("weatherSource", "-");
+            setText("weatherTopic", "-");
+            setText("weatherTemp", "-");
+            setText("weatherHum", "-");
+            setText("weatherFeels", "-");
+            setText("weatherDew", "-");
         }
     }
 
@@ -1541,10 +1603,12 @@
     })();
 
     loadStatus();
+    loadWeatherStatus();
     loadMatterStatus();
     loadSettings().finally(loadMetaConfig);
     loadLogHistory();
     setInterval(loadStatus, 5000);
+    setInterval(loadWeatherStatus, 5000);
     setInterval(loadMatterStatus, 8000);
 </script>
 
