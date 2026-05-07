@@ -1,3 +1,16 @@
+## 7. Mai 2026 - Unbenoetigte idf_component.orig entfernt
+
+**Aufgabe:** Aufraeumen fuer PlatformIO+Arduino-Setup ohne ESP-IDF-Component-Manager-Dateileichen.
+
+**Durchgefuehrte Aktionen:**
+- Datei `src/idf_component.yml.orig` entfernt.
+- Hintergrund: Im aktuellen Projekt wird PlatformIO mit Arduino-Framework genutzt; die `.orig`-Datei wird nicht benoetigt.
+
+**Ergebnis:**
+- **PASS** - Projekt aufgeraeumt, keine funktionale Auswirkung auf Build/Upload.
+
+---
+
 ## 6. Mai 2026 - Wetter-Liveanzeige stabilisiert + U ALL Upload
 
 **Aufgabe:** Wetterwerte in der Bridge sichtbar halten, Quellenkennzeichnung nutzen und kompletten Upload ausfuehren.
