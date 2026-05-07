@@ -2,7 +2,7 @@
 //******************************************************
 //         Main of MatterMQTTBridge.
 // nur hier die start wert der version Aendern.OK=======
-// @version: 1.0.63 <br> Builddatum 21:02:05 06-05.2026
+// @version: 1.0.65 <br> Builddatum 06:06:02 07-05.2026
 //****************************************************
 
 #include <Arduino.h>
@@ -40,7 +40,7 @@
 #define TEST_OUTPUT_PIN_5 33
 
 // ======================= GLOBALS =======================
-const char* firmwareVersion = "1.0.63 <br> Builddatum 21:02:05 06-05.2026";
+const char* firmwareVersion = "1.0.65 <br> Builddatum 06:06:02 07-05.2026";
 AsyncWebServer webServer(80);
 SettingsManager settingsManager;
 MatterBridgeManager matterBridge;
@@ -73,7 +73,7 @@ static uint32_t s_weatherTemperatureAtMs = 0;
 static uint32_t s_weatherHumidityAtMs = 0;
 static uint32_t s_weatherFeelsLikeAtMs = 0;
 static uint32_t s_weatherDewPointAtMs = 0;
-static const uint32_t WEATHER_VALUE_FRESH_MS = 2UL * 60UL * 1000UL;
+static const uint32_t WEATHER_VALUE_FRESH_MS = 3UL * 60UL * 1000UL;
 
 // ======================= LOG PUFFER =======================
 #define LOG_BUFFER_SIZE 50

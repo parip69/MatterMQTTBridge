@@ -1,3 +1,27 @@
+## 6. Mai 2026 - Wetter-Liveanzeige stabilisiert + U ALL Upload
+
+**Aufgabe:** Wetterwerte in der Bridge sichtbar halten, Quellenkennzeichnung nutzen und kompletten Upload ausfuehren.
+
+**Durchgefuehrte Aktionen:**
+- `src/main.cpp`: Wetter-Freshness-Fenster von 2 auf 3 Minuten erhoeht (`WEATHER_VALUE_FRESH_MS`), damit 1-Minuten-Sendeintervalle vom Fingerprint-Sender robust als "live" bleiben.
+- Bestehende Wetter-Quelle/Topic-Anzeige in der Bridge-Indexseite gegengeprueft (Statuskarte "Wetter Live" mit `Quelle` und `Topic`).
+- Build und Flash ueber Task `U ALL` ausgefuehrt (BuildFS, UploadFS, Firmware-Upload).
+
+**Verifikation:**
+- BuildFS: SUCCESS
+- UploadFS: SUCCESS (COM4)
+- Firmware-Upload: SUCCESS (COM4)
+- Backup-Skript nach Upload: SUCCESS
+
+**Ergebnis:**
+- **PASS** - Bridge zeigt Wetterdaten inkl. Herkunft an; Upload komplett erfolgreich.
+
+**Geaenderte Dateien:**
+- `src/main.cpp`
+- `agent_worklog.md`
+
+---
+
 ## 6. Mai 2026 - Wetterquelle (Host/IP) in Liveanzeige + robuste Topic-Erkennung
 
 **Aufgabe:** Wetterdaten aus MQTT sensorunabhängig verarbeiten und in der Bridge-Liveanzeige mit Quelle (Host/IP/Absender) kennzeichnen.
