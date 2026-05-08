@@ -1,3 +1,33 @@
+## 8. Mai 2026 - TriggerOutputPin/OutputPinStatus Architektur in Bridge umgesetzt
+
+**Aufgabe:** MatterMQTTBridge auf neues Fingerprint-TriggerOutputPin-Prinzip umbauen, ohne MQTT-Echo-Logik.
+
+**Durchgefuehrte Aktionen:**
+- `src/main.cpp`: Helper `isMqttPayloadTrue(...)` hinzugefuegt.
+- `src/main.cpp`: Topic-Parser `parseTriggerOutputPinTopic(...)` fuer `<root>/TriggerOutputPin0..6` hinzugefuegt.
+- `src/main.cpp`: Lokale RX-Verarbeitung `handleTriggerOutputPinForLocalBridge(...)` hinzugefuegt (nur Log/optionale Testpins, kein Re-Publish, kein `bridgeExecuteTrigger()`, kein `bridgeSendTrigger()`).
+- `src/main.cpp`: Alte Testpin-Auswertung auf `OutputPinStatus` aus `handleIncomingMqttMessage(...)` entfernt; stattdessen nur neue TriggerOutputPin-Logik.
+- `src/main.cpp`: `bridgeExecuteTrigger(...)` auf reines Senden von `OutputPinStatus1..5` mit Payload `source:[<TAG>];true` umgebaut; keine TriggerOut-Nachricht, keine direkte Testpin-Schaltung.
+- `src/main.cpp`: `/api/bridge/trigger` auf gueltige Pins `1..5` konsolidiert und Rueckgabe-Topic/Payload auf `OutputPinStatus` umgestellt.
+- `src/MatterBridgeManager.cpp`: Logtexte von `TriggerOutPin` auf `OutputPinStatusX` angepasst.
+- `data/index.html`: Sichtbare Begriffe und Defaults auf neue Semantik umgestellt (Befehl: `OutputPinStatus1..5`, Rueckmeldung: `TriggerOutputPin0..6`, Custom Trigger `min=1`, `max=5`, Default-Slots send/listen entsprechend angepasst).
+
+**Verifikation:**
+- Buildtask `B Bridge` ausgefuehrt.
+- Erster Lauf: FAIL (einmaliger Framework/Tool-Setup-Fehler waehrend Paketauflosung).
+- Zweiter Lauf: SUCCESS, Firmware erfolgreich gebaut.
+
+**Ergebnis:**
+- **PASS** - Zielarchitektur umgesetzt: Bridge sendet nur `OutputPinStatus1..5`, wertet empfangene `TriggerOutputPin0..6` nur lokal aus, keine MQTT-Echo-Logik.
+
+**Geaenderte Dateien:**
+- `src/main.cpp`
+- `src/MatterBridgeManager.cpp`
+- `data/index.html`
+- `agent_worklog.md`
+
+---
+
 ## 7. Mai 2026 - Unbenoetigte idf_component.orig entfernt
 
 **Aufgabe:** Aufraeumen fuer PlatformIO+Arduino-Setup ohne ESP-IDF-Component-Manager-Dateileichen.

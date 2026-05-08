@@ -38,9 +38,9 @@ static bool handleMatterTriggerState(uint8_t slot, bool state) {
         return true;
     }
 
-    addLogMessage("Matter Slot " + String(slot) + " ON erhalten -> TriggerOutPin=" + String(slot));
+    addLogMessage("Matter Slot " + String(slot) + " ON erhalten -> OutputPinStatus" + String(slot));
     if (!bridgeExecuteTrigger(slot, "MATTER")) {
-        addLogMessage("Matter Fehler: TriggerOutPin=" + String(slot) + " konnte nicht gesendet werden");
+        addLogMessage("Matter Fehler: OutputPinStatus" + String(slot) + " konnte nicht gesendet werden");
         return false;
     }
 

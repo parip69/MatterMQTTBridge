@@ -587,7 +587,7 @@
 <body>
 <header>
     <h1>MatterMQTTBridge</h1>
-    <p>Google Home / Matter → MQTT → Fingerprint TriggerOutPin</p>
+    <p>Google Home / Matter → MQTT → Fingerprint OutputPinStatus (Befehl) / TriggerOutputPin (Rueckmeldung)</p>
 </header>
 
 <main>
@@ -625,7 +625,8 @@
                 <div class="status-mini-card">
                     <h3>Gerät</h3>
                     <div class="row"><span class="label">Version</span><span id="version" class="value">-</span></div>
-                    <div class="row"><span class="label">Trigger Topic</span><span id="triggerTopicStatus" class="value">fingerprint/TriggerOutPin</span></div>
+                    <div class="row"><span class="label">Befehl an Fingerprint</span><span id="triggerTopicStatus" class="value">fingerprint/OutputPinStatus1..5</span></div>
+                    <div class="row"><span class="label">Rueckmeldung lokal</span><span id="feedbackTopicStatus" class="value">fingerprint/TriggerOutputPin0..6</span></div>
                     <div class="row"><span class="label">Anzeige</span><span class="value">Status oben kompakt</span></div>
                 </div>
 
@@ -649,20 +650,20 @@
         <h2>Bridge Trigger Test</h2>
 
         <p class="small">
-            Diese Buttons senden später genau das, was Matter/Google auslösen soll:
+            Diese Buttons senden Befehle an den Fingerprint als OutputPinStatus1..5. Lokale Bridge-Pins reagieren spaeter auf TriggerOutputPin-Rueckmeldungen.
         </p>
 
         <div class="trigger-layout">
             <div class="code-box trigger-preview">
-                Topic: <span id="triggerTopicPreview">fingerprint/TriggerOutPin</span><br>
-                Payload: 1..99
+                Topic: <span id="triggerTopicPreview">fingerprint/OutputPinStatusX</span><br>
+                Payload: source:[WEB];true
             </div>
 
             <div class="trigger-control">
-                <label>Eigene Triggernummer</label>
+                <label>Eigene OutputPinStatus-Nummer</label>
                 <div class="trigger-custom-row">
-                    <input id="customTrigger" type="number" min="1" max="99" value="1" />
-                    <button class="okbtn" onclick="sendCustomTrigger()">Trigger senden</button>
+                    <input id="customTrigger" type="number" min="1" max="5" value="1" />
+                    <button class="okbtn" onclick="sendCustomTrigger()">Befehl senden</button>
                 </div>
             </div>
         </div>
@@ -894,7 +895,8 @@
             const mqttText = j.mqtt || "-";
             const mqttClass = mqttStateClass(mqttText);
             const root = j.root || "fingerprint";
-            const triggerTopic = `${root}/TriggerOutPin`;
+            const triggerTopic = `${root}/OutputPinStatus1..5`;
+            const feedbackTopic = `${root}/TriggerOutputPin0..6`;
 
             setText("wifiStatus", wifiText);
             setClass("wifiStatus", wifiOk ? "ok" : "err");
@@ -916,6 +918,7 @@
             setText("hostnameStatus", j.hostname || "-");
             setText("triggerTopicPreview", triggerTopic);
             setText("triggerTopicStatus", triggerTopic);
+            setText("feedbackTopicStatus", feedbackTopic);
 
             const mdns = j.mdns || "-";
             const mdnsLink = $("mdnsLink");
@@ -1010,8 +1013,8 @@
 
     function sendCustomTrigger() {
         const pin = parseInt($("customTrigger").value, 10);
-        if (!pin || pin < 1 || pin > 99) {
-            log("Ungültiger Trigger. Erlaubt 1..99");
+        if (!pin || pin < 1 || pin > 5) {
+            log("Ungueltiger Trigger. Erlaubt 1..5");
             return;
         }
         sendTrigger(pin);
@@ -1095,7 +1098,6 @@
     }
 
     function createDefaultSlots(root = getRootTopic()) {
-        const triggerTopic = topicFromRoot(root, "TriggerOutPin");
         return [
             {
                 enabled: true,
@@ -1103,11 +1105,11 @@
                 name: "Haustür öffnen",
                 matterFunction: "open",
                 triggerOutPin: 1,
-                sendTopic: triggerTopic,
-                sendPayload: "1",
-                listenTopic: topicFromRoot(root, "OutputPinStatus1"),
+                sendTopic: topicFromRoot(root, "OutputPinStatus1"),
+                sendPayload: "source:[MATTER];true",
+                listenTopic: topicFromRoot(root, "TriggerOutputPin1"),
                 listenPayload: "true",
-                statusText: "Öffnen / Trigger 1"
+                statusText: "Rueckmeldung TriggerOutputPin1"
             },
             {
                 enabled: true,
@@ -1115,11 +1117,11 @@
                 name: "Haustür schließen",
                 matterFunction: "close",
                 triggerOutPin: 2,
-                sendTopic: triggerTopic,
-                sendPayload: "2",
-                listenTopic: topicFromRoot(root, "OutputPinStatus2"),
+                sendTopic: topicFromRoot(root, "OutputPinStatus2"),
+                sendPayload: "source:[MATTER];true",
+                listenTopic: topicFromRoot(root, "TriggerOutputPin2"),
                 listenPayload: "true",
-                statusText: "Schließen / Trigger 2"
+                statusText: "Rueckmeldung TriggerOutputPin2"
             },
             {
                 enabled: true,
@@ -1127,11 +1129,11 @@
                 name: "Falle ziehen",
                 matterFunction: "unlatch",
                 triggerOutPin: 3,
-                sendTopic: triggerTopic,
-                sendPayload: "3",
-                listenTopic: topicFromRoot(root, "OutputPinStatus3"),
+                sendTopic: topicFromRoot(root, "OutputPinStatus3"),
+                sendPayload: "source:[MATTER];true",
+                listenTopic: topicFromRoot(root, "TriggerOutputPin3"),
                 listenPayload: "true",
-                statusText: "Falle ziehen / Trigger 3"
+                statusText: "Rueckmeldung TriggerOutputPin3"
             },
             {
                 enabled: true,
@@ -1139,11 +1141,11 @@
                 name: "Status abfragen",
                 matterFunction: "status",
                 triggerOutPin: 4,
-                sendTopic: triggerTopic,
-                sendPayload: "4",
-                listenTopic: topicFromRoot(root, "status"),
-                listenPayload: "online",
-                statusText: "Fingerprint online"
+                sendTopic: topicFromRoot(root, "OutputPinStatus4"),
+                sendPayload: "source:[MATTER];true",
+                listenTopic: topicFromRoot(root, "TriggerOutputPin4"),
+                listenPayload: "true",
+                statusText: "Rueckmeldung TriggerOutputPin4"
             },
             {
                 enabled: true,
@@ -1151,11 +1153,11 @@
                 name: "Reserve / Licht / Zusatz",
                 matterFunction: "custom",
                 triggerOutPin: 5,
-                sendTopic: triggerTopic,
-                sendPayload: "5",
-                listenTopic: topicFromRoot(root, "OutputPinStatus5"),
+                sendTopic: topicFromRoot(root, "OutputPinStatus5"),
+                sendPayload: "source:[MATTER];true",
+                listenTopic: topicFromRoot(root, "TriggerOutputPin5"),
                 listenPayload: "true",
-                statusText: "Reserve / Trigger 5"
+                statusText: "Rueckmeldung TriggerOutputPin5"
             }
         ];
     }
@@ -1271,7 +1273,7 @@
                 <div class="matter-function-head">
                     <div>
                         <h3 class="matter-function-title">Funktion ${escAttr(row.nr)}</h3>
-                        <div class="small">Fester Slot / TriggerOutPin ${escAttr(row.triggerOutPin)}</div>
+                        <div class="small">Fester Slot / OutputPinStatus${escAttr(row.nr)} / TriggerOutputPin${escAttr(row.nr)}</div>
                     </div>
                     <label class="matter-active-toggle">
                         <input class="meta-enabled" type="checkbox" ${row.enabled ? "checked" : ""}>
@@ -1290,17 +1292,17 @@
                         </select>
                     </label>
                     <label>MQTT Publish Topic
-                        <input class="meta-send-topic" value="${escAttr(row.sendTopic)}" placeholder="${escAttr(topicFromRoot(root, "TriggerOutPin"))}">
+                        <input class="meta-send-topic" value="${escAttr(row.sendTopic)}" placeholder="${escAttr(topicFromRoot(root, `OutputPinStatus${row.nr}`))}">
                     </label>
                     <label>MQTT Payload
-                        <input class="meta-send-payload" value="${escAttr(row.sendPayload)}" placeholder="${escAttr(String(row.nr))}">
+                        <input class="meta-send-payload" value="${escAttr(row.sendPayload)}" placeholder="source:[MATTER];true">
                     </label>
                 </div>
                 <details class="matter-details">
                     <summary>Status / Horchen</summary>
                     <div class="matter-form-grid">
                         <label>Horch-Topic
-                            <input class="meta-listen-topic" value="${escAttr(row.listenTopic)}" placeholder="${escAttr(topicFromRoot(root, `OutputPinStatus${row.nr}`))}">
+                            <input class="meta-listen-topic" value="${escAttr(row.listenTopic)}" placeholder="${escAttr(topicFromRoot(root, `TriggerOutputPin${row.nr}`))}">
                         </label>
                         <label>Horch-Payload
                             <input class="meta-listen-payload" value="${escAttr(row.listenPayload)}" placeholder="true / online">

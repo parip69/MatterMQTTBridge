@@ -2,7 +2,7 @@
 //******************************************************
 //         Main of MatterMQTTBridge.
 // nur hier die start wert der version Aendern.OK=======
-// @version: 1.0.65 <br> Builddatum 06:06:02 07-05.2026
+// @version: 1.0.67 <br> Builddatum 16:38:47 08-05.2026
 //****************************************************
 
 #include <Arduino.h>
@@ -40,7 +40,7 @@
 #define TEST_OUTPUT_PIN_5 33
 
 // ======================= GLOBALS =======================
-const char* firmwareVersion = "1.0.65 <br> Builddatum 06:06:02 07-05.2026";
+const char* firmwareVersion = "1.0.67 <br> Builddatum 16:38:47 08-05.2026";
 AsyncWebServer webServer(80);
 SettingsManager settingsManager;
 MatterBridgeManager matterBridge;
@@ -283,6 +283,43 @@ static bool endsWithIgnoreCase(const String &value, const String &suffix)
     return value.substring(value.length() - suffix.length()).equalsIgnoreCase(suffix);
 }
 
+static bool isMqttPayloadTrue(const String &rawPayload)
+{
+    String payload = rawPayload;
+    payload.trim();
+    payload.toLowerCase();
+
+    return payload == "true" ||
+           payload == "1" ||
+           payload == "on" ||
+           payload.endsWith(";true");
+}
+
+static bool parseTriggerOutputPinTopic(const String &topicStr, uint8_t &pin)
+{
+    const String root = normalizeMqttRootTopic(settingsManager.getAppSettings().mqttRootTopic);
+    const String prefix = root + "/TriggerOutputPin";
+
+    if (!topicStr.startsWith(prefix)) {
+        return false;
+    }
+
+    String pinText = topicStr.substring(prefix.length());
+    pinText.trim();
+
+    if (pinText.length() != 1) {
+        return false;
+    }
+
+    char c = pinText[0];
+    if (c < '0' || c > '6') {
+        return false;
+    }
+
+    pin = (uint8_t)(c - '0');
+    return true;
+}
+
 static String parseWeatherSourceFromPayload(const String &payloadStr)
 {
     const String marker = "source:[";
@@ -405,6 +442,35 @@ void addLogMessage(const String& message) {
     events.send(message.c_str(), "log", millis());
 }
 
+void setOptionalTestOutputPin(uint8_t pin, bool high);
+
+static void handleTriggerOutputPinForLocalBridge(const String &topicStr, const String &payloadStr, const String &rxSource)
+{
+    uint8_t pin = 0;
+    if (!parseTriggerOutputPinTopic(topicStr, pin)) {
+        return;
+    }
+
+    const bool high = isMqttPayloadTrue(payloadStr);
+
+    String line = "RX TriggerOutputPin";
+    line += String(pin);
+    line += high ? " = true" : " = false";
+
+    if (!rxSource.isEmpty()) {
+        line += " von ";
+        line += rxSource;
+    }
+
+    addLogMessage(line);
+
+#if USE_OUTPUT_TEST_PINS
+    if (pin >= 1 && pin <= 5) {
+        setOptionalTestOutputPin(pin, high);
+    }
+#endif
+}
+
 void handleIncomingMqttMessage(const String &topicStr, const String &payloadStr, const String &rxSource) {
     String line = "RX";
     if (!rxSource.isEmpty()) {
@@ -413,20 +479,7 @@ void handleIncomingMqttMessage(const String &topicStr, const String &payloadStr,
     line += "  " + topicStr + "  ->  " + payloadStr.substring(0, 80);
     addLogMessage(line);
     updateWeatherValueFromTopic(topicStr, payloadStr, rxSource);
-
-#if USE_OUTPUT_TEST_PINS
-    String root = normalizeMqttRootTopic(settingsManager.getAppSettings().mqttRootTopic);
-    for (int i = 1; i <= 5; i++) {
-        if (topicStr == root + "/OutputPinStatus" + String(i)) {
-            String p = payloadStr;
-            p.trim();
-            p.toLowerCase();
-            bool hi = (p == "true" || p == "1" || p == "on" || p.endsWith(";true"));
-            setOptionalTestOutputPin((uint8_t)i, hi);
-            break;
-        }
-    }
-#endif
+    handleTriggerOutputPinForLocalBridge(topicStr, payloadStr, rxSource);
 
 }
 
@@ -434,7 +487,6 @@ String outputPinStatusTopic(uint8_t pin) {
     return makeTopic("OutputPinStatus" + String(pin));
 }
 
-void setOptionalTestOutputPin(uint8_t pin, bool high);
 bool publishMqttMessage(const String &topic, const String &message, bool retain, int qos);
 
 static String normalizeBridgeSourceTag(const char* sourceTag) {
@@ -454,36 +506,26 @@ static String normalizeBridgeSourceTag(const char* sourceTag) {
 }
 
 bool bridgeExecuteTrigger(uint8_t pin, const char* sourceTag) {
-    if (pin < 1 || pin > 99) {
+    if (pin < 1 || pin > 5) {
+        addLogMessage("Bridge Befehl abgelehnt: nur OutputPinStatus1..5 erlaubt, pin=" + String(pin));
         return false;
-    }
-
-    addLogMessage("Bridge TriggerOutPin=" + String(pin) + " angefordert");
-
-    bool sentTrigger = bridgeSendTrigger(pin);
-    if (sentTrigger) {
-        addLogMessage("Bridge TriggerOutPin=" + String(pin) + " gesendet");
-    } else {
-        addLogMessage("Bridge Fehler: TriggerOutPin=" + String(pin) + " konnte nicht gesendet werden");
-    }
-
-    if (pin > 5) {
-        return sentTrigger;
     }
 
     String normalizedSourceTag = normalizeBridgeSourceTag(sourceTag);
     String outputTopic = outputPinStatusTopic(pin);
     String outputPayload = "source:[" + normalizedSourceTag + "];true";
+
+    addLogMessage("Bridge TX Befehl OutputPinStatus" + String(pin));
+
     bool sentOutputStatus = publishMqttMessage(outputTopic, outputPayload, false, 0);
 
     if (sentOutputStatus) {
-        addLogMessage("Bridge OutputPinStatus" + String(pin) + "=true gesendet");
-        setOptionalTestOutputPin(pin, true);
+        addLogMessage("Bridge OutputPinStatus" + String(pin) + " gesendet");
     } else {
         addLogMessage("Bridge Fehler: OutputPinStatus" + String(pin) + " konnte nicht gesendet werden");
     }
 
-    return sentTrigger && sentOutputStatus;
+    return sentOutputStatus;
 }
 
 void setOptionalTestOutputPin(uint8_t pin, bool high) {
@@ -719,7 +761,7 @@ void setupRouting() {
         }
 
         int pin = request->getParam("pin")->value().toInt();
-        if (pin < 1 || pin > 99) {
+        if (pin < 1 || pin > 5) {
             JsonDocument doc;
             doc["ok"] = false;
             doc["error"] = "invalid pin";
@@ -730,30 +772,20 @@ void setupRouting() {
         }
 
         bool sent = bridgeExecuteTrigger((uint8_t)pin, "WEB");
-        String outputTopic;
-        String outputPayload;
-        if (pin >= 1 && pin <= 5) {
-            outputTopic = outputPinStatusTopic((uint8_t)pin);
-            outputPayload = "source:[WEB];true";
-        }
+        String outputTopic = outputPinStatusTopic((uint8_t)pin);
+        String outputPayload = "source:[WEB];true";
         
         JsonDocument doc;
         if (sent) {
             doc["ok"] = true;
             doc["trigger"] = pin;
-            doc["topic"] = bridgeTriggerTopic();
-            doc["payload"] = bridgeTriggerPayload(pin);
-            if (pin >= 1 && pin <= 5) {
-                doc["outputTopic"] = outputTopic;
-                doc["outputPayload"] = outputPayload;
-            }
+            doc["topic"] = outputTopic;
+            doc["payload"] = outputPayload;
+            doc["outputTopic"] = outputTopic;
+            doc["outputPayload"] = outputPayload;
         } else {
             doc["ok"] = false;
-            if (pin >= 1 && pin <= 5) {
-                doc["error"] = "output status publish failed";
-            } else {
-                doc["error"] = "trigger publish failed";
-            }
+            doc["error"] = "output status publish failed";
         }
 
         String resp;
